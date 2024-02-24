@@ -107,6 +107,6 @@ namespace Cscg.Constants
         }
 
         private static bool IsText(AdditionalText file)
-            => HasEnding(file, "txt");
+            => file.HasEnding("txt");
     }
 }
