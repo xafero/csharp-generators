@@ -15,7 +15,12 @@
 		<Authors>xafero</Authors>
 		<Description>A source generator that prepares SQL statements ahead of runtime</Description>
     <PackageProjectUrl>https://github.com/xafero/csharp-generators</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0" PrivateAssets="all" />

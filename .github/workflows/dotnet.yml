@@ -20,7 +20,7 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Build and Pack with dotnet
-      run: dotnet pack --configuration Release
+      run: dotnet pack --configuration Release -o nupkg
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4

@@ -1,3 +1,3 @@
 @echo off
 
-dotnet pack --configuration Release
+dotnet pack --configuration Release -o nupkg
