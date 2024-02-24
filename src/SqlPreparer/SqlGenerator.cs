@@ -13,7 +13,7 @@ namespace SqlPreparer
         {
             context.RegisterPostInitializationOutput(ctx =>
             {
-                var attrCode = GenerateAttr("Funny");
+                var attrCode = GenerateAttr("Funny", "test");
                 ctx.AddSource("FunnyAttribute.g.cs", Sources.From(attrCode));
 
 

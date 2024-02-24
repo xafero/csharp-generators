@@ -4,7 +4,9 @@ namespace Cscg.Core
 {
     public static class Coding
     {
-        public static string GenerateAttr(string name, string space = "Generator", string target = "Class")
+        public const string AutoNamespace = "autogen";
+
+        public static string GenerateAttr(string name, string space, string target = "Class")
         {
             var code = new StringBuilder();
             code.AppendLine($"namespace {space}");

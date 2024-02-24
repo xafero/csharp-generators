@@ -19,7 +19,7 @@ namespace Cscg.Constants
 
             ctx.RegisterSourceOutput(contents, (spc, nac) =>
             {
-                const string space = "autogen";
+                const string space = Coding.AutoNamespace;
                 var className = $"ConstStrings.{nac.name}";
                 var code = new StringBuilder();
                 code.AppendLine("using System;");
