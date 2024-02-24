@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.IO;
+using System.Runtime.InteropServices.ComTypes;
+using System.Text;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -30,6 +32,9 @@ namespace SqlPreparer
             var name = cds.GetClassName();
             var fileName = $"{name}.g.cs";
             var code = new StringBuilder();
+            code.AppendLine("using System.Text;");
+            code.AppendLine("using System.IO;");
+            code.AppendLine();
             code.AppendLine($"namespace {space};");
             code.AppendLine();
             code.AppendLine($"partial class {name}");
@@ -44,7 +49,7 @@ namespace SqlPreparer
                     var propType = Typing.Parse(pds.Type).ToTitle();
 
                     reader.AppendLine($"\t\tthis.{propName} = reader.Read{propType}();");
-                    writer.AppendLine($"\t\twriter.Write{propType}(this.{propName});");
+                    writer.AppendLine($"\t\twriter.Write(this.{propName});");
                 }
 
             code.AppendLine("\tpublic void Read(dynamic reader)");
@@ -52,8 +57,9 @@ namespace SqlPreparer
             code.Append(reader);
             code.AppendLine("\t}");
             code.AppendLine();
-            code.AppendLine("\tpublic void Write(dynamic writer)");
+            code.AppendLine("\tpublic void Write(Stream stream)");
             code.AppendLine("\t{");
+            code.AppendLine("\t\tusing var writer = new BinaryWriter(stream, Encoding.UTF8, true);");
             code.Append(writer);
             code.AppendLine("\t}");
 
