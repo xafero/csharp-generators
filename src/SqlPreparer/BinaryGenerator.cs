@@ -68,10 +68,12 @@ namespace SqlPreparer
                     }
                     if (rank >= 1)
                     {
-                        writer.AppendLine($"\t\twriter.Write(this.{propName}.Length);");
+                        writer.AppendLine($"\t\twriter.Write(this.{propName}?.Length ?? 0);");
                     }
                     var writeArg = $"this.{propName}";
                     if (propType == "DateTime") writeArg += ".Ticks";
+                    else if (propType == "String") writeArg += " ?? string.Empty";
+                    if (rank >= 1) writeArg += " ?? []";
                     writer.AppendLine($"\t\twriter.Write({writeArg});");
                 }
 
