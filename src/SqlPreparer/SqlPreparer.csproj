@@ -3,7 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -15,15 +19,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0"
+      PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference
-      Include="Microsoft.CodeAnalysis.CSharp.Workspaces"
-      Version="4.8.0"
-      PrivateAssets="all"
-    />
+    <None Include="..\..\README.md" Pack="true"
+      PackagePath="\" />
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true"
+      PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
 </Project>
