@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Runtime.InteropServices.ComTypes;
+﻿using System.Collections.Generic;
 using System.Text;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
@@ -10,17 +9,25 @@ namespace SqlPreparer
     [Generator(LanguageNames.CSharp)]
     public sealed class BinaryGenerator : IIncrementalGenerator
     {
+        private const string Space = Coding.AutoNamespace;
+        private const string BinObjName = "BinaryObj";
+        private const string IntObjName = "IBinaryObj";
+
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             context.RegisterPostInitializationOutput(ctx =>
             {
-                const string space = Coding.AutoNamespace;
-                const string binObjName = "BinaryObj";
-                var attrCode = Coding.GenerateAttr(binObjName, space);
-                ctx.AddSource($"{binObjName}Attribute.g.cs", Sources.From(attrCode));
+                var attrCode = Coding.GenerateAttr(BinObjName, Space);
+                ctx.AddSource($"{BinObjName}Attribute.g.cs", Sources.From(attrCode));
+
+                var intCode = Coding.GenerateIntf(IntObjName, Space, new List<string>
+                {
+                    "void Read(System.IO.Stream stream)", "void Write(System.IO.Stream stream)"
+                });
+                ctx.AddSource($"{IntObjName}.g.cs", Sources.From(intCode));
 
                 var classes = context.SyntaxProvider.CreateSyntaxProvider(
-                    predicate: static (sn, _) => sn.HasThisAttribute(binObjName),
+                    predicate: static (sn, _) => sn.HasThisAttribute(BinObjName),
                     transform: static (ctx, _) => ctx.GetTarget());
                 context.RegisterSourceOutput(classes, Generate);
             });
@@ -37,7 +44,7 @@ namespace SqlPreparer
             code.AppendLine();
             code.AppendLine($"namespace {space};");
             code.AppendLine();
-            code.AppendLine($"partial class {name}");
+            code.AppendLine($"partial class {name} : {Space}.{IntObjName}");
             code.AppendLine("{");
 
             var reader = new StringBuilder();
@@ -52,8 +59,9 @@ namespace SqlPreparer
                     writer.AppendLine($"\t\twriter.Write(this.{propName});");
                 }
 
-            code.AppendLine("\tpublic void Read(dynamic reader)");
+            code.AppendLine("\tpublic void Read(Stream stream)");
             code.AppendLine("\t{");
+            code.AppendLine("\t\tusing var reader = new BinaryReader(stream, Encoding.UTF8, true);");
             code.Append(reader);
             code.AppendLine("\t}");
             code.AppendLine();
