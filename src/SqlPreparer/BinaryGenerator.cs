@@ -13,9 +13,9 @@ namespace SqlPreparer
         private const string BinObjName = "BinaryObj";
         private const string IntObjName = "IBinaryObj";
 
-        public void Initialize(IncrementalGeneratorInitializationContext context)
+        public void Initialize(IncrementalGeneratorInitializationContext igi)
         {
-            context.RegisterPostInitializationOutput(ctx =>
+            igi.RegisterPostInitializationOutput(ctx =>
             {
                 var attrCode = Coding.GenerateAttr(BinObjName, Space);
                 ctx.AddSource($"{BinObjName}Attribute.g.cs", Sources.From(attrCode));
@@ -25,12 +25,12 @@ namespace SqlPreparer
                     "void Read(System.IO.Stream stream)", "void Write(System.IO.Stream stream)"
                 });
                 ctx.AddSource($"{IntObjName}.g.cs", Sources.From(intCode));
-
-                var classes = context.SyntaxProvider.CreateSyntaxProvider(
-                    predicate: static (sn, _) => sn.HasThisAttribute(BinObjName),
-                    transform: static (ctx, _) => ctx.GetTarget());
-                context.RegisterSourceOutput(classes, Generate);
             });
+
+            var classes = igi.SyntaxProvider.CreateSyntaxProvider(
+                predicate: static (sn, _) => sn.HasThisAttribute(BinObjName),
+                transform: static (ctx, _) => ctx.GetTarget());
+            igi.RegisterSourceOutput(classes, Generate);
         }
 
         private static void Generate(SourceProductionContext ctx, ClassDeclarationSyntax cds)

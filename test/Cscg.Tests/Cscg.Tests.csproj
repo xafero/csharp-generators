@@ -21,6 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Cscg.Constants\Cscg.Constants.csproj" />
+    <ProjectReference Include="..\..\src\Cscg.Core\Cscg.Core.csproj" />
     <ProjectReference Include="..\..\src\SqlPreparer\SqlPreparer.csproj" />
   </ItemGroup>
 
