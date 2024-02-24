@@ -15,21 +15,6 @@ namespace SourceGenerated
 }
 
 /*
- *
- *using System;
-   using System.IO;
-   using System.Text;
-
-   class ConsoleApplication
-   {
-       const string fileName = "AppSettings.dat";
-
-       static void Main()
-       {
-           WriteDefaultValues();
-           DisplayValues();
-       }
-
        public static void WriteDefaultValues()
        {
            using (var stream = File.Open(fileName, FileMode.Create))

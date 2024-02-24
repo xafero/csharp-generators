@@ -51,5 +51,11 @@ namespace Cscg.Core
             var text = cds.Identifier.Text.TrimNull();
             return text;
         }
+
+        public static string GetName(this PropertyDeclarationSyntax pds)
+        {
+            var text = pds.Identifier.Text.TrimNull();
+            return text;
+        }
     }
 }

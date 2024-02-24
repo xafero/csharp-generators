@@ -6,5 +6,10 @@
         {
             return string.IsNullOrWhiteSpace(text) ? null : text.Trim();
         }
+
+        public static string ToTitle(this string text)
+        {
+            return text.Substring(0, 1).ToUpper() + text.Substring(1);
+        }
     }
 }

@@ -34,7 +34,29 @@ namespace SqlPreparer
             code.AppendLine();
             code.AppendLine($"partial class {name}");
             code.AppendLine("{");
-            code.AppendLine($" // ");
+
+            var reader = new StringBuilder();
+            var writer = new StringBuilder();
+            foreach (var member in cds.Members)
+                if (member is PropertyDeclarationSyntax pds)
+                {
+                    var propName = pds.GetName();
+                    var propType = Typing.Parse(pds.Type).ToTitle();
+
+                    reader.AppendLine($"\t\tthis.{propName} = reader.Read{propType}();");
+                    writer.AppendLine($"\t\twriter.Write{propType}(this.{propName});");
+                }
+
+            code.AppendLine("\tpublic void Read(dynamic reader)");
+            code.AppendLine("\t{");
+            code.Append(reader);
+            code.AppendLine("\t}");
+            code.AppendLine();
+            code.AppendLine("\tpublic void Write(dynamic writer)");
+            code.AppendLine("\t{");
+            code.Append(writer);
+            code.AppendLine("\t}");
+
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
         }
