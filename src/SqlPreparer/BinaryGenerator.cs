@@ -57,7 +57,7 @@ namespace SqlPreparer
                     var propType = Typing.Parse(pds.Type, out var rank).ToTitle();
                     if (rank >= 1)
                     {
-                        if (propType == "Byte" || propType == "Char")
+                        if (propType is "Byte" or "Char")
                             reader.AppendLine($"\t\tthis.{propName} = reader.Read{propType}s(reader.ReadInt32());");
                     }
                     else
