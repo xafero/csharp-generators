@@ -38,5 +38,18 @@ namespace Cscg.Core
             var classDeclaration = (ClassDeclarationSyntax)context.Node;
             return classDeclaration;
         }
+
+        public static string GetParentName(this ClassDeclarationSyntax cds)
+        {
+            if (cds.Parent is NamespaceDeclarationSyntax nds)
+                return nds.Name.GetText().ToString().TrimNull();
+            return null;
+        }
+
+        public static string GetClassName(this ClassDeclarationSyntax cds)
+        {
+            var text = cds.Identifier.Text.TrimNull();
+            return text;
+        }
     }
 }

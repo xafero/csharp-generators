@@ -25,18 +25,16 @@ namespace SqlPreparer
         }
 
         private static void Generate(SourceProductionContext ctx, ClassDeclarationSyntax cds)
-            => Generate(ctx, cds.Identifier.Text);
-
-        private static void Generate(SourceProductionContext ctx, string name)
         {
-            const string ns = Coding.AutoNamespace;
+            var space = cds.GetParentName() ?? Coding.AutoNamespace;
+            var name = cds.GetClassName();
             var fileName = $"{name}.g.cs";
             var code = new StringBuilder();
-            code.AppendLine($"namespace {ns};");
+            code.AppendLine($"namespace {space};");
             code.AppendLine();
             code.AppendLine($"partial class {name}");
             code.AppendLine("{");
-            code.AppendLine(" // ");
+            code.AppendLine($" // ");
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
         }
