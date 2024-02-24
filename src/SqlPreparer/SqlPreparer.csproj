@@ -8,13 +8,18 @@
   <PropertyGroup>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
   </PropertyGroup>
 
   <PropertyGroup>
     <Version>0.0.1</Version>
     <Authors>xafero</Authors>
-    <Description>A source generator that prepares SQL statements ahead of runtime</Description>
+    <Description>C# source generator that prepares SQL statements ahead of runtime</Description>
     <PackageProjectUrl>https://github.com/xafero/csharp-generators</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/xafero/csharp-generators</RepositoryUrl>
+    <Copyright>AGPL License 2024, $(Authors)</Copyright>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+    <PackageTags>csharp;csharp-sourcegenerators;source-generator;sourcegenerator;csharp-sourcegenerator</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
