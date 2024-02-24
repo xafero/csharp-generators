@@ -39,6 +39,7 @@ namespace SqlPreparer
             var name = cds.GetClassName();
             var fileName = $"{name}.g.cs";
             var code = new StringBuilder();
+            code.AppendLine("using System;");
             code.AppendLine("using System.Text;");
             code.AppendLine("using System.IO;");
             code.AppendLine();
@@ -53,10 +54,25 @@ namespace SqlPreparer
                 if (member is PropertyDeclarationSyntax pds)
                 {
                     var propName = pds.GetName();
-                    var propType = Typing.Parse(pds.Type).ToTitle();
-
-                    reader.AppendLine($"\t\tthis.{propName} = reader.Read{propType}();");
-                    writer.AppendLine($"\t\twriter.Write(this.{propName});");
+                    var propType = Typing.Parse(pds.Type, out var rank).ToTitle();
+                    if (rank >= 1)
+                    {
+                        if (propType == "Byte" || propType == "Char")
+                            reader.AppendLine($"\t\tthis.{propName} = reader.Read{propType}s(reader.ReadInt32());");
+                    }
+                    else
+                    {
+                        var readFunc = $"reader.Read{propType}()";
+                        if (propType == "DateTime") readFunc = "new DateTime(reader.ReadInt64())";
+                        reader.AppendLine($"\t\tthis.{propName} = {readFunc};");
+                    }
+                    if (rank >= 1)
+                    {
+                        writer.AppendLine($"\t\twriter.Write(this.{propName}.Length);");
+                    }
+                    var writeArg = $"this.{propName}";
+                    if (propType == "DateTime") writeArg += ".Ticks";
+                    writer.AppendLine($"\t\twriter.Write({writeArg});");
                 }
 
             code.AppendLine("\tpublic void Read(Stream stream)");
