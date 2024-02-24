@@ -4,9 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Cscg.Core;
 using Microsoft.CodeAnalysis;
 
-namespace SqlPreparer
+namespace Cscg.Constants
 {
     [Generator(LanguageNames.CSharp)]
     public sealed class ConstGenerator : IIncrementalGenerator

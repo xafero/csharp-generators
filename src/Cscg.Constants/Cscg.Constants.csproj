@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Version>0.0.1</Version>
-    <Description>C# source generator for preparing SQL statements</Description>
+    <Description>C# source generator for storing text constants</Description>
     <IsRoslynComponent>true</IsRoslynComponent>
   </PropertyGroup>
 

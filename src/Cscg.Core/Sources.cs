@@ -2,7 +2,7 @@
 using System.Text;
 using Microsoft.CodeAnalysis.Text;
 
-namespace SqlPreparer
+namespace Cscg.Core
 {
     public static class Sources
     {

@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Cscg.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
