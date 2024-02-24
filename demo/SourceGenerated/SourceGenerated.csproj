@@ -3,7 +3,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <EmitCompilerGeneratedFiles>True</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 
   <ItemGroup>
