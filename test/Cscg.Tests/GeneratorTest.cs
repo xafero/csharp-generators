@@ -14,8 +14,8 @@ namespace Cscg.Tests
             var input = source.CreateCompilation();
             var (output, run) = input.RunGenerators(out var dia, [gen], []);
 
-            dia.CheckNoError(output, 3);
-            run.CheckNoError(2);
+            dia.CheckNoError(output, 4);
+            run.CheckNoError(3);
         }
     }
 }
