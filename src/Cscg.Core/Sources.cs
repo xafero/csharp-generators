@@ -1,23 +1,15 @@
 ﻿using System.Globalization;
+using System.IO;
 using System.Text;
+using System.Threading;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Cscg.Core
 {
     public static class Sources
     {
-        public static string GenerateAttr(string name, string space = "Generator", string target = "Class")
-        {
-            var code = new StringBuilder();
-            code.AppendLine($"namespace {space}");
-            code.AppendLine("{");
-            code.AppendLine($"\t[System.AttributeUsage(System.AttributeTargets.{target})]");
-            code.AppendLine($"\tpublic class {name}Attribute : System.Attribute");
-            code.AppendLine("\t{");
-            code.AppendLine("\t}");
-            code.AppendLine("}");
-            return code.ToString();
-        }
+        public static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
         public static SourceText From(string source)
         {
@@ -25,6 +17,13 @@ namespace Cscg.Core
             return text;
         }
 
-        public static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
+        public static (string name, string content) ToNamed(AdditionalText text, CancellationToken token)
+            => (name: Path.GetFileNameWithoutExtension(text.Path), content: ToContent(text, token));
+
+        private static string ToContent(AdditionalText file, CancellationToken token)
+            => file.GetText(token)!.ToString();
+
+        public static bool HasEnding(AdditionalText file, string ending)
+            => file.Path.EndsWith($".{ending}");
     }
 }

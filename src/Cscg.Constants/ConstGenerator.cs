@@ -1,11 +1,10 @@
 using System;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
+using static Cscg.Core.Sources;
 
 namespace Cscg.Constants
 {
@@ -107,16 +106,7 @@ namespace Cscg.Constants
             }
         }
 
-        private static (string name, string content) ToNamed(AdditionalText text, CancellationToken token)
-            => (name: Path.GetFileNameWithoutExtension(text.Path), content: ToContent(text, token));
-
-        private static string ToContent(AdditionalText file, CancellationToken token)
-            => file.GetText(token)!.ToString();
-
         private static bool IsText(AdditionalText file)
             => HasEnding(file, "txt");
-
-        private static bool HasEnding(AdditionalText file, string ending)
-            => file.Path.EndsWith($".{ending}");
     }
 }

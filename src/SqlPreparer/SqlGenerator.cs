@@ -2,6 +2,7 @@
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Cscg.Core.Coding;
 
 namespace SqlPreparer
 {
@@ -12,7 +13,7 @@ namespace SqlPreparer
         {
             context.RegisterPostInitializationOutput(ctx =>
             {
-                var attrCode = Sources.GenerateAttr("Funny");
+                var attrCode = GenerateAttr("Funny");
                 ctx.AddSource("FunnyAttribute.g.cs", Sources.From(attrCode));
 
 
