@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using Microsoft.CodeAnalysis.Text;
 
 namespace SqlPreparer
@@ -23,5 +24,7 @@ namespace SqlPreparer
             var text = SourceText.From(source, Encoding.UTF8);
             return text;
         }
+
+        public static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
     }
 }

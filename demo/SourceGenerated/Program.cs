@@ -1,12 +1,14 @@
 ﻿using System;
+using Generator;
 
 namespace SourceGenerated
 {
+    [Funny]
     internal static class Program
     {
         private static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+           // Console.WriteLine(ConstStrings.Dufk);
         }
     }
 }

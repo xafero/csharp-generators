@@ -1,0 +1,17 @@
+
+Flag1     = true
+Greeting1 = Hello World
+Count1    = 3
+Super1    = 42.934
+Unix1     = 1970-02-03
+Image1    = base64:R0lGODlhAQABAAAAACw=
+
+
+Flag2     = [true, false, true]
+Greeting2 = ["Hello World", "Not good"]
+Count2    = [3, 5]
+Super2    = [42.934, 33.2, 17.4]
+Unix2     = [1970-02-03, 1970-02-04]
+Image2    = [base64:R0lGODlhAQABAAAAACw=, base64:iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=]
+
+

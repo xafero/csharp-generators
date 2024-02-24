@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -28,30 +27,6 @@ namespace SqlPreparer
                     (spc, source) =>
                         Execute(source.Item1, source.Item2, spc));
                 */
-            });
-        }
-
-        public void Initialize3(IncrementalGeneratorInitializationContext initContext)
-        {
-            // define the execution pipeline here via a series of transformations:
-
-            // find all additional files that end with .txt
-            var textFiles =
-                initContext.AdditionalTextsProvider.Where(static file => file.Path.EndsWith(".txt"));
-
-            // read their contents and save their name
-            var namesAndContents =
-                textFiles.Select((text, cancellationToken) => (name: Path.GetFileNameWithoutExtension(text.Path),
-                    content: text.GetText(cancellationToken)!.ToString()));
-
-            // generate a class that contains their values as const strings
-            initContext.RegisterSourceOutput(namesAndContents, (spc, nameAndContent) =>
-            {
-                spc.AddSource($"ConstStrings.{nameAndContent.name}", $@"
-    public static partial class ConstStrings
-    {{
-        public const string {nameAndContent.name} = ""{nameAndContent.content}"";
-    }}");
             });
         }
 
@@ -86,8 +61,7 @@ namespace {ns}
 
         public static bool IsSyntaxTargetForGeneration(SyntaxNode syntaxNode)
         {
-            return syntaxNode is ClassDeclarationSyntax classDeclarationSyntax &&
-                   classDeclarationSyntax.AttributeLists.Count > 0 &&
+            return syntaxNode is ClassDeclarationSyntax { AttributeLists.Count: > 0 } classDeclarationSyntax &&
                    classDeclarationSyntax.AttributeLists
                        .Any(al => al.Attributes.Any(a => a.Name.ToString() == "GenerateService"));
         }
