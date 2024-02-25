@@ -3,6 +3,7 @@ using autogen;
 
 namespace SourceGenerated
 {
+    [ConciseObj]
     [BinaryObj]
     public partial class Person
     {
@@ -15,6 +16,7 @@ namespace SourceGenerated
         Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
     }
 
+    [ConciseObj]
     [BinaryObj]
     public partial class DisplayValues
     {
