@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -12,18 +13,32 @@ namespace Cscg.Tests
     public static class TestHelper
     {
         internal static Compilation CreateCompilation(this string source, string name = "Compiled", bool isLib = true)
-            => CSharpCompilation.Create(assemblyName: name, syntaxTrees: new[]
+        {
+            var references = new[]
+            {
+                GetMetaRef<Binder>(), GetMetaRef(typeof(Console)), GetMetaRef<object>("System.Runtime.dll")
+            };
+            return CSharpCompilation.Create(assemblyName: name, syntaxTrees: new[]
                 {
                     CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest))
                 },
-                references: new[]
-                {
-                    MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location)
-                },
+                references,
                 options: new CSharpCompilationOptions(isLib
                     ? OutputKind.DynamicallyLinkedLibrary
                     : OutputKind.ConsoleApplication)
             );
+        }
+
+        private static PortableExecutableReference GetMetaRef<T>(string replace = null)
+            => GetMetaRef(typeof(T), replace);
+
+        private static PortableExecutableReference GetMetaRef(Type type, string replace = null)
+        {
+            var loc = type.GetTypeInfo().Assembly.Location;
+            if (replace != null)
+                loc = Path.Combine(Path.GetDirectoryName(loc)!, replace);
+            return MetadataReference.CreateFromFile(loc);
+        }
 
         private static GeneratorDriver CreateDriver(Compilation compilation,
             IIncrementalGenerator[] generators, AdditionalText[] texts)

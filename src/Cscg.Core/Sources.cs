@@ -19,12 +19,6 @@ namespace Cscg.Core
             return text;
         }
 
-        public static SourceText HashFrom(string source)
-        {
-            var text = SourceText.From(source, Encoding.UTF8, SourceHashAlgorithm.Sha256);
-            return text;
-        }
-
         public static (string name, string content) ToNamed(AdditionalText text, CancellationToken token)
             => (name: Path.GetFileNameWithoutExtension(text.Path), content: ToContent(text, token));
 
