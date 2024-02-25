@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
-namespace Cscg.Tests
+namespace Cscg.Tests.Tools
 {
     public static class TestHelper
     {

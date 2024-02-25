@@ -2,7 +2,7 @@ using Cscg.Constants;
 using Cscg.Tests.Tools;
 using SqlPreparer;
 using Xunit;
-using static Cscg.Tests.TestHelper;
+using static Cscg.Tests.Tools.TestHelper;
 
 namespace Cscg.Tests
 {
