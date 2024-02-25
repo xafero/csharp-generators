@@ -39,6 +39,8 @@ namespace Cscg.Core
         public static string GenerateExt(string name, string space, IEnumerable<string> lines)
         {
             var code = new StringBuilder();
+            code.AppendLine("using System.IO;");
+            code.AppendLine();
             code.AppendLine($"namespace {space}");
             code.AppendLine("{");
             code.AppendLine($"\tpublic static class {name}");

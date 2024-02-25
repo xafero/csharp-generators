@@ -27,11 +27,7 @@ namespace Cscg.Binary
                 });
                 ctx.AddSource($"{IntObjName}.g.cs", Sources.From(intCode));
 
-                var extCode = Coding.GenerateExt(ExtObjName, Space, new List<string>
-                {
-                    $"T ReadObject<T>(this System.IO.BinaryReader r, System.IO.Stream s) where T : new() {{ if (typeof(T).IsEnum) return (T)(object)r.ReadInt32(); var v = new T(); (v as {IntObjName})?.Read(s); return v; }}",
-                    $"void WriteObject<T>(this System.IO.BinaryWriter w, System.IO.Stream s, T v) where T : new() {{ if (typeof(T).IsEnum) {{ w.Write((int)(object)v); return; }} v ??= new T(); (v as {IntObjName})?.Write(s); }}"
-                });
+                var extCode = Coding.GenerateExt(ExtObjName, Space, new List<string>());
                 ctx.AddSource($"{ExtObjName}.g.cs", Sources.From(extCode));
             });
 
@@ -71,12 +67,14 @@ namespace Cscg.Binary
                     }
                     else
                     {
+                        var readArg = $"this.{propName}";
                         var readFunc = $"reader.Read{propType}()";
                         if (propType == "DateTime") readFunc = "DateTime.FromBinary(reader.ReadInt64())";
                         else if (propType == "TimeSpan") readFunc = "TimeSpan.FromTicks(reader.ReadInt64())";
                         else if (propType == "Guid") readFunc = "new Guid(reader.ReadBytes(16))";
-                        else if (propType.StartsWith("_")) readFunc = $"reader.ReadObject<{propType.Substring(1)}>(stream)";
-                        reader.AppendLine($"\t\tthis.{propName} = {readFunc};");
+                        var readLine = $"{readArg} = {readFunc};";
+                        if (propType.StartsWith("_")) readLine = BuildSubRead(propType.Substring(1), readArg);
+                        reader.AppendLine($"\t\t{readLine};");
                     }
                     if (rank >= 1)
                     {
@@ -89,7 +87,7 @@ namespace Cscg.Binary
                     else if (propType == "String") writeArg += " ?? string.Empty";
                     if (rank >= 1) writeArg += " ?? []";
                     var writeFunc = $"writer.Write({writeArg})";
-                    if (propType.StartsWith("_")) writeFunc = $"writer.WriteObject(stream, {writeArg})";
+                    if (propType.StartsWith("_")) writeFunc = BuildSubWrite(propType.Substring(1), writeArg);
                     writer.AppendLine($"\t\t{writeFunc};");
                 }
 
@@ -107,6 +105,24 @@ namespace Cscg.Binary
 
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
+        }
+
+        private static string BuildSubRead(string type, string prop)
+        {
+            var code = new StringBuilder();
+            code.Append($"if (typeof({type}).IsEnum) {{ {prop} = ({type})(object)reader.ReadInt32(); }}");
+            code.Append($" else {{ if (stream.ReadByte() == 0) {{ {prop} = default; }}");
+            code.Append($" else {{ var v = new {type}(); (({IntObjName})(object)v)!.Read(stream); {prop} = v; }} }}");
+            return code.ToString();
+        }
+
+        private static string BuildSubWrite(string type, string prop)
+        {
+            var code = new StringBuilder();
+            code.Append($"if (typeof({type}).IsEnum) {{ writer.Write((int)(object){prop}); }}");
+            code.Append($" else {{ stream.WriteByte((byte)({prop} == default ? 0 : 1));");
+            code.Append($" (({IntObjName})(object){prop}).Write(stream); }}");
+            return code.ToString();
         }
     }
 }
