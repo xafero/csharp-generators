@@ -60,15 +60,15 @@ namespace Cscg.Binary
                 if (member is PropertyDeclarationSyntax pds)
                 {
                     var propName = pds.GetName();
-                    var propType = Typing.Parse(pds.Type, out var rank).ToTitle();
+                    var propType = Typing.Parse(pds.Type, out var rank, out var nil).ToTitle();
 
                     var readArg = $"this.{propName}";
                     var readFunc = $"reader.Read{propType}()";
                     if (propType == "DateTime") readFunc = "DateTime.FromBinary(reader.ReadInt64())";
                     else if (propType == "TimeSpan") readFunc = "TimeSpan.FromTicks(reader.ReadInt64())";
                     else if (propType == "Guid") readFunc = "new Guid(reader.ReadBytes(16))";
-                    var readLine = $"{readArg} = {readFunc};";
-                    if (propType == "String") readLine = BuildNullableRead(propType, propName);
+                    var readLine = $"{readArg} = {readFunc}";
+                    if (propType == "String" || nil) readLine = BuildNullableRead(readArg, readFunc);
                     if (rank >= 1)
                     {
                         if (propType is "Byte" or "Char") readLine = BuildArrayRead(propType, readArg);
@@ -81,7 +81,7 @@ namespace Cscg.Binary
                     else if (propType == "TimeSpan") writeArg += ".Ticks";
                     else if (propType == "Guid") writeArg += ".ToByteArray()";
                     var writeFunc = $"writer.Write({writeArg})";
-                    if (propType == "String") writeFunc = BuildNullableWrite(propName);
+                    if (propType == "String" || nil) writeFunc = BuildNullableWrite(propName, writeFunc, propType);
                     if (rank >= 1) writeFunc = BuildArrayWrite(writeArg);
                     if (propType.StartsWith("_")) writeFunc = BuildSubWrite(propType.Substring(1), writeArg);
                     writer.AppendLine($"\t\t{writeFunc};");
@@ -115,7 +115,7 @@ namespace Cscg.Binary
         private static string BuildArrayWrite(string prop)
         {
             var code = new StringBuilder();
-            code.Append($"if ({prop} == null) {{ writer.Write(-1); }}");
+            code.Append($"if ({prop} == default) {{ writer.Write(-1); }}");
             code.Append($" else {{ writer.Write({prop}.Length); writer.Write({prop}); }}");
             return code.ToString();
         }
@@ -138,19 +138,21 @@ namespace Cscg.Binary
             return code.ToString();
         }
 
-        private static string BuildNullableRead(string type, string prop)
+        private static string BuildNullableRead(string prop, string func)
         {
             var code = new StringBuilder();
             code.Append($"if (stream.ReadByte() == 0) {{ {prop} = default; }}");
-            code.Append($" else {{ {prop} = reader.Read{type}(); }}");
+            code.Append($" else {{ {prop} = {func}; }}");
             return code.ToString();
         }
 
-        private static string BuildNullableWrite(string prop)
+        private static string BuildNullableWrite(string prop, string func, string type)
         {
             var code = new StringBuilder();
-            code.Append($"if ({prop} == default) {{ stream.WriteByte((byte)0); }}");
-            code.Append($" else {{ stream.WriteByte((byte)1); writer.Write({prop}); }}");
+            code.Append($"if (this.{prop} == default) {{ stream.WriteByte((byte)0); }}");
+            if (type != "String" && !func.EndsWith("))")) func = $"{func.TrimEnd(')')}.Value)";
+            if (type == "DateTime") func = func.Replace(".ToBin", ".Value.ToBin");
+            code.Append($" else {{ stream.WriteByte((byte)1); {func}; }}");
             return code.ToString();
         }
     }

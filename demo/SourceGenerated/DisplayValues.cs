@@ -39,5 +39,8 @@ namespace SourceGenerated
         public DateTime TimeStamp { get; set; }
         public TimeSpan Duration { get; set; }
         public Guid Unique { get; set; }
+        public bool? MaybeBool { get; set; }
+        public int? MaybeInt { get; set; }
+        public DateTime? MaybeDate { get; set; }
     }
 }

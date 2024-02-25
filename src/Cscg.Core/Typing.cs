@@ -5,12 +5,15 @@ namespace Cscg.Core
 {
     public static class Typing
     {
-        public static string Parse(TypeSyntax type, out int arrayRank)
+        public static string Parse(TypeSyntax type, out int arrayRank, out bool canNull)
         {
             var name = type.GetText().ToString().TrimNull();
             arrayRank = name.Count(n => n == '[');
             if (arrayRank >= 1)
                 name = name.Split(['['], 2).First();
+            canNull = name.EndsWith("?");
+            if (canNull)
+                name = name.Substring(0, name.Length - 1);
             switch (name)
             {
                 case "float": return nameof(System.Single);

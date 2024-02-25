@@ -48,7 +48,10 @@ namespace SourceGenerated
                 Duration = TimeSpan.FromDays(8),
                 FreeDay = WeekDays.Thursday,
                 Unique = Guid.NewGuid(),
-                Owner = new Person { FirstName = "Harry", SecondName = "Willy" }
+                Owner = new Person { FirstName = "Harry", SecondName = "Willy" },
+                MaybeBool = true,
+                MaybeDate = DateTime.UnixEpoch.AddYears(35).AddMonths(2).AddDays(7),
+                MaybeInt = 0x39393045
             };
     }
 }
