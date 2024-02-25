@@ -64,6 +64,7 @@ namespace Cscg.Binary
                     {
                         var readFunc = $"reader.Read{propType}()";
                         if (propType == "DateTime") readFunc = "DateTime.FromBinary(reader.ReadInt64())";
+                        else if (propType == "Guid") readFunc = "new Guid(reader.ReadBytes(16))";
                         reader.AppendLine($"\t\tthis.{propName} = {readFunc};");
                     }
                     if (rank >= 1)
@@ -72,6 +73,7 @@ namespace Cscg.Binary
                     }
                     var writeArg = $"this.{propName}";
                     if (propType == "DateTime") writeArg += ".ToBinary()";
+                    else if (propType == "Guid") writeArg += ".ToByteArray()";
                     else if (propType == "String") writeArg += " ?? string.Empty";
                     if (rank >= 1) writeArg += " ?? []";
                     writer.AppendLine($"\t\twriter.Write({writeArg});");

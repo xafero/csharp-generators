@@ -23,5 +23,6 @@ namespace SourceGenerated
         public uint VeryMid { get; set; }
         public ulong VeryLong { get; set; }
         public DateTime TimeStamp { get; set; }
+        public Guid Unique { get; set; }
     }
 }
