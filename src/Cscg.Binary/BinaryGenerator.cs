@@ -4,7 +4,7 @@ using Cscg.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace SqlPreparer
+namespace Cscg.Binary
 {
     [Generator(LanguageNames.CSharp)]
     public sealed class BinaryGenerator : IIncrementalGenerator
