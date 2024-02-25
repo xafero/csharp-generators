@@ -50,10 +50,12 @@ namespace Cscg.Tests
             Assert.Equal(expected, actual);
         }
 
-        [Fact]
-        public void TestConst()
+        [Theory]
+        [InlineData("e")]
+        [InlineData("s")]
+        public void TestConst(string mode)
         {
-            var input = Program.CreateSample();
+            var input = mode == "e" ? new DisplayValues() : Program.CreateSample();
             byte[] bytes;
             using (var mem = new MemoryStream())
             {

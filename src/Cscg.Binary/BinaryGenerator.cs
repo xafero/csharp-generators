@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
@@ -60,33 +61,28 @@ namespace Cscg.Binary
                 {
                     var propName = pds.GetName();
                     var propType = Typing.Parse(pds.Type, out var rank).ToTitle();
+
+                    var readArg = $"this.{propName}";
+                    var readFunc = $"reader.Read{propType}()";
+                    if (propType == "DateTime") readFunc = "DateTime.FromBinary(reader.ReadInt64())";
+                    else if (propType == "TimeSpan") readFunc = "TimeSpan.FromTicks(reader.ReadInt64())";
+                    else if (propType == "Guid") readFunc = "new Guid(reader.ReadBytes(16))";
+                    var readLine = $"{readArg} = {readFunc};";
+                    if (propType == "String") readLine = BuildNullableRead(propType, propName);
                     if (rank >= 1)
                     {
-                        if (propType is "Byte" or "Char")
-                            reader.AppendLine($"\t\tthis.{propName} = reader.Read{propType}s(reader.ReadInt32());");
+                        if (propType is "Byte" or "Char") readLine = BuildArrayRead(propType, readArg);
                     }
-                    else
-                    {
-                        var readArg = $"this.{propName}";
-                        var readFunc = $"reader.Read{propType}()";
-                        if (propType == "DateTime") readFunc = "DateTime.FromBinary(reader.ReadInt64())";
-                        else if (propType == "TimeSpan") readFunc = "TimeSpan.FromTicks(reader.ReadInt64())";
-                        else if (propType == "Guid") readFunc = "new Guid(reader.ReadBytes(16))";
-                        var readLine = $"{readArg} = {readFunc};";
-                        if (propType.StartsWith("_")) readLine = BuildSubRead(propType.Substring(1), readArg);
-                        reader.AppendLine($"\t\t{readLine};");
-                    }
-                    if (rank >= 1)
-                    {
-                        writer.AppendLine($"\t\twriter.Write(this.{propName}?.Length ?? 0);");
-                    }
+                    if (propType.StartsWith("_")) readLine = BuildSubRead(propType.Substring(1), readArg);
+                    reader.AppendLine($"\t\t{readLine};");
+
                     var writeArg = $"this.{propName}";
                     if (propType == "DateTime") writeArg += ".ToBinary()";
                     else if (propType == "TimeSpan") writeArg += ".Ticks";
                     else if (propType == "Guid") writeArg += ".ToByteArray()";
-                    else if (propType == "String") writeArg += " ?? string.Empty";
-                    if (rank >= 1) writeArg += " ?? []";
                     var writeFunc = $"writer.Write({writeArg})";
+                    if (propType == "String") writeFunc = BuildNullableWrite(propName);
+                    if (rank >= 1) writeFunc = BuildArrayWrite(writeArg);
                     if (propType.StartsWith("_")) writeFunc = BuildSubWrite(propType.Substring(1), writeArg);
                     writer.AppendLine($"\t\t{writeFunc};");
                 }
@@ -107,6 +103,23 @@ namespace Cscg.Binary
             ctx.AddSource(fileName, code.ToString());
         }
 
+        private static string BuildArrayRead(string type, string prop)
+        {
+            var code = new StringBuilder();
+            var idx = $"{prop.Split(['.'], 2).Last()}_i";
+            code.Append($"{prop} = reader.ReadInt32() is var {idx} && {idx} == -1 ? default");
+            code.Append($" : reader.Read{type}s({idx})");
+            return code.ToString();
+        }
+
+        private static string BuildArrayWrite(string prop)
+        {
+            var code = new StringBuilder();
+            code.Append($"if ({prop} == null) {{ writer.Write(-1); }}");
+            code.Append($" else {{ writer.Write({prop}.Length); writer.Write({prop}); }}");
+            return code.ToString();
+        }
+
         private static string BuildSubRead(string type, string prop)
         {
             var code = new StringBuilder();
@@ -121,7 +134,23 @@ namespace Cscg.Binary
             var code = new StringBuilder();
             code.Append($"if (typeof({type}).IsEnum) {{ writer.Write((int)(object){prop}); }}");
             code.Append($" else {{ stream.WriteByte((byte)({prop} == default ? 0 : 1));");
-            code.Append($" (({IntObjName})(object){prop}).Write(stream); }}");
+            code.Append($" (({IntObjName})(object){prop})?.Write(stream); }}");
+            return code.ToString();
+        }
+
+        private static string BuildNullableRead(string type, string prop)
+        {
+            var code = new StringBuilder();
+            code.Append($"if (stream.ReadByte() == 0) {{ {prop} = default; }}");
+            code.Append($" else {{ {prop} = reader.Read{type}(); }}");
+            return code.ToString();
+        }
+
+        private static string BuildNullableWrite(string prop)
+        {
+            var code = new StringBuilder();
+            code.Append($"if ({prop} == default) {{ stream.WriteByte((byte)0); }}");
+            code.Append($" else {{ stream.WriteByte((byte)1); writer.Write({prop}); }}");
             return code.ToString();
         }
     }
