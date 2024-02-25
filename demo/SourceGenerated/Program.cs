@@ -1,8 +1,8 @@
 ﻿namespace SourceGenerated
 {
-    internal static partial class Program
+    public static partial class Program
     {
-        private static void Main()
+        public static void Main()
         {
             MainCg();
             MainBg();

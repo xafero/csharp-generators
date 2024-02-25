@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="xunit" Version="2.6.6" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -21,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\demo\SourceGenerated\SourceGenerated.csproj" />
     <ProjectReference Include="..\..\src\Cscg.Constants\Cscg.Constants.csproj" />
     <ProjectReference Include="..\..\src\Cscg.Core\Cscg.Core.csproj" />
     <ProjectReference Include="..\..\src\SqlPreparer\SqlPreparer.csproj" />

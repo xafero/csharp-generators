@@ -3,9 +3,9 @@ using autogen;
 
 namespace SourceGenerated
 {
-    internal static partial class Program
+    public static partial class Program
     {
-        private static void MainCg()
+        public static void MainCg()
         {
             Console.WriteLine(ConstStrings.Greeting1);
         }

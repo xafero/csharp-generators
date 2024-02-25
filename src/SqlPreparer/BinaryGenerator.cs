@@ -63,7 +63,7 @@ namespace SqlPreparer
                     else
                     {
                         var readFunc = $"reader.Read{propType}()";
-                        if (propType == "DateTime") readFunc = "new DateTime(reader.ReadInt64())";
+                        if (propType == "DateTime") readFunc = "DateTime.FromBinary(reader.ReadInt64())";
                         reader.AppendLine($"\t\tthis.{propName} = {readFunc};");
                     }
                     if (rank >= 1)
@@ -71,7 +71,7 @@ namespace SqlPreparer
                         writer.AppendLine($"\t\twriter.Write(this.{propName}?.Length ?? 0);");
                     }
                     var writeArg = $"this.{propName}";
-                    if (propType == "DateTime") writeArg += ".Ticks";
+                    if (propType == "DateTime") writeArg += ".ToBinary()";
                     else if (propType == "String") writeArg += " ?? string.Empty";
                     if (rank >= 1) writeArg += " ?? []";
                     writer.AppendLine($"\t\twriter.Write({writeArg});");
