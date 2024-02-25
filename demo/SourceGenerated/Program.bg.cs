@@ -44,7 +44,11 @@ namespace SourceGenerated
                 TempDirectory = "super secret",
                 Vulcan = 21,
                 ShowStatusBar = true,
-                Image = [1, 2, 3, 4, 5, 6, 7]
+                Image = [1, 2, 3, 4, 5, 6, 7],
+                Duration = TimeSpan.FromDays(8),
+                FreeDay = WeekDays.Thursday,
+                Unique = Guid.NewGuid(),
+                Owner = new Person { FirstName = "Harry", SecondName = "Willy" }
             };
     }
 }

@@ -62,8 +62,9 @@ namespace Cscg.Tests.Tools
 
         public static void CheckNoError(this ImmutableArray<Diagnostic> diag, Compilation comp, int count)
         {
+            var ids = new[] { "CS8019" };
             Assert.Empty(diag);
-            var others = comp.GetDiagnostics();
+            var others = comp.GetDiagnostics().Where(c => !ids.Contains(c.Id)).ToArray();
             Assert.Empty(others);
             var trees = comp.SyntaxTrees.ToArray();
             Assert.Equal(count, trees.Length);

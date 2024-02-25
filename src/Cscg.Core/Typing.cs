@@ -28,6 +28,7 @@ namespace Cscg.Core
                 case "decimal": return nameof(System.Decimal);
                 case "byte": return nameof(System.Byte);
                 case "DateTime": return nameof(System.DateTime);
+                case "TimeSpan": return nameof(System.TimeSpan);
                 case "Guid": return nameof(System.Guid);
                 default: return $"_{name}";
             }

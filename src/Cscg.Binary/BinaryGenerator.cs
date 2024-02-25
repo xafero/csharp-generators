@@ -11,6 +11,7 @@ namespace Cscg.Binary
     {
         private const string Space = Coding.AutoNamespace;
         private const string BinObjName = "BinaryObj";
+        private const string ExtObjName = "BinaryObjExt";
         private const string IntObjName = "IBinaryObj";
 
         public void Initialize(IncrementalGeneratorInitializationContext igi)
@@ -25,6 +26,13 @@ namespace Cscg.Binary
                     "void Read(System.IO.Stream stream)", "void Write(System.IO.Stream stream)"
                 });
                 ctx.AddSource($"{IntObjName}.g.cs", Sources.From(intCode));
+
+                var extCode = Coding.GenerateExt(ExtObjName, Space, new List<string>
+                {
+                    $"T ReadObject<T>(this System.IO.BinaryReader r, System.IO.Stream s) where T : new() {{ if (typeof(T).IsEnum) return (T)(object)r.ReadInt32(); var value = new T(); if (value is {Space}.{IntObjName} bo) bo.Read(s); return value; }}",
+                    $"void WriteObject<T>(this System.IO.BinaryWriter w, System.IO.Stream s, T v) {{ if (typeof(T).IsEnum) w.Write((int)(object)v); else if (v is {Space}.{IntObjName} bo) bo.Write(s); }}"
+                });
+                ctx.AddSource($"{ExtObjName}.g.cs", Sources.From(extCode));
             });
 
             var classes = igi.SyntaxProvider.CreateSyntaxProvider(
@@ -39,6 +47,7 @@ namespace Cscg.Binary
             var name = cds.GetClassName();
             var fileName = $"{name}.g.cs";
             var code = new StringBuilder();
+            code.AppendLine("using autogen;");
             code.AppendLine("using System;");
             code.AppendLine("using System.Text;");
             code.AppendLine("using System.IO;");
@@ -64,7 +73,9 @@ namespace Cscg.Binary
                     {
                         var readFunc = $"reader.Read{propType}()";
                         if (propType == "DateTime") readFunc = "DateTime.FromBinary(reader.ReadInt64())";
+                        else if (propType == "TimeSpan") readFunc = "TimeSpan.FromTicks(reader.ReadInt64())";
                         else if (propType == "Guid") readFunc = "new Guid(reader.ReadBytes(16))";
+                        else if (propType.StartsWith("_")) readFunc = $"reader.ReadObject<{propType.Substring(1)}>(stream)";
                         reader.AppendLine($"\t\tthis.{propName} = {readFunc};");
                     }
                     if (rank >= 1)
@@ -73,10 +84,13 @@ namespace Cscg.Binary
                     }
                     var writeArg = $"this.{propName}";
                     if (propType == "DateTime") writeArg += ".ToBinary()";
+                    else if (propType == "TimeSpan") writeArg += ".Ticks";
                     else if (propType == "Guid") writeArg += ".ToByteArray()";
                     else if (propType == "String") writeArg += " ?? string.Empty";
                     if (rank >= 1) writeArg += " ?? []";
-                    writer.AppendLine($"\t\twriter.Write({writeArg});");
+                    var writeFunc = $"writer.Write({writeArg})";
+                    if (propType.StartsWith("_")) writeFunc = $"writer.WriteObject(stream, {writeArg})";
+                    writer.AppendLine($"\t\t{writeFunc};");
                 }
 
             code.AppendLine("\tpublic void Read(Stream stream)");

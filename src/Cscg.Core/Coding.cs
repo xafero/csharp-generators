@@ -35,5 +35,21 @@ namespace Cscg.Core
             code.AppendLine("}");
             return code.ToString();
         }
+
+        public static string GenerateExt(string name, string space, IEnumerable<string> lines)
+        {
+            var code = new StringBuilder();
+            code.AppendLine($"namespace {space}");
+            code.AppendLine("{");
+            code.AppendLine($"\tpublic static class {name}");
+            code.AppendLine("\t{");
+            foreach (var line in lines)
+            {
+                code.AppendLine($"\t\tpublic static {line.TrimNull()}");
+            }
+            code.AppendLine("\t}");
+            code.AppendLine("}");
+            return code.ToString();
+        }
     }
 }
