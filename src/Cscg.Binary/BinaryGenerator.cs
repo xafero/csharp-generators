@@ -29,8 +29,8 @@ namespace Cscg.Binary
 
                 var extCode = Coding.GenerateExt(ExtObjName, Space, new List<string>
                 {
-                    $"T ReadObject<T>(this System.IO.BinaryReader r, System.IO.Stream s) where T : new() {{ if (typeof(T).IsEnum) return (T)(object)r.ReadInt32(); var value = new T(); if (value is {Space}.{IntObjName} bo) bo.Read(s); return value; }}",
-                    $"void WriteObject<T>(this System.IO.BinaryWriter w, System.IO.Stream s, T v) {{ if (typeof(T).IsEnum) w.Write((int)(object)v); else if (v is {Space}.{IntObjName} bo) bo.Write(s); }}"
+                    $"T ReadObject<T>(this System.IO.BinaryReader r, System.IO.Stream s) where T : new() {{ if (typeof(T).IsEnum) return (T)(object)r.ReadInt32(); var v = new T(); (v as {IntObjName})?.Read(s); return v; }}",
+                    $"void WriteObject<T>(this System.IO.BinaryWriter w, System.IO.Stream s, T v) where T : new() {{ if (typeof(T).IsEnum) {{ w.Write((int)(object)v); return; }} v ??= new T(); (v as {IntObjName})?.Write(s); }}"
                 });
                 ctx.AddSource($"{ExtObjName}.g.cs", Sources.From(extCode));
             });
