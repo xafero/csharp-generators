@@ -59,15 +59,39 @@ namespace Cscg.ConciseBinary
 
             var reader = new StringBuilder();
             var writer = new StringBuilder();
+
+            writer.AppendLine("\t\twriter.WriteStartMap(null);");
+
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
                 {
                     var propName = pds.GetName();
-                    var propType = Typing.Parse(pds.Type, out var rank, out var nil).ToTitle();
+                    var propType = Typing.Parse(pds.Type, out var rank, out var nil);
+
+                    var pnW = $"writer.WriteTextString(\"{propName}\");";
+                    writer.AppendLine($"\t\t{pnW}");
+
+                    var pvW = propType switch
+                    {
+                        "DateTimeOffset" => $"writer.WriteDateTimeOffset(this.{propName});",
+                        "Decimal" => $"writer.WriteDecimal(this.{propName});",
+                        "Double" => $"writer.WriteDouble(this.{propName});",
+                        "Single" => $"writer.WriteSingle(this.{propName});",
+                        "Int32" => $"writer.WriteInt32(this.{propName});",
+                        "Int64" => $"writer.WriteInt64(this.{propName});",
+                        "UInt32" => $"writer.WriteUInt32(this.{propName});",
+                        "UInt64" => $"writer.WriteUInt64(this.{propName});",
+                        "Half" => $"writer.WriteHalf(this.{propName});",
+                        "Boolean" => $"writer.WriteBoolean(this.{propName});",
+                        "String" => $"writer.WriteTextString(this.{propName});",
+                        _ => $"writer.WriteTextString((string)(object)this.{propName}); // TODO"
+                    };
+                    writer.AppendLine($"\t\t{pvW}");
 
                     reader.AppendLine(" // " + propName + " / " + propType);
-                    writer.AppendLine(" // " + propName + " / " + propType);
                 }
+
+            writer.AppendLine("\t\twriter.WriteEndMap();");
 
             code.AppendLine("\tpublic void ReadCBOR(Stream stream)");
             code.AppendLine("\t{");

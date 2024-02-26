@@ -16,6 +16,7 @@ namespace Cscg.Core
                 name = name.Substring(0, name.Length - 1);
             switch (name)
             {
+                case "Half": return "Half";
                 case "float": return nameof(System.Single);
                 case "string": return nameof(System.String);
                 case "long": return nameof(System.Int64);
@@ -31,6 +32,7 @@ namespace Cscg.Core
                 case "decimal": return nameof(System.Decimal);
                 case "byte": return nameof(System.Byte);
                 case "DateTime": return nameof(System.DateTime);
+                case "DateTimeOffset": return nameof(System.DateTimeOffset);
                 case "TimeSpan": return nameof(System.TimeSpan);
                 case "Guid": return nameof(System.Guid);
                 default: return $"_{name}";
