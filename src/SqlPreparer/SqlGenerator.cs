@@ -14,8 +14,12 @@ namespace SqlPreparer
                 var attrCode = GenerateAttr("Funny", "test");
                 ctx.AddSource("FunnyAttribute.g.cs", Sources.From(attrCode));
 
+                /*
+                 * EntityFrameworkQueryableExtensions.ToQueryString(IQueryable) Method
 
-
+                    var sqlSource = db.Database.GenerateCreateScript();            
+                 */
+                
                 /*
                 IncrementalValueProvider<(Compilation, ImmutableArray<ClassDeclarationSyntax>)> compilationAndEnums
                     = context.CompilationProvider.Combine(enumDeclarations.Collect());
