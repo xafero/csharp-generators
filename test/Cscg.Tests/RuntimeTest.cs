@@ -5,6 +5,7 @@ using System.IO;
 using SourceGenerated;
 using SourceGenerated.Complex;
 using Xunit;
+using Xunit.Abstractions;
 using DvS = SourceGenerated.Simple.DisplayValues;
 using DvC = SourceGenerated.Complex.DisplayValues;
 using static Cscg.Tests.Tools.DebugTool;
@@ -13,6 +14,13 @@ namespace Cscg.Tests
 {
     public class RuntimeTest
     {
+        private readonly ITestOutputHelper _out;
+
+        public RuntimeTest(ITestOutputHelper @out)
+        {
+            _out = @out;
+        }
+
         [Fact]
         public void TestMain()
         {
@@ -92,10 +100,8 @@ namespace Cscg.Tests
 
             var expected = ToJson(input);
             var actual = ToJson(output);
+            _out.WriteLine(ToCborJson(bytes));
             Assert.Equal(expected, actual);
-
-            // TODO actual = ToCborJson(bytes);
-            // TODO Assert.Equal(expected, actual);
         }
 
         private static DvC CreateCdv()

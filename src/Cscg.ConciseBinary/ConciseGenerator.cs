@@ -84,7 +84,7 @@ namespace Cscg.ConciseBinary
                         "Half" => $"writer.WriteHalf(this.{propName});",
                         "Boolean" => $"writer.WriteBoolean(this.{propName});",
                         "String" => $"writer.WriteTextString(this.{propName});",
-                        _ => $"writer.WriteTextString((string)(object)this.{propName}); // TODO"
+                        _ => BuildSubWrite(propType.Substring(1), propName)
                     };
                     writer.AppendLine($"\t\t{pvW}");
 
@@ -131,6 +131,24 @@ namespace Cscg.ConciseBinary
 
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
+        }
+
+        private static string BuildSubRead(string type, string prop)
+        {
+            var code = new StringBuilder();
+            code.Append($"if (typeof({type}).IsEnum) {{ {prop} = ({type})(object)reader.ReadInt32(); }}");
+            code.Append($" else {{ if (stream.ReadByte() == 0) {{ {prop} = default; }}");
+            code.Append($" else {{ var v = new {type}(); (({IntObjName})(object)v)!.Read(stream); {prop} = v; }} }}");
+            return code.ToString();
+        }
+
+        private static string BuildSubWrite(string type, string prop)
+        {
+            var code = new StringBuilder();
+            code.Append($"if (typeof({type}).IsEnum) {{ writer.WriteInt32((int)(object){prop}); }}");
+            code.Append($" else {{ if ({prop} == default) writer.WriteNull(); else");
+            code.Append($" (({IntObjName})(object){prop})!.WriteCBOR(ref writer); }}");
+            return code.ToString();
         }
     }
 }
