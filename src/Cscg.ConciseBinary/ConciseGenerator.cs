@@ -61,6 +61,8 @@ namespace Cscg.ConciseBinary
             var writer = new StringBuilder();
 
             writer.AppendLine("\t\twriter.WriteStartMap(null);");
+            reader.AppendLine("\t\treader.ReadStartMap();");
+            reader.AppendLine("\t\tstring key;");
 
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
@@ -83,10 +85,13 @@ namespace Cscg.ConciseBinary
                         "UInt64" => $"writer.WriteUInt64(this.{propName});",
                         "Half" => $"writer.WriteHalf(this.{propName});",
                         "Boolean" => $"writer.WriteBoolean(this.{propName});",
-                        "String" => $"writer.WriteTextString(this.{propName});",
+                        "String" => BuildStringWrite($"this.{propName}"),
                         _ => BuildSubWrite(propType.Substring(1), $"this.{propName}")
                     };
                     writer.AppendLine($"\t\t{pvW}");
+
+                    var pnR = "key = reader.ReadTextString();";
+                    reader.AppendLine($"\t\t{pnR}");
 
                     var pvR = propType switch
                     {
@@ -107,6 +112,7 @@ namespace Cscg.ConciseBinary
                 }
 
             writer.AppendLine("\t\twriter.WriteEndMap();");
+            reader.AppendLine("\t\treader.ReadEndMap();");
 
             code.AppendLine("\tpublic void ReadCBOR(Stream stream)");
             code.AppendLine("\t{");
@@ -146,6 +152,14 @@ namespace Cscg.ConciseBinary
 
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
+        }
+
+        private static string BuildStringWrite(string prop)
+        {
+            var code = new StringBuilder();
+            code.Append($"if ({prop} == default) writer.WriteNull(); else");
+            code.Append($" writer.WriteTextString({prop});");
+            return code.ToString();
         }
 
         private static string BuildSubRead(string type, string prop)
