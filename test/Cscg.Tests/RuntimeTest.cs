@@ -119,7 +119,8 @@ namespace Cscg.Tests
                 Owner = new Person { FirstName = "Hans", SecondName = "Gruber" },
                 ShowStatusBar = true,
                 HalfSize = Half.Epsilon,
-                WorkDay = WeekDays.Friday
+                WorkDay = WeekDays.Friday,
+                Image = [1, 3, 23, 42, 3, 1, 35, 7, 48, 9]
             };
     }
 }

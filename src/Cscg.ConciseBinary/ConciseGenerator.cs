@@ -91,6 +91,7 @@ namespace Cscg.ConciseBinary
                         "String" => BuildStringWrite($"this.{propName}"),
                         _ => BuildSubWrite(propType.Substring(1), $"this.{propName}")
                     };
+                    if (propType == "Byte" && rank >= 1) pvW = BuildBytesWrite($"this.{propName}");
                     writer.AppendLine($"\t\t{pvW}");
 
                     reader.AppendLine($"\t\t\tif (key == \"{propName}\")");
@@ -110,6 +111,7 @@ namespace Cscg.ConciseBinary
                         "String" => BuildStringRead($"this.{propName}"),
                         _ => BuildSubRead(propType.Substring(1), $"this.{propName}")
                     };
+                    if (propType == "Byte" && rank >= 1) pvR = BuildBytesRead($"this.{propName}");
                     reader.AppendLine($"\t\t\t\t{pvR}");
                     reader.AppendLine("\t\t\t\tcontinue;");
                     reader.AppendLine("\t\t\t}");
@@ -157,6 +159,22 @@ namespace Cscg.ConciseBinary
 
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
+        }
+
+        private static string BuildBytesRead(string prop)
+        {
+            var code = new StringBuilder();
+            code.Append($"if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
+            code.Append($" else {{ {prop} = reader.ReadByteString(); }}");
+            return code.ToString();
+        }
+
+        private static string BuildBytesWrite(string prop)
+        {
+            var code = new StringBuilder();
+            code.Append($"if ({prop} == default) writer.WriteNull(); else");
+            code.Append($" writer.WriteByteString({prop});");
+            return code.ToString();
         }
 
         private static string BuildStringRead(string prop)

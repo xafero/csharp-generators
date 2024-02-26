@@ -31,5 +31,6 @@ namespace SourceGenerated.Complex
         public bool ShowStatusBar { get; set; }
         public string TempDirectory { get; set; }
         public DateTimeOffset TimeStamp { get; set; }
+        public byte[] Image { get; set; }
     }
 }
