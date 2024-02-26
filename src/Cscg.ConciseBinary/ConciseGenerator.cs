@@ -71,6 +71,9 @@ namespace Cscg.ConciseBinary
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
                 {
+                    var propSym = sw.GetSymbol(pds);
+                    var propInfo = sw.GetInfo(propSym);
+
                     var propName = pds.GetName();
                     var propType = Typing.Parse(pds.Type, out var rank, out var nil);
 
@@ -90,7 +93,7 @@ namespace Cscg.ConciseBinary
                         "Half" => $"writer.WriteHalf(this.{propName});",
                         "Boolean" => $"writer.WriteBoolean(this.{propName});",
                         "String" => BuildStringWrite($"this.{propName}"),
-                        _ => BuildSubWrite(propType.Substring(1), $"this.{propName}")
+                        _ => BuildSubWrite(propInfo, propType.Substring(1), $"this.{propName}")
                     };
                     if (propType == "Byte" && rank >= 1) pvW = BuildBytesWrite($"this.{propName}");
                     writer.AppendLine($"\t\t{pvW}");
@@ -110,7 +113,7 @@ namespace Cscg.ConciseBinary
                         "Half" => $"this.{propName} = reader.ReadHalf();",
                         "Boolean" => $"this.{propName} = reader.ReadBoolean();",
                         "String" => BuildStringRead($"this.{propName}"),
-                        _ => BuildSubRead(propType.Substring(1), $"this.{propName}")
+                        _ => BuildSubRead(propInfo, propType.Substring(1), $"this.{propName}")
                     };
                     if (propType == "Byte" && rank >= 1) pvR = BuildBytesRead($"this.{propName}");
                     reader.AppendLine($"\t\t\t\t{pvR}");
@@ -165,8 +168,8 @@ namespace Cscg.ConciseBinary
         private static string BuildBytesRead(string prop)
         {
             var code = new StringBuilder();
-            code.Append($"if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
-            code.Append($" else {{ {prop} = reader.ReadByteString(); }}");
+            code.AppendLine($"if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
+            code.Append($"\t\t\t\t else {{ {prop} = reader.ReadByteString(); }}");
             return code.ToString();
         }
 
@@ -181,8 +184,8 @@ namespace Cscg.ConciseBinary
         private static string BuildStringRead(string prop)
         {
             var code = new StringBuilder();
-            code.Append($"if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
-            code.Append($" else {{ {prop} = reader.ReadTextString(); }}");
+            code.AppendLine($"if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
+            code.Append($"\t\t\t\t else {{ {prop} = reader.ReadTextString(); }}");
             return code.ToString();
         }
 
@@ -194,21 +197,33 @@ namespace Cscg.ConciseBinary
             return code.ToString();
         }
 
-        private static string BuildSubRead(string type, string prop)
+        private static string BuildSubRead(Particle info, string type, string prop)
         {
             var code = new StringBuilder();
-            code.AppendLine($"if (typeof({type}).IsEnum) {{ {prop} = ({type})(object)reader.ReadInt32(); }}");
-            code.AppendLine($"\t\t\t\t else {{ if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
-            code.Append($"\t\t\t\t else {{ var v = new {type}(); (({IntObjName})(object)v)!.ReadCBOR(ref reader); {prop} = v; }} }}");
+            if (info.ReturnType.IsEnum(out _))
+            {
+                code.Append($"{prop} = ({type})reader.ReadInt32();");
+            }
+            else
+            {
+                code.AppendLine($"if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
+                code.Append($"\t\t\t\t else {{ var v = new {type}(); v.ReadCBOR(ref reader); {prop} = v; }}");
+            }
             return code.ToString();
         }
 
-        private static string BuildSubWrite(string type, string prop)
+        private static string BuildSubWrite(Particle info, string type, string prop)
         {
             var code = new StringBuilder();
-            code.AppendLine($"if (typeof({type}).IsEnum) {{ writer.WriteInt32((int)(object){prop}); }}");
-            code.Append($"\t\t else {{ if ({prop} == default) writer.WriteNull(); else");
-            code.Append($" (({IntObjName})(object){prop})!.WriteCBOR(ref writer); }}");
+            if (info.ReturnType.IsEnum(out var eut))
+            {
+                code.Append($"writer.WriteInt32(({eut}){prop});");
+            }
+            else
+            {
+                code.Append($"if ({prop} == default) writer.WriteNull(); else");
+                code.Append($" {prop}.WriteCBOR(ref writer);");
+            }
             return code.ToString();
         }
     }
