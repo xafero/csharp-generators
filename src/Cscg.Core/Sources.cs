@@ -33,7 +33,7 @@ namespace Cscg.Core
                && clazz.AttributeLists.Any(al =>
                    al.Attributes.Any(a => a.Name.ToString() == name));
 
-        public static ClassDeclarationSyntax GetTarget(this GeneratorSyntaxContext context)
+        private static ClassDeclarationSyntax GetTarget(this GeneratorSyntaxContext context)
         {
             var classDeclaration = (ClassDeclarationSyntax)context.Node;
             return classDeclaration;

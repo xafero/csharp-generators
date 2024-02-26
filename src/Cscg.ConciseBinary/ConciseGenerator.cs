@@ -36,12 +36,13 @@ namespace Cscg.ConciseBinary
 
             var classes = igi.SyntaxProvider.CreateSyntaxProvider(
                 predicate: static (sn, _) => sn.HasThisAttribute(BinObjName),
-                transform: static (ctx, _) => ctx.GetTarget());
+                transform: static (ctx, _) => ctx.Wrap());
             igi.RegisterSourceOutput(classes, Generate);
         }
 
-        private static void Generate(SourceProductionContext ctx, ClassDeclarationSyntax cds)
+        private static void Generate(SourceProductionContext ctx, SyntaxWrap sw)
         {
+            var cds = sw.Class;
             var space = cds.GetParentName() ?? Coding.AutoNamespace;
             var name = cds.GetClassName();
             var fileName = $"{name}.g.cs";
