@@ -107,7 +107,7 @@ namespace Cscg.ConciseBinary
                         "UInt64" => $"this.{propName} = reader.ReadUInt64();",
                         "Half" => $"this.{propName} = reader.ReadHalf();",
                         "Boolean" => $"this.{propName} = reader.ReadBoolean();",
-                        "String" => $"this.{propName} = reader.ReadTextString();",
+                        "String" => BuildStringRead($"this.{propName}"),
                         _ => BuildSubRead(propType.Substring(1), $"this.{propName}")
                     };
                     reader.AppendLine($"\t\t\t\t{pvR}");
@@ -157,6 +157,14 @@ namespace Cscg.ConciseBinary
 
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
+        }
+
+        private static string BuildStringRead(string prop)
+        {
+            var code = new StringBuilder();
+            code.Append($"if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
+            code.Append($" else {{ {prop} = reader.ReadTextString(); }}");
+            return code.ToString();
         }
 
         private static string BuildStringWrite(string prop)
