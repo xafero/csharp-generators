@@ -70,12 +70,12 @@ namespace Cscg.Tests
             byte[] bytes;
             using (var mem = new MemoryStream())
             {
-                input.Write(mem);
+                input.WriteBinary(mem);
                 bytes = mem.ToArray();
             }
             var output = new DvS();
             using (var mem = new MemoryStream(bytes))
-                output.Read(mem);
+                output.ReadBinary(mem);
 
             var expected = ToJson(input);
             var actual = ToJson(output);

@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using Microsoft.CodeAnalysis;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Cscg.Core;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Cscg.Binary
@@ -24,7 +26,10 @@ namespace Cscg.Binary
 
                 var intCode = Coding.GenerateIntf(IntObjName, Space, new List<string>
                 {
-                    "void Read(System.IO.Stream stream)", "void Write(System.IO.Stream stream)"
+                    "void ReadBinary(System.IO.Stream stream)",
+                    "void ReadBinary(System.IO.BinaryReader reader)",
+                    "void WriteBinary(System.IO.Stream stream)",
+                    "void WriteBinary(System.IO.BinaryWriter writer)"
                 });
                 ctx.AddSource($"{IntObjName}.g.cs", Sources.From(intCode));
 
@@ -60,9 +65,96 @@ namespace Cscg.Binary
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
                 {
+                    var propSym = sw.GetSymbol(pds);
+                    var propInfo = sw.GetInfo(propSym);
                     var propName = pds.GetName();
-                    var propType = Typing.Parse(pds.Type, out var rank, out var nil).ToTitle();
+                    var propType = propInfo.ReturnType.ToTrimDisplay();
 
+                    var propType2 = Typing.Parse(pds.Type, out var rank, out var nil);
+
+                    var readLeft = $"this.{propName}";
+                    string readRight = null;
+                    var writeLeft = "w.Write";
+                    var writeRight = $"this.{propName}";
+
+                    var isNullable = false;
+                    if (propType.EndsWith("?"))
+                    {
+                        isNullable = true;
+                        propType = propType.Substring(0, propType.Length - 1);
+                    }
+
+                    switch (propType)
+                    {
+                        case "ulong": readRight = "r.ReadUInt64()"; break;
+                        case "uint": readRight = "r.ReadUInt32()"; break;
+                        case "ushort": readRight = "r.ReadUInt16()"; break;
+                        case "decimal": readRight = "r.ReadDecimal()"; break;
+                        case "double": readRight = "r.ReadDouble()"; break;
+                        case "float": readRight = "r.ReadSingle()"; break;
+                        case "long": readRight = "r.ReadInt64()"; break;
+                        case "int": 
+                            readRight = "r.ReadInt32()";
+                            if (isNullable) writeRight += ".Value";
+                            break;
+                        case "short": readRight = "r.ReadInt16()"; break;
+                        case "byte": readRight = "r.ReadByte()"; break;
+                        case "byte[]": readRight = "r.ReadBytes(r.ReadInt32())"; break;
+                        case "sbyte": readRight = "r.ReadSByte()"; break;
+                        case "bool": 
+                            readRight = "r.ReadBoolean()";
+                            if (isNullable) writeRight += ".Value";
+                            break;
+                        case "char": readRight = "r.ReadChar()"; break;
+                        case "char[]": readRight = "r.ReadChars(r.ReadInt32())"; break;
+                        case "string": readRight = "r.ReadString()"; break;
+                        case "System.TimeSpan":
+                            readRight = "TimeSpan.FromTicks(r.ReadInt64())";
+                            writeRight = $"{writeRight}{(isNullable ? ".Value" : "")}.Ticks";
+                            break;
+                        case "System.DateTime":
+                            readRight = "DateTime.FromBinary(r.ReadInt64())";
+                            writeRight = $"{writeRight}{(isNullable ? ".Value" : "")}.ToBinary()";
+                            break;
+                        case "System.Guid":
+                            readRight = "new Guid(r.ReadBytes(16))";
+                            writeRight = $"{writeRight}{(isNullable ? ".Value" : "")}.ToByteArray()"; 
+                            break;
+                    }
+                    if (propInfo.ReturnType.IsEnum(out var eut))
+                        switch (eut.ToTrimDisplay())
+                        {
+                            case "int": 
+                                readRight = $"({propType})r.ReadInt32()";
+                                writeRight = $"(int){writeRight}";
+                                break;
+                        }
+
+                    var readLine = $"\t\t{readLeft} = {readRight};";
+                    var writeLine = $"\t\t{writeLeft}({writeRight});";
+                    if (readRight == null)
+                    {
+                        readLine = $"\t\t{BuildSubRead(propType, readLeft)}";
+                        writeLine = $"\t\t{BuildSubWrite(propType, writeRight)}";
+                    }
+                    else if (isNullable)
+                    {
+                        readLine = $"\t\t{BuildNullableRead2(readLeft, readLine)}";
+                        writeLine = $"\t\t{BuildNullableWrite2(writeRight, writeLine)}";
+                    }
+                    reader.AppendLine(readLine);
+                    writer.AppendLine(writeLine);
+
+                    /*
+                        // bool?             // int?                        // System.DateTime?
+                     */
+                    
+
+
+
+
+
+                    /*
                     var readArg = $"this.{propName}";
                     var readFunc = $"reader.Read{propType}()";
                     if (propType == "DateTime") readFunc = "DateTime.FromBinary(reader.ReadInt64())";
@@ -86,17 +178,28 @@ namespace Cscg.Binary
                     if (rank >= 1) writeFunc = BuildArrayWrite(writeArg);
                     if (propType.StartsWith("_")) writeFunc = BuildSubWrite(propType.Substring(1), writeArg);
                     writer.AppendLine($"\t\t{writeFunc};");
+                    */
                 }
 
-            code.AppendLine("\tpublic void Read(Stream stream)");
+            code.AppendLine("\tpublic void ReadBinary(Stream stream)");
             code.AppendLine("\t{");
             code.AppendLine("\t\tusing var reader = new BinaryReader(stream, Encoding.UTF8, true);");
+            code.AppendLine("\t\tReadBinary(reader);");
+            code.AppendLine("\t}");
+            code.AppendLine();
+            code.AppendLine("\tpublic void ReadBinary(BinaryReader r)");
+            code.AppendLine("\t{");
             code.Append(reader);
             code.AppendLine("\t}");
             code.AppendLine();
-            code.AppendLine("\tpublic void Write(Stream stream)");
+            code.AppendLine("\tpublic void WriteBinary(Stream stream)");
             code.AppendLine("\t{");
             code.AppendLine("\t\tusing var writer = new BinaryWriter(stream, Encoding.UTF8, true);");
+            code.AppendLine("\t\tWriteBinary(writer);");
+            code.AppendLine("\t}");
+            code.AppendLine();
+            code.AppendLine("\tpublic void WriteBinary(BinaryWriter w)");
+            code.AppendLine("\t{");
             code.Append(writer);
             code.AppendLine("\t}");
 
@@ -124,18 +227,16 @@ namespace Cscg.Binary
         private static string BuildSubRead(string type, string prop)
         {
             var code = new StringBuilder();
-            code.Append($"if (typeof({type}).IsEnum) {{ {prop} = ({type})(object)reader.ReadInt32(); }}");
-            code.Append($" else {{ if (stream.ReadByte() == 0) {{ {prop} = default; }}");
-            code.Append($" else {{ var v = new {type}(); (({IntObjName})(object)v)!.Read(stream); {prop} = v; }} }}");
+            code.AppendLine($"if (r.ReadByte() == 0) {{ {prop} = default; }}");
+            code.Append($"\t\t else {{ var v = new {type}(); v.ReadBinary(r); {prop} = v; }}");
             return code.ToString();
         }
 
-        private static string BuildSubWrite(string type, string prop)
+        private static string BuildSubWrite(string _, string prop)
         {
             var code = new StringBuilder();
-            code.Append($"if (typeof({type}).IsEnum) {{ writer.Write((int)(object){prop}); }}");
-            code.Append($" else {{ stream.WriteByte((byte)({prop} == default ? 0 : 1));");
-            code.Append($" (({IntObjName})(object){prop})?.Write(stream); }}");
+            code.Append($"w.Write((byte)({prop} == default ? 0 : 1));");
+            code.Append($" {prop}.WriteBinary(w);");
             return code.ToString();
         }
 
@@ -150,10 +251,26 @@ namespace Cscg.Binary
         private static string BuildNullableWrite(string prop, string func, string type)
         {
             var code = new StringBuilder();
-            code.Append($"if (this.{prop} == default) {{ stream.WriteByte((byte)0); }}");
+            code.Append($"if (this.{prop} == default) {{ stream.Write((byte)0); }}");
             if (type != "String" && !func.EndsWith("))")) func = $"{func.TrimEnd(')')}.Value)";
             if (type == "DateTime") func = func.Replace(".ToBin", ".Value.ToBin");
-            code.Append($" else {{ stream.WriteByte((byte)1); {func}; }}");
+            code.Append($" else {{ stream.Write((byte)1); {func}; }}");
+            return code.ToString();
+        }
+
+        private static string BuildNullableWrite2(string prop, string func)
+        {
+            var code = new StringBuilder();
+            code.Append($"if ({prop} == default) {{ w.Write((byte)0); }}");
+            code.Append($" else {{ w.Write((byte)1); {func.Trim()} }}");
+            return code.ToString();
+        }
+
+        private static string BuildNullableRead2(string prop, string func)
+        {
+            var code = new StringBuilder();
+            code.Append($"if (r.ReadByte() == 0) {{ {prop} = default; }}");
+            code.Append($" else {{ {func.Trim()} }}");
             return code.ToString();
         }
     }
