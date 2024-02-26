@@ -11,5 +11,11 @@
         {
             return text.Substring(0, 1).ToUpper() + text.Substring(1);
         }
+
+        public static string Combine(string space, string name)
+        {
+            var full = $"{space}.{name}";
+            return full;
+        }
     }
 }

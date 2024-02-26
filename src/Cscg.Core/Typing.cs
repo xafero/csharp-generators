@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Cscg.Core
@@ -37,6 +38,18 @@ namespace Cscg.Core
                 case "Guid": return nameof(System.Guid);
                 default: return $"_{name}";
             }
+        }
+
+        public static bool UnwrapNullable(this INamedTypeSymbol symbol, out ITypeSymbol found)
+        {
+            if (symbol.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T
+                && symbol.TypeArguments[0] is var nullType)
+            {
+                found = nullType;
+                return true;
+            }
+            found = symbol;
+            return false;
         }
     }
 }

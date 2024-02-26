@@ -57,5 +57,11 @@ namespace Cscg.Core
             var text = pds.Identifier.Text.TrimNull();
             return text;
         }
+
+        public static SyntaxWrap Wrap(this GeneratorSyntaxContext ctx)
+        {
+            var wrap = new SyntaxWrap(ctx);
+            return wrap;
+        }
     }
 }
