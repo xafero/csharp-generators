@@ -152,8 +152,8 @@ namespace Cscg.ConciseBinary
         {
             var code = new StringBuilder();
             code.AppendLine($"if (typeof({type}).IsEnum) {{ {prop} = ({type})(object)reader.ReadInt32(); }}");
-            code.Append($"\t\t else {{ if (reader.ReadByte() == 0) {{ {prop} = default; }}");
-            code.Append($" else {{ var v = new {type}(); (({IntObjName})(object)v)!.ReadCBOR(ref reader); {prop} = v; }} }}");
+            code.AppendLine($"\t\t else {{ if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
+            code.Append($"\t\t else {{ var v = new {type}(); (({IntObjName})(object)v)!.ReadCBOR(ref reader); {prop} = v; }} }}");
             return code.ToString();
         }
 
