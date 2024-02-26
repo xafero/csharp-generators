@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -51,5 +52,20 @@ namespace Cscg.Core
             found = symbol;
             return false;
         }
+
+        public static bool IsEnum(this ITypeSymbol type, out INamedTypeSymbol underlying)
+        {
+            if (Is(type, TypeKind.Enum))
+            {
+                underlying = (type as INamedTypeSymbol)?.EnumUnderlyingType;
+                return true;
+            }
+            underlying = null;
+            return false;
+        }
+
+        public static bool Is(this ITypeSymbol type, TypeKind kind) => type.TypeKind == kind;
+
+        public static string ToTrimDisplay(this ITypeSymbol type) => type.ToDisplayString().TrimNull();
     }
 }
