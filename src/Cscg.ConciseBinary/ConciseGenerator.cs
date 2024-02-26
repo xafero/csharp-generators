@@ -61,8 +61,11 @@ namespace Cscg.ConciseBinary
             var writer = new StringBuilder();
 
             writer.AppendLine("\t\twriter.WriteStartMap(null);");
-            reader.AppendLine("\t\treader.ReadStartMap();");
+            reader.AppendLine("\t\tvar count = (int)reader.ReadStartMap();");
             reader.AppendLine("\t\tstring key;");
+            reader.AppendLine("\t\tfor (var i = 0; i < count; i++)");
+            reader.AppendLine("\t\t{");
+            reader.AppendLine("\t\t\tkey = reader.ReadTextString();");
 
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
@@ -90,9 +93,8 @@ namespace Cscg.ConciseBinary
                     };
                     writer.AppendLine($"\t\t{pvW}");
 
-                    var pnR = "key = reader.ReadTextString();";
-                    reader.AppendLine($"\t\t{pnR}");
-
+                    reader.AppendLine($"\t\t\tif (key == \"{propName}\")");
+                    reader.AppendLine("\t\t\t{");
                     var pvR = propType switch
                     {
                         "DateTimeOffset" => $"this.{propName} = reader.ReadDateTimeOffset();",
@@ -108,11 +110,14 @@ namespace Cscg.ConciseBinary
                         "String" => $"this.{propName} = reader.ReadTextString();",
                         _ => BuildSubRead(propType.Substring(1), $"this.{propName}")
                     };
-                    reader.AppendLine($"\t\t{pvR}");
+                    reader.AppendLine($"\t\t\t\t{pvR}");
+                    reader.AppendLine("\t\t\t\tcontinue;");
+                    reader.AppendLine("\t\t\t}");
                 }
 
-            writer.AppendLine("\t\twriter.WriteEndMap();");
+            reader.AppendLine("\t\t}");
             reader.AppendLine("\t\treader.ReadEndMap();");
+            writer.AppendLine("\t\twriter.WriteEndMap();");
 
             code.AppendLine("\tpublic void ReadCBOR(Stream stream)");
             code.AppendLine("\t{");
@@ -166,8 +171,8 @@ namespace Cscg.ConciseBinary
         {
             var code = new StringBuilder();
             code.AppendLine($"if (typeof({type}).IsEnum) {{ {prop} = ({type})(object)reader.ReadInt32(); }}");
-            code.AppendLine($"\t\t else {{ if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
-            code.Append($"\t\t else {{ var v = new {type}(); (({IntObjName})(object)v)!.ReadCBOR(ref reader); {prop} = v; }} }}");
+            code.AppendLine($"\t\t\t\t else {{ if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
+            code.Append($"\t\t\t\t else {{ var v = new {type}(); (({IntObjName})(object)v)!.ReadCBOR(ref reader); {prop} = v; }} }}");
             return code.ToString();
         }
 
