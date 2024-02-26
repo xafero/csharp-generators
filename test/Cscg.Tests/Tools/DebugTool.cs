@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using PeterO.Cbor;
 
 namespace Cscg.Tests.Tools
 {
@@ -13,6 +14,13 @@ namespace Cscg.Tests.Tools
             {
                 Formatting = Formatting.None, Converters = { new StringEnumConverter() }
             });
+        }
+
+        public static string ToCborJson(byte[] bytes)
+        {
+            var cbor = CBORObject.DecodeFromBytes(bytes);
+            var json = cbor.ToJSONString();
+            return json;
         }
 
         public static IDictionary<string, object> ToDict(Type type)

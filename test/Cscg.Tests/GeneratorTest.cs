@@ -1,4 +1,6 @@
+using System.Formats.Cbor;
 using Cscg.Binary;
+using Cscg.ConciseBinary;
 using Cscg.Constants;
 using Cscg.Tests.Tools;
 using Xunit;
@@ -12,9 +14,22 @@ namespace Cscg.Tests
         public void TestBinary()
         {
             var gen = new BinaryGenerator();
-            var (_, source) = GetLocalFile("DisplayValues.cs");
+            var (_, source) = GetLocalFile("Simple/DisplayValues.cs");
 
             var input = source.CreateCompilation();
+            var (output, run) = input.RunGenerators(out var dia, [gen], []);
+
+            dia.CheckNoError(output, 6);
+            run.CheckNoError(5);
+        }
+
+        [Fact]
+        public void TestConcise()
+        {
+            var gen = new ConciseGenerator();
+            var (_, source) = GetLocalFile("Complex/DisplayValues.cs");
+
+            var input = source.CreateCompilation(addedRefs: [GetMetaRef<CborReader>()]);
             var (output, run) = input.RunGenerators(out var dia, [gen], []);
 
             dia.CheckNoError(output, 6);

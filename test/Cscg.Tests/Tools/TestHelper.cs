@@ -12,12 +12,14 @@ namespace Cscg.Tests.Tools
 {
     public static class TestHelper
     {
-        internal static Compilation CreateCompilation(this string source, string name = "Compiled", bool isLib = true)
+        internal static Compilation CreateCompilation(this string source, string name = "Compiled",
+            bool isLib = true, PortableExecutableReference[] addedRefs = null)
         {
             var references = new[]
             {
                 GetMetaRef<Binder>(), GetMetaRef(typeof(Console)), GetMetaRef<object>("System.Runtime.dll")
             };
+            if (addedRefs != null) references = references.Concat(addedRefs).ToArray();
             return CSharpCompilation.Create(assemblyName: name, syntaxTrees: new[]
                 {
                     CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest))
@@ -29,7 +31,7 @@ namespace Cscg.Tests.Tools
             );
         }
 
-        private static PortableExecutableReference GetMetaRef<T>(string replace = null)
+        internal static PortableExecutableReference GetMetaRef<T>(string replace = null)
             => GetMetaRef(typeof(T), replace);
 
         private static PortableExecutableReference GetMetaRef(Type type, string replace = null)

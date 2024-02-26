@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using SourceGenerated.Simple;
 
 namespace SourceGenerated
 {

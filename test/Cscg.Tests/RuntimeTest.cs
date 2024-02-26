@@ -4,6 +4,8 @@ using autogen;
 using System.IO;
 using SourceGenerated;
 using Xunit;
+using DvS = SourceGenerated.Simple.DisplayValues;
+using DvC = SourceGenerated.Complex.DisplayValues;
 using static Cscg.Tests.Tools.DebugTool;
 
 namespace Cscg.Tests
@@ -17,7 +19,7 @@ namespace Cscg.Tests
         }
 
         [Fact]
-        public void TestBinary()
+        public void TestConst()
         {
             var input = ToDict(typeof(ConstStrings));
             var output = new SortedDictionary<string, object>
@@ -53,16 +55,16 @@ namespace Cscg.Tests
         [Theory]
         [InlineData("e")]
         [InlineData("s")]
-        public void TestConst(string mode)
+        public void TestBinary(string mode)
         {
-            var input = mode == "e" ? new DisplayValues() : Program.CreateSample();
+            var input = mode == "e" ? new DvS() : Program.CreateSample();
             byte[] bytes;
             using (var mem = new MemoryStream())
             {
                 input.Write(mem);
                 bytes = mem.ToArray();
             }
-            var output = new DisplayValues();
+            var output = new DvS();
             using (var mem = new MemoryStream(bytes))
                 output.Read(mem);
 
@@ -70,5 +72,35 @@ namespace Cscg.Tests
             var actual = ToJson(output);
             Assert.Equal(expected, actual);
         }
+
+        [Theory]
+        [InlineData("e")]
+        [InlineData("s")]
+        public void TestConcise(string mode)
+        {
+            var input = mode == "e" ? new DvC() : CreateCdv();
+            byte[] bytes;
+            using (var mem = new MemoryStream())
+            {
+                input.WriteCBOR(mem);
+                bytes = mem.ToArray();
+            }
+            var output = new DvC();
+            using (var mem = new MemoryStream(bytes))
+                output.ReadCBOR(mem);
+
+            var expected = ToJson(input);
+            var actual = ToJson(output);
+            Assert.Equal(expected, actual);
+
+            actual = ToCborJson(bytes);
+            Assert.Equal(expected, actual);
+        }
+
+        private static DvC CreateCdv()
+            => new()
+            {
+                TempDirectory = "help me"
+            };
     }
 }

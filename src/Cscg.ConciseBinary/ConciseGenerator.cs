@@ -23,7 +23,10 @@ namespace Cscg.ConciseBinary
 
                 var intCode = Coding.GenerateIntf(IntObjName, Space, new List<string>
                 {
-                    "void ReadCBOR(System.IO.Stream stream)", "void WriteCBOR(System.IO.Stream stream)"
+                    "void ReadCBOR(System.IO.Stream stream)",
+                    "void ReadCBOR(ref System.Formats.Cbor.CborReader reader)",
+                    "void WriteCBOR(System.IO.Stream stream)",
+                    "void WriteCBOR(ref System.Formats.Cbor.CborWriter writer)"
                 });
                 ctx.AddSource($"{IntObjName}.g.cs", Sources.From(intCode));
 
@@ -79,27 +82,27 @@ namespace Cscg.ConciseBinary
             code.AppendLine("\t\t\tstream.CopyTo(copy);");
             code.AppendLine("\t\t\tarray = copy.ToArray();");
             code.AppendLine("\t\t}");
-            code.AppendLine("\t\tReadCBOR(array);");
+            code.AppendLine("\t\tvar reader = new CborReader(array, CborConformanceMode.Canonical);");
+            code.AppendLine("\t\tReadCBOR(ref reader);");
             code.AppendLine("\t}");
             code.AppendLine();
-            code.AppendLine("\tpublic void ReadCBOR(byte[] array)");
+            code.AppendLine("\tpublic void ReadCBOR(ref CborReader reader)");
             code.AppendLine("\t{");
-            code.AppendLine("\t\tvar reader = new CborReader(array, CborConformanceMode.Canonical);");
             code.Append(reader);
             code.AppendLine("\t}");
             code.AppendLine();
             code.AppendLine("\tpublic void WriteCBOR(Stream stream)");
             code.AppendLine("\t{");
-            code.AppendLine("\t\tvar array = WriteCBOR();");
+            code.AppendLine("\t\tvar writer = new CborWriter(CborConformanceMode.Canonical, true);");
+            code.AppendLine("\t\tWriteCBOR(ref writer);");
+            code.AppendLine("\t\tvar array = writer.Encode();");
             code.AppendLine("\t\tstream.Write(array, 0, array.Length);");
             code.AppendLine("\t\tstream.Flush();");
             code.AppendLine("\t}");
             code.AppendLine();
-            code.AppendLine("\tpublic byte[] WriteCBOR()");
+            code.AppendLine("\tpublic void WriteCBOR(ref CborWriter writer)");
             code.AppendLine("\t{");
-            code.AppendLine("\t\tvar writer = new CborWriter(CborConformanceMode.Canonical, true);");
             code.Append(writer);
-            code.AppendLine("\t\treturn writer.Encode();");
             code.AppendLine("\t}");
 
             code.AppendLine("}");
