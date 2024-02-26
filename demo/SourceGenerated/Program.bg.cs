@@ -12,7 +12,7 @@ namespace SourceGenerated
             var dv1 = CreateSample();
             using (var mem1 = new MemoryStream())
             {
-                dv1.Write(mem1);
+                dv1.WriteBinary(mem1);
                 dv1S = Convert.ToBase64String(mem1.ToArray());
             }
             Console.WriteLine(dv1S);
@@ -21,7 +21,7 @@ namespace SourceGenerated
             var dv2B = Convert.FromBase64String(dv1S);
             using (var mem2 = new MemoryStream(dv2B))
             {
-                dv2.Read(mem2);
+                dv2.ReadBinary(mem2);
             }
             Console.WriteLine(dv2);
         }
