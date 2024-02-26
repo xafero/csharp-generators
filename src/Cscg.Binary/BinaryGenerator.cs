@@ -1,7 +1,5 @@
-﻿using System;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using Cscg.Core;
@@ -70,12 +68,12 @@ namespace Cscg.Binary
                     var propName = pds.GetName();
                     var propType = propInfo.ReturnType.ToTrimDisplay();
 
-                    var propType2 = Typing.Parse(pds.Type, out var rank, out var nil);
-
                     var readLeft = $"this.{propName}";
                     string readRight = null;
                     var writeLeft = "w.Write";
                     var writeRight = $"this.{propName}";
+
+                    if (propType == "string") propType = "string?";
 
                     var isNullable = false;
                     if (propType.EndsWith("?"))
@@ -86,28 +84,58 @@ namespace Cscg.Binary
 
                     switch (propType)
                     {
-                        case "ulong": readRight = "r.ReadUInt64()"; break;
-                        case "uint": readRight = "r.ReadUInt32()"; break;
-                        case "ushort": readRight = "r.ReadUInt16()"; break;
-                        case "decimal": readRight = "r.ReadDecimal()"; break;
-                        case "double": readRight = "r.ReadDouble()"; break;
-                        case "float": readRight = "r.ReadSingle()"; break;
-                        case "long": readRight = "r.ReadInt64()"; break;
-                        case "int": 
+                        case "ulong":
+                            readRight = "r.ReadUInt64()";
+                            break;
+                        case "uint":
+                            readRight = "r.ReadUInt32()";
+                            break;
+                        case "ushort":
+                            readRight = "r.ReadUInt16()";
+                            break;
+                        case "decimal":
+                            readRight = "r.ReadDecimal()";
+                            break;
+                        case "double":
+                            readRight = "r.ReadDouble()";
+                            break;
+                        case "float":
+                            readRight = "r.ReadSingle()";
+                            break;
+                        case "long":
+                            readRight = "r.ReadInt64()";
+                            break;
+                        case "int":
                             readRight = "r.ReadInt32()";
                             if (isNullable) writeRight += ".Value";
                             break;
-                        case "short": readRight = "r.ReadInt16()"; break;
-                        case "byte": readRight = "r.ReadByte()"; break;
-                        case "byte[]": readRight = "r.ReadBytes(r.ReadInt32())"; break;
-                        case "sbyte": readRight = "r.ReadSByte()"; break;
-                        case "bool": 
+                        case "short":
+                            readRight = "r.ReadInt16()";
+                            break;
+                        case "byte":
+                            readRight = "r.ReadByte()";
+                            break;
+                        case "sbyte":
+                            readRight = "r.ReadSByte()";
+                            break;
+                        case "bool":
                             readRight = "r.ReadBoolean()";
                             if (isNullable) writeRight += ".Value";
                             break;
-                        case "char": readRight = "r.ReadChar()"; break;
-                        case "char[]": readRight = "r.ReadChars(r.ReadInt32())"; break;
-                        case "string": readRight = "r.ReadString()"; break;
+                        case "char":
+                            readRight = "r.ReadChar()";
+                            break;
+                        case "byte[]":
+                            readRight = $"r.ReadBytes({propName}_i);";
+                            writeRight = $"w.Write({writeRight}.Length); w.Write({writeRight});";
+                            break;
+                        case "char[]":
+                            readRight = $"r.ReadChars({propName}_i);";
+                            writeRight = $"w.Write({writeRight}.Length); w.Write({writeRight});";
+                            break;
+                        case "string":
+                            readRight = "r.ReadString()";
+                            break;
                         case "System.TimeSpan":
                             readRight = "TimeSpan.FromTicks(r.ReadInt64())";
                             writeRight = $"{writeRight}{(isNullable ? ".Value" : "")}.Ticks";
@@ -118,13 +146,13 @@ namespace Cscg.Binary
                             break;
                         case "System.Guid":
                             readRight = "new Guid(r.ReadBytes(16))";
-                            writeRight = $"{writeRight}{(isNullable ? ".Value" : "")}.ToByteArray()"; 
+                            writeRight = $"{writeRight}{(isNullable ? ".Value" : "")}.ToByteArray()";
                             break;
                     }
                     if (propInfo.ReturnType.IsEnum(out var eut))
                         switch (eut.ToTrimDisplay())
                         {
-                            case "int": 
+                            case "int":
                                 readRight = $"({propType})r.ReadInt32()";
                                 writeRight = $"(int){writeRight}";
                                 break;
@@ -132,53 +160,23 @@ namespace Cscg.Binary
 
                     var readLine = $"\t\t{readLeft} = {readRight};";
                     var writeLine = $"\t\t{writeLeft}({writeRight});";
-                    if (readRight == null)
+                    if (propType == "byte[]" || propType == "char[]")
+                    {
+                        readLine = $"\t\t{BuildArrayRead(readLeft, readRight)}";
+                        writeLine = $"\t\t{BuildArrayWrite(readLeft, writeRight)}";
+                    }
+                    else if (readRight == null)
                     {
                         readLine = $"\t\t{BuildSubRead(propType, readLeft)}";
                         writeLine = $"\t\t{BuildSubWrite(propType, writeRight)}";
                     }
                     else if (isNullable)
                     {
-                        readLine = $"\t\t{BuildNullableRead2(readLeft, readLine)}";
-                        writeLine = $"\t\t{BuildNullableWrite2(writeRight, writeLine)}";
+                        readLine = $"\t\t{BuildNullableRead(readLeft, readLine)}";
+                        writeLine = $"\t\t{BuildNullableWrite(readLeft, writeLine)}";
                     }
                     reader.AppendLine(readLine);
                     writer.AppendLine(writeLine);
-
-                    /*
-                        // bool?             // int?                        // System.DateTime?
-                     */
-                    
-
-
-
-
-
-                    /*
-                    var readArg = $"this.{propName}";
-                    var readFunc = $"reader.Read{propType}()";
-                    if (propType == "DateTime") readFunc = "DateTime.FromBinary(reader.ReadInt64())";
-                    else if (propType == "TimeSpan") readFunc = "TimeSpan.FromTicks(reader.ReadInt64())";
-                    else if (propType == "Guid") readFunc = "new Guid(reader.ReadBytes(16))";
-                    var readLine = $"{readArg} = {readFunc}";
-                    if (propType == "String" || nil) readLine = BuildNullableRead(readArg, readFunc);
-                    if (rank >= 1)
-                    {
-                        if (propType is "Byte" or "Char") readLine = BuildArrayRead(propType, readArg);
-                    }
-                    if (propType.StartsWith("_")) readLine = BuildSubRead(propType.Substring(1), readArg);
-                    reader.AppendLine($"\t\t{readLine};");
-
-                    var writeArg = $"this.{propName}";
-                    if (propType == "DateTime") writeArg += ".ToBinary()";
-                    else if (propType == "TimeSpan") writeArg += ".Ticks";
-                    else if (propType == "Guid") writeArg += ".ToByteArray()";
-                    var writeFunc = $"writer.Write({writeArg})";
-                    if (propType == "String" || nil) writeFunc = BuildNullableWrite(propName, writeFunc, propType);
-                    if (rank >= 1) writeFunc = BuildArrayWrite(writeArg);
-                    if (propType.StartsWith("_")) writeFunc = BuildSubWrite(propType.Substring(1), writeArg);
-                    writer.AppendLine($"\t\t{writeFunc};");
-                    */
                 }
 
             code.AppendLine("\tpublic void ReadBinary(Stream stream)");
@@ -207,20 +205,20 @@ namespace Cscg.Binary
             ctx.AddSource(fileName, code.ToString());
         }
 
-        private static string BuildArrayRead(string type, string prop)
+        private static string BuildArrayRead(string prop, string func)
         {
             var code = new StringBuilder();
             var idx = $"{prop.Split(['.'], 2).Last()}_i";
-            code.Append($"{prop} = reader.ReadInt32() is var {idx} && {idx} == -1 ? default");
-            code.Append($" : reader.Read{type}s({idx})");
+            code.Append($"{prop} = r.ReadInt32() is var {idx} && {idx} == -1 ? default");
+            code.Append($" : {func}");
             return code.ToString();
         }
 
-        private static string BuildArrayWrite(string prop)
+        private static string BuildArrayWrite(string prop, string func)
         {
             var code = new StringBuilder();
-            code.Append($"if ({prop} == default) {{ writer.Write(-1); }}");
-            code.Append($" else {{ writer.Write({prop}.Length); writer.Write({prop}); }}");
+            code.Append($"if ({prop} == default) {{ w.Write(-1); }}");
+            code.Append($" else {{ {func.Trim()} }}");
             return code.ToString();
         }
 
@@ -236,29 +234,11 @@ namespace Cscg.Binary
         {
             var code = new StringBuilder();
             code.Append($"w.Write((byte)({prop} == default ? 0 : 1));");
-            code.Append($" {prop}.WriteBinary(w);");
+            code.Append($" {prop}?.WriteBinary(w);");
             return code.ToString();
         }
 
-        private static string BuildNullableRead(string prop, string func)
-        {
-            var code = new StringBuilder();
-            code.Append($"if (stream.ReadByte() == 0) {{ {prop} = default; }}");
-            code.Append($" else {{ {prop} = {func}; }}");
-            return code.ToString();
-        }
-
-        private static string BuildNullableWrite(string prop, string func, string type)
-        {
-            var code = new StringBuilder();
-            code.Append($"if (this.{prop} == default) {{ stream.Write((byte)0); }}");
-            if (type != "String" && !func.EndsWith("))")) func = $"{func.TrimEnd(')')}.Value)";
-            if (type == "DateTime") func = func.Replace(".ToBin", ".Value.ToBin");
-            code.Append($" else {{ stream.Write((byte)1); {func}; }}");
-            return code.ToString();
-        }
-
-        private static string BuildNullableWrite2(string prop, string func)
+        private static string BuildNullableWrite(string prop, string func)
         {
             var code = new StringBuilder();
             code.Append($"if ({prop} == default) {{ w.Write((byte)0); }}");
@@ -266,7 +246,7 @@ namespace Cscg.Binary
             return code.ToString();
         }
 
-        private static string BuildNullableRead2(string prop, string func)
+        private static string BuildNullableRead(string prop, string func)
         {
             var code = new StringBuilder();
             code.Append($"if (r.ReadByte() == 0) {{ {prop} = default; }}");
