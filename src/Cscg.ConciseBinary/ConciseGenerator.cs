@@ -1,9 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Cscg.Core;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Linq;
 
 namespace Cscg.ConciseBinary
 {
@@ -47,7 +47,7 @@ namespace Cscg.ConciseBinary
             var space = cds.GetParentName() ?? Coding.AutoNamespace;
             var name = cds.GetClassName();
             var fileName = $"{name}.g.cs";
-            var code = new StringBuilder();
+            var code = new CodeWriter();
             code.AppendLine("using autogen;");
             code.AppendLine("using System;");
             code.AppendLine("using System.Collections.Generic;");
@@ -55,20 +55,20 @@ namespace Cscg.ConciseBinary
             code.AppendLine("using System.Text;");
             code.AppendLine("using System.IO;");
             code.AppendLine();
-            code.AppendLine($"namespace {space};");
-            code.AppendLine();
+            code.AppendLine($"namespace {space}");
+            code.AppendLine("{");
             code.AppendLine($"partial class {name} : {Space}.{IntObjName}");
             code.AppendLine("{");
 
-            var reader = new StringBuilder();
-            var writer = new StringBuilder();
+            var reader = new CodeWriter();
+            var writer = new CodeWriter();
 
-            writer.AppendLine("\t\twriter.WriteStartMap(null);");
-            reader.AppendLine("\t\tvar count = (int)reader.ReadStartMap();");
-            reader.AppendLine("\t\tstring key;");
-            reader.AppendLine("\t\tfor (var i = 0; i < count; i++)");
-            reader.AppendLine("\t\t{");
-            reader.AppendLine("\t\t\tkey = reader.ReadTextString();");
+            writer.AppendLine("w.WriteStartMap(null);");
+            reader.AppendLine("var count = (int)r.ReadStartMap();");
+            reader.AppendLine("string key;");
+            reader.AppendLine("for (var i = 0; i < count; i++)");
+            reader.AppendLine("{");
+            reader.AppendLine("key = r.ReadTextString();");
 
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
@@ -146,46 +146,47 @@ namespace Cscg.ConciseBinary
                     reader.AppendLine("\t\t\t}");*/
                 }
 
-            reader.AppendLine("\t\t}");
-            reader.AppendLine("\t\treader.ReadEndMap();");
-            writer.AppendLine("\t\twriter.WriteEndMap();");
+            reader.AppendLine("}");
+            reader.AppendLine("r.ReadEndMap();");
+            writer.AppendLine("w.WriteEndMap();");
 
-            code.AppendLine("\tpublic void ReadCBOR(Stream stream)");
-            code.AppendLine("\t{");
-            code.AppendLine("\t\tbyte[] array;");
-            code.AppendLine("\t\tif (stream is MemoryStream mem)");
-            code.AppendLine("\t\t{");
-            code.AppendLine("\t\t\tarray = mem.ToArray();");
-            code.AppendLine("\t\t}");
-            code.AppendLine("\t\telse");
-            code.AppendLine("\t\t{");
-            code.AppendLine("\t\t\tusing var copy = new MemoryStream();");
-            code.AppendLine("\t\t\tstream.CopyTo(copy);");
-            code.AppendLine("\t\t\tarray = copy.ToArray();");
-            code.AppendLine("\t\t}");
-            code.AppendLine("\t\tvar reader = new CborReader(array, CborConformanceMode.Canonical);");
-            code.AppendLine("\t\tReadCBOR(ref reader);");
-            code.AppendLine("\t}");
+            code.AppendLine("public void ReadCBOR(Stream stream)");
+            code.AppendLine("{");
+            code.AppendLine("byte[] array;");
+            code.AppendLine("if (stream is MemoryStream mem)");
+            code.AppendLine("{");
+            code.AppendLine("array = mem.ToArray();");
+            code.AppendLine("}");
+            code.AppendLine("else");
+            code.AppendLine("{");
+            code.AppendLine("using var copy = new MemoryStream();");
+            code.AppendLine("stream.CopyTo(copy);");
+            code.AppendLine("array = copy.ToArray();");
+            code.AppendLine("}");
+            code.AppendLine("var reader = new CborReader(array, CborConformanceMode.Canonical);");
+            code.AppendLine("ReadCBOR(ref reader);");
+            code.AppendLine("}");
             code.AppendLine();
-            code.AppendLine("\tpublic void ReadCBOR(ref CborReader reader)");
-            code.AppendLine("\t{");
-            code.Append(reader);
-            code.AppendLine("\t}");
+            code.AppendLine("public void ReadCBOR(ref CborReader r)");
+            code.AppendLine("{");
+            // code.Append(reader);
+            code.AppendLine("}");
             code.AppendLine();
-            code.AppendLine("\tpublic void WriteCBOR(Stream stream)");
-            code.AppendLine("\t{");
-            code.AppendLine("\t\tvar writer = new CborWriter(CborConformanceMode.Canonical, true);");
-            code.AppendLine("\t\tWriteCBOR(ref writer);");
-            code.AppendLine("\t\tvar array = writer.Encode();");
-            code.AppendLine("\t\tstream.Write(array, 0, array.Length);");
-            code.AppendLine("\t\tstream.Flush();");
-            code.AppendLine("\t}");
+            code.AppendLine("public void WriteCBOR(Stream stream)");
+            code.AppendLine("{");
+            code.AppendLine("var writer = new CborWriter(CborConformanceMode.Canonical, true);");
+            code.AppendLine("WriteCBOR(ref writer);");
+            code.AppendLine("var array = writer.Encode();");
+            code.AppendLine("stream.Write(array, 0, array.Length);");
+            code.AppendLine("stream.Flush();");
+            code.AppendLine("}");
             code.AppendLine();
-            code.AppendLine("\tpublic void WriteCBOR(ref CborWriter writer)");
-            code.AppendLine("\t{");
-            code.Append(writer);
-            code.AppendLine("\t}");
+            code.AppendLine("public void WriteCBOR(ref CborWriter w)");
+            code.AppendLine("{");
+            // code.Append(writer);
+            code.AppendLine("}");
 
+            code.AppendLine("}");
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
         }
