@@ -8,6 +8,7 @@ using Xunit;
 using Xunit.Abstractions;
 using DvS = SourceGenerated.Simple.DisplayValues;
 using DvC = SourceGenerated.Complex.DisplayValues;
+using static SourceGenerated.Complex.Zoos;
 using static Cscg.Tests.Tools.DebugTool;
 
 namespace Cscg.Tests
@@ -83,18 +84,24 @@ namespace Cscg.Tests
         }
 
         [Theory]
-        [InlineData("e")]
-        [InlineData("s")]
-        public void TestConcise(string mode)
+        [InlineData("d", "e")]
+        [InlineData("d", "s")]
+        [InlineData("a", "e")]
+        [InlineData("a", "s")]
+        public void TestConcise(string cla, string mode)
         {
-            var input = mode == "e" ? new DvC() : CreateCdv();
+            IConciseObj input = cla == "d"
+                ? (mode == "e" ? new DvC() : CreateCdv())
+                : (mode == "e" ? new Zoo() : CreateZoo());
             byte[] bytes;
             using (var mem = new MemoryStream())
             {
                 input.WriteCBOR(mem);
                 bytes = mem.ToArray();
             }
-            var output = new DvC();
+            IConciseObj output = cla == "d"
+                ? new DvC()
+                : new Zoo();
             using (var mem = new MemoryStream(bytes))
                 output.ReadCBOR(mem);
 

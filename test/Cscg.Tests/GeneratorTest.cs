@@ -37,6 +37,19 @@ namespace Cscg.Tests
         }
 
         [Fact]
+        public void TestConciseA()
+        {
+            var gen = new ConciseGenerator();
+            var (_, source) = GetLocalFile("Complex/Animals.cs");
+
+            var input = source.CreateCompilation(addedRefs: [GetMetaRef<CborReader>()]);
+            var (output, run) = input.RunGenerators(out var dia, [gen], []);
+
+            dia.CheckNoError(output, 6);
+            run.CheckNoError(5);
+        }
+
+        [Fact]
         public void TestConst()
         {
             var gen = new ConstGenerator();

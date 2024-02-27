@@ -4,7 +4,7 @@ using autogen;
 namespace SourceGenerated.Simple
 {
     [BinaryObj]
-    public partial class Person
+    public sealed partial class Person
     {
         public string FirstName { get; set; }
         public string SecondName { get; set; }
@@ -16,7 +16,7 @@ namespace SourceGenerated.Simple
     }
 
     [BinaryObj]
-    public partial class DisplayValues
+    public sealed partial class DisplayValues
     {
         public float AspectRatio { get; set; }
         public string TempDirectory { get; set; }

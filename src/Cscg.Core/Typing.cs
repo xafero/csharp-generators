@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -52,6 +54,41 @@ namespace Cscg.Core
             return false;
         }
 
+        public static bool IsArray(this ITypeSymbol type, out ITypeSymbol underlying)
+        {
+            if (Is(type, TypeKind.Array))
+            {
+                underlying = (type as IArrayTypeSymbol)?.ElementType;
+                return true;
+            }
+            underlying = null;
+            return false;
+        }
+
+        public static bool IsTyped(this ITypeSymbol type, out ITypeSymbol[] args)
+        {
+            if (type is INamedTypeSymbol nts && nts.IsGenericType &&
+                nts.TypeArguments is { } nta && nta.Length >= 1)
+            {
+                args = nta.ToArray();
+                return true;
+            }
+            args = null;
+            return false;
+        }
+
+        public static bool HasLeafs(this ITypeSymbol type, out ITypeSymbol parent)
+        {
+            if (Is(type, TypeKind.Interface) ||
+                (Is(type, TypeKind.Class) && (type.IsAbstract || !type.IsSealed)))
+            {
+                parent = type.OriginalDefinition;
+                return true;
+            }
+            parent = null;
+            return false;
+        }
+
         public static bool IsEnum(this ITypeSymbol type, out INamedTypeSymbol underlying)
         {
             if (Is(type, TypeKind.Enum))
@@ -66,5 +103,27 @@ namespace Cscg.Core
         public static bool Is(this ITypeSymbol type, TypeKind kind) => type.TypeKind == kind;
 
         public static string ToTrimDisplay(this ITypeSymbol type) => type.ToDisplayString().TrimNull();
+
+        public static void IsColl(this ITypeSymbol type, out bool isList, out bool isDict)
+        {
+            isList = false;
+            isDict = false;
+            var text = type.ToTrimDisplay();
+            switch (text)
+            {
+                case "System.Collections.Generic.List<T>":
+                case "System.Collections.Generic.IList<T>":
+                case "System.Collections.Generic.ICollection<T>":
+                case "System.Collections.Generic.IEnumerable<T>":
+                    isList = true;
+                    break;
+                case "System.Collections.Generic.Dictionary<TKey, TValue>":
+                case "System.Collections.Generic.IDictionary<TKey, TValue>":
+                case "System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<TKey, TValue>>":
+                case "System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TValue>>":
+                    isDict = true;
+                    break;
+            }
+        }
     }
 }
