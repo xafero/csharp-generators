@@ -65,15 +65,21 @@ namespace Cscg.Core
             return false;
         }
 
-        public static bool IsTyped(this ITypeSymbol type, out ITypeSymbol[] args)
+        public static bool IsTyped(this ITypeSymbol type, out ITypeSymbol orig,
+            out ITypeSymbol[] args, out bool isList, out bool isDict)
         {
             if (type is INamedTypeSymbol nts && nts.IsGenericType &&
                 nts.TypeArguments is { } nta && nta.Length >= 1)
             {
                 args = nta.ToArray();
+                orig = nts.OriginalDefinition;
+                IsColl(orig, out isList, out isDict);
                 return true;
             }
             args = null;
+            orig = type.OriginalDefinition;
+            isList = false;
+            isDict = false;
             return false;
         }
 
@@ -104,7 +110,7 @@ namespace Cscg.Core
 
         public static string ToTrimDisplay(this ITypeSymbol type) => type.ToDisplayString().TrimNull();
 
-        public static void IsColl(this ITypeSymbol type, out bool isList, out bool isDict)
+        private static void IsColl(this ITypeSymbol type, out bool isList, out bool isDict)
         {
             isList = false;
             isDict = false;
