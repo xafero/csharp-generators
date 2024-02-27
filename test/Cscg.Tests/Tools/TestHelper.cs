@@ -13,18 +13,17 @@ namespace Cscg.Tests.Tools
     public static class TestHelper
     {
         internal static Compilation CreateCompilation(this string source, string name = "Compiled",
-            bool isLib = true, PortableExecutableReference[] addedRefs = null)
+            bool isLib = true, PortableExecutableReference[] addedRefs = null, string[] addedSrcs = null)
         {
             var references = new[]
             {
                 GetMetaRef<Binder>(), GetMetaRef(typeof(Console)), GetMetaRef<object>("System.Runtime.dll")
-            };
-            if (addedRefs != null) references = references.Concat(addedRefs).ToArray();
-            return CSharpCompilation.Create(assemblyName: name, syntaxTrees: new[]
-                {
-                    CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest))
-                },
-                references,
+            }
+            .Concat(addedRefs ?? []).ToArray();
+            var cpo = new CSharpParseOptions(LanguageVersion.Latest);
+            var syntaxTrees = new[] { source }.Concat(addedSrcs ?? [])
+                .Select(st => CSharpSyntaxTree.ParseText(st, cpo)).ToArray();
+            return CSharpCompilation.Create(assemblyName: name, syntaxTrees, references,
                 options: new CSharpCompilationOptions(isLib
                     ? OutputKind.DynamicallyLinkedLibrary
                     : OutputKind.ConsoleApplication)
