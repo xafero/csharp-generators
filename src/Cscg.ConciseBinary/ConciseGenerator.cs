@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Cscg.Core;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Linq;
 
 namespace Cscg.ConciseBinary
 {
@@ -49,6 +50,7 @@ namespace Cscg.ConciseBinary
             var code = new StringBuilder();
             code.AppendLine("using autogen;");
             code.AppendLine("using System;");
+            code.AppendLine("using System.Collections.Generic;");
             code.AppendLine("using System.Formats.Cbor;");
             code.AppendLine("using System.Text;");
             code.AppendLine("using System.IO;");
@@ -75,9 +77,32 @@ namespace Cscg.ConciseBinary
                     var propInfo = sw.GetInfo(propSym);
 
                     var propName = pds.GetName();
-                    var propType = Typing.Parse(pds.Type, out var rank, out var nil);
+                    var propType = propInfo.ReturnType;
 
-                    var pnW = $"writer.WriteTextString(\"{propName}\");";
+                    propType.IsEnum(out var eut);
+                    propType.IsArray(out var aut);
+                    var debug = string.Empty;
+
+                    if (propType.IsTyped(out _, out var mta, out var isList, out var isDict))
+                    {
+                        var listArg = isList ? mta.Single() : null;
+                        var dictArg = isDict ? mta.Last() : null;
+                        debug += $" l={listArg} d={dictArg}";
+                    }
+                    else if (propType.HasLeafs(out _))
+                    {
+                        var x = propType.SearchType()
+                            .Select(y => $"{y.GetParentName()}.{y.GetClassName()}")
+                            .ToArray();
+                        debug += " " + string.Join("/", x);
+                    }
+
+                    reader.AppendLine($" // R | {propName} / {propType} {eut} {aut} {debug}");
+                    writer.AppendLine($" // W | {propName} / {propType} {eut} {aut} {debug}");
+
+
+
+                    /*var pnW = $"writer.WriteTextString(\"{propName}\");";
                     writer.AppendLine($"\t\t{pnW}");
 
                     var pvW = propType switch
@@ -118,7 +143,7 @@ namespace Cscg.ConciseBinary
                     if (propType == "Byte" && rank >= 1) pvR = BuildBytesRead($"this.{propName}");
                     reader.AppendLine($"\t\t\t\t{pvR}");
                     reader.AppendLine("\t\t\t\tcontinue;");
-                    reader.AppendLine("\t\t\t}");
+                    reader.AppendLine("\t\t\t}");*/
                 }
 
             reader.AppendLine("\t\t}");
