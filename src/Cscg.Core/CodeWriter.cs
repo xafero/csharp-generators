@@ -1,17 +1,11 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Cscg.Core
 {
     public sealed class CodeWriter
     {
-        private readonly StringBuilder _code;
-
-        public CodeWriter()
-        {
-            _code = new StringBuilder();
-        }
-
         public string Space { get; set; } = '\t' + "";
         public int Level { get; set; }
 
@@ -19,20 +13,32 @@ namespace Cscg.Core
         {
             if (string.IsNullOrWhiteSpace(text))
             {
-                _code.AppendLine();
+                Lines.Add(string.Empty);
                 return;
             }
             if (text == "}")
                 Level--;
             var prefix = string.Join("", Enumerable.Repeat(Space, Level));
-            _code.AppendLine(prefix + text);
+            Lines.Add(prefix + text);
             if (text == "{")
                 Level++;
         }
 
+        public IList<string> Lines { get; } = new List<string>();
+
+        public void AppendLines(CodeWriter writer) => AppendLines(writer.Lines);
+
+        public void AppendLines(IEnumerable<string> lines)
+        {
+            foreach (var line in lines) AppendLine(line.Trim());
+        }
+
         public override string ToString()
         {
-            return _code.ToString();
+            var code = new StringBuilder();
+            foreach (var line in Lines)
+                code.AppendLine(line);
+            return code.ToString();
         }
     }
 }
