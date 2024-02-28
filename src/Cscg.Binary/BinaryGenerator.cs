@@ -160,7 +160,7 @@ namespace Cscg.Binary
 
                     var readLine = $"\t\t{readLeft} = {readRight};";
                     var writeLine = $"\t\t{writeLeft}({writeRight});";
-                    if (propType == "byte[]" || propType == "char[]")
+                    if (propType is "byte[]" or "char[]")
                     {
                         readLine = $"\t\t{BuildArrayRead(readLeft, readRight)}";
                         writeLine = $"\t\t{BuildArrayWrite(readLeft, writeRight)}";

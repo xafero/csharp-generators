@@ -66,8 +66,7 @@ namespace Cscg.Core
         public static bool IsTyped(this ITypeSymbol type, out ITypeSymbol orig,
             out ITypeSymbol[] args, out bool isList, out bool isDict)
         {
-            if (type is INamedTypeSymbol nts && nts.IsGenericType &&
-                nts.TypeArguments is { } nta && nta.Length >= 1)
+            if (type is INamedTypeSymbol { IsGenericType: true, TypeArguments: { Length: >= 1 } nta } nts)
             {
                 args = nta.ToArray();
                 orig = nts.OriginalDefinition;
@@ -81,7 +80,7 @@ namespace Cscg.Core
             return false;
         }
 
-        public static bool HasLeafs(this ITypeSymbol type, out ITypeSymbol parent)
+        public static bool CanBeParent(this ITypeSymbol type, out ITypeSymbol parent)
         {
             if (Is(type, TypeKind.Interface) ||
                 (Is(type, TypeKind.Class) && (type.IsAbstract || !type.IsSealed)))

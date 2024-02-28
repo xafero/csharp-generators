@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Cscg.Core;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 
 namespace Cscg.ConciseBinary
 {
@@ -75,75 +76,34 @@ namespace Cscg.ConciseBinary
                 {
                     var propSym = sw.GetSymbol(pds);
                     var propInfo = sw.GetInfo(propSym);
-
                     var propName = pds.GetName();
                     var propType = propInfo.ReturnType;
 
-                    propType.IsEnum(out var eut);
-                    propType.IsArray(out var aut);
-                    var debug = string.Empty;
+                    var instr = TryCreate(propName, propType);
 
-                    if (propType.IsTyped(out _, out var mta, out var isList, out var isDict))
-                    {
-                        var listArg = isList ? mta.Single() : null;
-                        var dictArg = isDict ? mta.Last() : null;
-                        debug += $" l={listArg} d={dictArg}";
-                    }
-                    else if (propType.HasLeafs(out _))
-                    {
-                        var x = propType.SearchType()
-                            .Select(y => $"{y.GetParentName()}.{y.GetClassName()}")
-                            .ToArray();
-                        debug += " " + string.Join("/", x);
-                    }
+                    reader.AppendLine($"if (key == nameof(this.{propName}))");
+                    reader.AppendLine("{");
+                    if (instr is { } isr)
+                        reader.AppendLines(isr.r);
+                    else
+                        reader.AppendLine($"// TODO {propType}");
+                    reader.AppendLine("continue;");
+                    reader.AppendLine("}");
 
-                    reader.AppendLine($" // R | {propName} / {propType} {eut} {aut} {debug}");
-                    writer.AppendLine($" // W | {propName} / {propType} {eut} {aut} {debug}");
+                    writer.AppendLine($"w.WriteTextString(nameof(this.{propName}));");
+                    if (instr is { } isw)
+                        writer.AppendLines(isw.w);
+                    else
+                        writer.AppendLine($"// TODO {propType}");
 
 
 
-                    /*var pnW = $"writer.WriteTextString(\"{propName}\");";
-                    writer.AppendLine($"\t\t{pnW}");
-
-                    var pvW = propType switch
-                    {
-                        "DateTimeOffset" => $"writer.WriteDateTimeOffset(this.{propName});",
-                        "Decimal" => $"writer.WriteDecimal(this.{propName});",
-                        "Double" => $"writer.WriteDouble(this.{propName});",
-                        "Single" => $"writer.WriteSingle(this.{propName});",
-                        "Int32" => $"writer.WriteInt32(this.{propName});",
-                        "Int64" => $"writer.WriteInt64(this.{propName});",
-                        "UInt32" => $"writer.WriteUInt32(this.{propName});",
-                        "UInt64" => $"writer.WriteUInt64(this.{propName});",
-                        "Half" => $"writer.WriteHalf(this.{propName});",
-                        "Boolean" => $"writer.WriteBoolean(this.{propName});",
-                        "String" => BuildStringWrite($"this.{propName}"),
-                        _ => BuildSubWrite(propInfo, propType.Substring(1), $"this.{propName}")
-                    };
-                    if (propType == "Byte" && rank >= 1) pvW = BuildBytesWrite($"this.{propName}");
-                    writer.AppendLine($"\t\t{pvW}");
-
-                    reader.AppendLine($"\t\t\tif (key == \"{propName}\")");
-                    reader.AppendLine("\t\t\t{");
-                    var pvR = propType switch
-                    {
-                        "DateTimeOffset" => $"this.{propName} = reader.ReadDateTimeOffset();",
-                        "Decimal" => $"this.{propName} = reader.ReadDecimal();",
-                        "Double" => $"this.{propName} = reader.ReadDouble();",
-                        "Single" => $"this.{propName} = reader.ReadSingle();",
-                        "Int32" => $"this.{propName} = reader.ReadInt32();",
-                        "Int64" => $"this.{propName} = reader.ReadInt64();",
-                        "UInt32" => $"this.{propName} = reader.ReadUInt32();",
-                        "UInt64" => $"this.{propName} = reader.ReadUInt64();",
-                        "Half" => $"this.{propName} = reader.ReadHalf();",
-                        "Boolean" => $"this.{propName} = reader.ReadBoolean();",
-                        "String" => BuildStringRead($"this.{propName}"),
-                        _ => BuildSubRead(propInfo, propType.Substring(1), $"this.{propName}")
-                    };
-                    if (propType == "Byte" && rank >= 1) pvR = BuildBytesRead($"this.{propName}");
-                    reader.AppendLine($"\t\t\t\t{pvR}");
-                    reader.AppendLine("\t\t\t\tcontinue;");
-                    reader.AppendLine("\t\t\t}");*/
+                    /*writer.AppendLine($"if (this.{propName} == default)");
+                    writer.AppendLine("{");
+                    writer.AppendLine("}");
+                    writer.AppendLine("else");
+                    writer.AppendLine("{");
+                    writer.AppendLine($"// TODO {propType}");*/
                 }
 
             reader.AppendLine("}");
@@ -169,7 +129,7 @@ namespace Cscg.ConciseBinary
             code.AppendLine();
             code.AppendLine("public void ReadCBOR(ref CborReader r)");
             code.AppendLine("{");
-            // code.Append(reader);
+            code.AppendLines(reader);
             code.AppendLine("}");
             code.AppendLine();
             code.AppendLine("public void WriteCBOR(Stream stream)");
@@ -183,7 +143,7 @@ namespace Cscg.ConciseBinary
             code.AppendLine();
             code.AppendLine("public void WriteCBOR(ref CborWriter w)");
             code.AppendLine("{");
-            // code.Append(writer);
+            code.AppendLines(writer);
             code.AppendLine("}");
 
             code.AppendLine("}");
@@ -191,11 +151,140 @@ namespace Cscg.ConciseBinary
             ctx.AddSource(fileName, code.ToString());
         }
 
+        private static (string[] r, string[] w)? TryCreate(string name, ITypeSymbol type)
+        {
+            var isNullable = false;
+            var tn = $"this.{name}";
+            var txt = type.ToTrimDisplay();
+            if (txt is "byte[]" or "string")
+            {
+                txt += "?";
+            }
+            if (txt.EndsWith("?"))
+            {
+                isNullable = true;
+                txt = txt.Substring(0, txt.Length - 1);
+            }
+            (string[] r, string[] w) x;
+            switch (txt)
+            {
+                case "ulong":
+                case "uint":
+                case "decimal":
+                case "double":
+                case "float":
+                case "long":
+                case "int":
+                case "bool":
+                case "System.Half":
+                case "System.DateTimeOffset":
+                    x = (r: [$"{tn} = {GetOneRead(txt)};"], w:
+                        [$"{GetOneWrite(txt, $"{tn}{(isNullable ? ".Value" : "")}")};"]);
+                    break;
+                case "byte[]":
+                case "string":
+                    x = (r: [$"{tn} = {GetOneRead(txt)};"], w: [$"{GetOneWrite(txt, tn)};"]);
+                    break;
+                case "System.TimeSpan":
+                    x = (r: [$"{tn} = TimeSpan.FromTicks({GetOneRead("long")});"],
+                        w: [$"{GetOneWrite("long", $"{tn}.Ticks")};"]);
+                    break;
+                default:
+                    if (type.IsEnum(out var eut))
+                    {
+                        x = (r: GetEnumRead(name, type, eut), w: GetEnumWrite(name, type, eut));
+                        break;
+                    }
+                    if (!type.CanBeParent(out _))
+                    {
+                        isNullable = true;
+                        x = (r: [$"var v = new {type}();", "v.ReadCBOR(ref r);", $"{tn} = v;"],
+                            w: [$"{tn}.WriteCBOR(ref w);"]);
+                        break;
+                    }
+                    return null;
+            }
+            if (isNullable)
+            {
+                x = GetNullRead(x, tn);
+            }
+            return x;
+        }
+
+        private static (string[] r, string[] w) GetNullRead((string[] r, string[] w) x, string tn)
+            => (r: GetIfStat("r.PeekState() == CborReaderState.Null",
+                        ["r.ReadNull();", $"{tn} = default;"], x.r),
+                    w: GetIfStat($"{tn} == default",
+                        ["w.WriteNull();"], x.w)
+                );
+
+        private static string[] GetIfStat(string cond, string[] then, string[] @else)
+        {
+            var lines = new List<string> { $"if ({cond})", "{" };
+            lines.AddRange(then);
+            lines.AddRange(new[] { "}", "else", "{" });
+            lines.AddRange(@else);
+            lines.Add("}");
+            return lines.ToArray();
+        }
+
+        private static string GetOneRead(string typeTxt)
+        {
+            switch (typeTxt)
+            {
+                case "ulong": return "r.ReadUInt64()";
+                case "uint": return "r.ReadUInt32()";
+                case "decimal": return "r.ReadDecimal()";
+                case "double": return "r.ReadDouble()";
+                case "float": return "r.ReadSingle()";
+                case "long": return "r.ReadInt64()";
+                case "int": return "r.ReadInt32()";
+                case "bool": return "r.ReadBoolean()";
+                case "System.Half": return "r.ReadHalf()";
+                case "System.DateTimeOffset": return "r.ReadDateTimeOffset()";
+                case "byte[]": return "r.ReadByteString()";
+                case "string": return "r.ReadTextString()";
+                default: return null;
+            }
+        }
+
+        private static string GetOneWrite(string typeTxt, string val)
+        {
+            switch (typeTxt)
+            {
+                case "ulong": return $"w.WriteUInt64({val})";
+                case "uint": return $"w.WriteUInt32({val})";
+                case "decimal": return $"w.WriteDecimal({val})";
+                case "double": return $"w.WriteDouble({val})";
+                case "float": return $"w.WriteSingle({val})";
+                case "long": return $"w.WriteInt64({val})";
+                case "int": return $"w.WriteInt32({val})";
+                case "bool": return $"w.WriteBoolean({val})";
+                case "System.Half": return $"w.WriteHalf({val})";
+                case "System.DateTimeOffset": return $"w.WriteDateTimeOffset({val})";
+                case "byte[]": return $"w.WriteByteString({val})";
+                case "string": return $"w.WriteTextString({val})";
+                default: return null;
+            }
+        }
+
+        private static string[] GetEnumRead(string name, ITypeSymbol type, INamedTypeSymbol ut)
+        {
+            var utt = ut.ToTrimDisplay();
+            return [$"this.{name} = ({type}){GetOneRead(utt)};"];
+        }
+
+        private static string[] GetEnumWrite(string name, ITypeSymbol type, INamedTypeSymbol ut)
+        {
+            var utt = ut.ToTrimDisplay();
+            return [$"{GetOneWrite(utt, $"({ut})this.{name}")};"];
+        }
+
         private static string BuildBytesRead(string prop)
         {
             var code = new StringBuilder();
             code.AppendLine($"if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
-            code.Append($"\t\t\t\t else {{ {prop} = reader.ReadByteString(); }}");
+            code.Append($" else {{ {prop} = reader.ReadByteString(); }}");
             return code.ToString();
         }
 
@@ -211,7 +300,7 @@ namespace Cscg.ConciseBinary
         {
             var code = new StringBuilder();
             code.AppendLine($"if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
-            code.Append($"\t\t\t\t else {{ {prop} = reader.ReadTextString(); }}");
+            code.Append($" else {{ {prop} = reader.ReadTextString(); }}");
             return code.ToString();
         }
 
@@ -233,7 +322,7 @@ namespace Cscg.ConciseBinary
             else
             {
                 code.AppendLine($"if (reader.PeekState() == CborReaderState.Null) {{ reader.ReadNull(); {prop} = default; }}");
-                code.Append($"\t\t\t\t else {{ var v = new {type}(); v.ReadCBOR(ref reader); {prop} = v; }}");
+                code.Append($" else {{ var v = new {type}(); v.ReadCBOR(ref reader); {prop} = v; }}");
             }
             return code.ToString();
         }
