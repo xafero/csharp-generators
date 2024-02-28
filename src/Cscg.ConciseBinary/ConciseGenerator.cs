@@ -25,7 +25,7 @@ namespace Cscg.ConciseBinary
 
                 var intCode = Coding.GenerateIntf(IntObjName, Space, new List<string>
                 {
-                    "void ReadCBOR(ref CborReader reader)",
+                    "void ReadCBOR(ref CborReader reader)", 
                     "void WriteCBOR(ref CborWriter writer)"
                 }, "System.Formats.Cbor");
                 ctx.AddSource($"{IntObjName}.g.cs", Sources.From(intCode));
@@ -84,15 +84,23 @@ namespace Cscg.ConciseBinary
             var callMode = cdSealed && cdBase == null ? string.Empty
                 : callBase ? "override " : "virtual ";
 
-            var reader = new CodeWriter();
-            var writer = new CodeWriter();
+            var readerH = new CodeWriter();
+            var readerC = new CodeWriter();
+            var writerH = new CodeWriter();
+            var writerC = new CodeWriter();
 
-            writer.AppendLine("w.WriteStartMap(null);");
-            reader.AppendLine("var count = (int)r.ReadStartMap();");
-            reader.AppendLine("string key;");
-            reader.AppendLine("for (var i = 0; i < count; i++)");
-            reader.AppendLine("{");
-            reader.AppendLine("key = r.ReadTextString();");
+            readerH.AppendLine("var count = (int)r.ReadStartMap();");
+            readerH.AppendLine("string key;");
+            readerH.AppendLine("for (var i = 0; i < count; i++)");
+            readerH.AppendLine("{");
+            readerH.AppendLine("key = r.ReadTextString();");
+            readerH.AppendLine("ReadCBORCore(ref r, key);");
+            readerH.AppendLine("}");
+            readerH.AppendLine("r.ReadEndMap();");
+
+            writerH.AppendLine("w.WriteStartMap(null);");
+            writerH.AppendLine("WriteCBORCore(ref w);");
+            writerH.AppendLine("w.WriteEndMap();");
 
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
@@ -104,35 +112,45 @@ namespace Cscg.ConciseBinary
 
                     var instr = TryCreate(propName, propType);
 
-                    reader.AppendLine($"if (key == nameof(this.{propName}))");
-                    reader.AppendLine("{");
+                    readerC.AppendLine($"if (key == nameof(this.{propName}))");
+                    readerC.AppendLine("{");
                     if (instr is { } isr)
-                        reader.AppendLines(isr.r);
+                        readerC.AppendLines(isr.r);
                     else
-                        reader.AppendLine($"// TODO {propType}");
-                    reader.AppendLine("continue;");
-                    reader.AppendLine("}");
+                        readerC.AppendLine($"// TODO {propType}");
+                    readerC.AppendLine("return;");
+                    readerC.AppendLine("}");
 
-                    writer.AppendLine($"w.WriteTextString(nameof(this.{propName}));");
+                    writerC.AppendLine($"w.WriteTextString(nameof(this.{propName}));");
                     if (instr is { } isw)
-                        writer.AppendLines(isw.w);
+                        writerC.AppendLines(isw.w);
                     else
-                        writer.AppendLine($"// TODO {propType}");
+                        writerC.AppendLine($"// TODO {propType}");
                 }
-
-            reader.AppendLine("}");
-            reader.AppendLine("r.ReadEndMap();");
-            writer.AppendLine("w.WriteEndMap();");
 
             code.AppendLine($"public {callMode}void ReadCBOR(ref CborReader r)");
             code.AppendLine("{");
-            code.AppendLines(reader);
+            code.AppendLines(readerH);
+            code.AppendLine("}");
+            code.AppendLine();
+
+            code.AppendLine($"public {callMode}void ReadCBORCore(ref CborReader r, string key)");
+            code.AppendLine("{");
+            if (callBase) code.AppendLine("base.ReadCBORCore(ref r, key);");
+            code.AppendLines(readerC);
             code.AppendLine("}");
             code.AppendLine();
 
             code.AppendLine($"public {callMode}void WriteCBOR(ref CborWriter w)");
             code.AppendLine("{");
-            code.AppendLines(writer);
+            code.AppendLines(writerH);
+            code.AppendLine("}");
+            code.AppendLine();
+
+            code.AppendLine($"public {callMode}void WriteCBORCore(ref CborWriter w)");
+            code.AppendLine("{");
+            if (callBase) code.AppendLine("base.WriteCBORCore(ref w);");
+            code.AppendLines(writerC);
             code.AppendLine("}");
 
             code.AppendLine("}");
