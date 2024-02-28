@@ -154,8 +154,15 @@ namespace Cscg.ConciseBinary
         private static (string[] r, string[] w)? TryCreate(string name, ITypeSymbol type)
         {
             var isNullable = false;
+            var isArray = false;
             var tn = $"this.{name}";
             var txt = type.ToTrimDisplay();
+            var rank = txt.Count(l => l == '[');
+            if (txt != "byte[]" && rank >= 1)
+            {
+                isArray = true;
+                txt = txt.Split(['['], 2).First();
+            }
             if (txt is "byte[]" or "string")
             {
                 txt += "?";
@@ -175,6 +182,7 @@ namespace Cscg.ConciseBinary
                 case "float":
                 case "long":
                 case "int":
+                case "short":
                 case "bool":
                 case "System.Half":
                 case "System.DateTimeOffset":
@@ -203,6 +211,21 @@ namespace Cscg.ConciseBinary
                         break;
                     }
                     return null;
+            }
+            if (isArray)
+            {
+                isNullable = true;
+                x = (r:
+                    [
+                        "var size = (int)r.ReadStartArray();", $"var v = new {txt}[size];",
+                        "for (var j = 0; j < size; j++)", "{", $"v[j] = {GetOneRead(txt)};",
+                        "}", "r.ReadEndArray();", $"{tn} = v;"
+                    ],
+                    w:
+                    [
+                        "w.WriteStartArray(null);", $"for (var j = 0; j < {tn}.Length; j++)",
+                        "{", $"{GetOneWrite(txt, $"{tn}[j]")};", "}", "w.WriteEndArray();"
+                    ]);
             }
             if (isNullable)
             {
@@ -239,6 +262,7 @@ namespace Cscg.ConciseBinary
                 case "float": return "r.ReadSingle()";
                 case "long": return "r.ReadInt64()";
                 case "int": return "r.ReadInt32()";
+                case "short": return "(short)r.ReadInt32()";
                 case "bool": return "r.ReadBoolean()";
                 case "System.Half": return "r.ReadHalf()";
                 case "System.DateTimeOffset": return "r.ReadDateTimeOffset()";
@@ -258,7 +282,8 @@ namespace Cscg.ConciseBinary
                 case "double": return $"w.WriteDouble({val})";
                 case "float": return $"w.WriteSingle({val})";
                 case "long": return $"w.WriteInt64({val})";
-                case "int": return $"w.WriteInt32({val})";
+                case "int":
+                case "short": return $"w.WriteInt32({val})";
                 case "bool": return $"w.WriteBoolean({val})";
                 case "System.Half": return $"w.WriteHalf({val})";
                 case "System.DateTimeOffset": return $"w.WriteDateTimeOffset({val})";

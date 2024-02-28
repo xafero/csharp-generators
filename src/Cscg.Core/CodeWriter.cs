@@ -6,7 +6,7 @@ namespace Cscg.Core
 {
     public sealed class CodeWriter
     {
-        public string Space { get; set; } = '\t' + "";
+        public string Space { get; set; } = "\t";
         public int Level { get; set; }
 
         public void AppendLine(string text = null)
