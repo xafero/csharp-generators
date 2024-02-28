@@ -95,15 +95,6 @@ namespace Cscg.ConciseBinary
                         writer.AppendLines(isw.w);
                     else
                         writer.AppendLine($"// TODO {propType}");
-
-
-
-                    /*writer.AppendLine($"if (this.{propName} == default)");
-                    writer.AppendLine("{");
-                    writer.AppendLine("}");
-                    writer.AppendLine("else");
-                    writer.AppendLine("{");
-                    writer.AppendLine($"// TODO {propType}");*/
                 }
 
             reader.AppendLine("}");
