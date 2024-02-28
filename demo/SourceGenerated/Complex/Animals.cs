@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Cscg.AutoGen;
 
 namespace SourceGenerated.Complex
