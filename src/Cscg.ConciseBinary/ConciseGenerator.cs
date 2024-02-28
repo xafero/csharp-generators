@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Cscg.Core;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Xml.Linq;
 
 namespace Cscg.ConciseBinary
 {
@@ -169,11 +170,11 @@ namespace Cscg.ConciseBinary
             ctx.AddSource(fileName, code.ToString());
         }
 
-        private static (string[] r, string[] w)? TryCreate(string name, ITypeSymbol type)
+        private static (string[] r, string[] w)? TryCreate(string name, ITypeSymbol type, string tnf = null)
         {
             var isNullable = false;
             var isArray = false;
-            var tn = $"this.{name}";
+            var tn = tnf ?? $"this.{name}";
             var txt = type.ToTrimDisplay();
             var rank = txt.Count(l => l == '[');
             if (txt != "byte[]" && rank >= 1)
@@ -221,6 +222,17 @@ namespace Cscg.ConciseBinary
                         x = (r: GetEnumRead(name, type, eut), w: GetEnumWrite(name, type, eut));
                         break;
                     }
+                    if (type.IsTyped(out _, out var tArgs, out var isList, out var isDict))
+                    {
+                        var atSym = tArgs.LastOrDefault();
+                        if (isList)
+                            x = GetListRead(name, atSym, tn);
+                        else if (isDict)
+                            x = GetDictRead(name, atSym, tn);
+                        else
+                            return null;
+                        break;
+                    }
                     if (!type.CanBeParent(out _))
                     {
                         isNullable = true;
@@ -238,23 +250,81 @@ namespace Cscg.ConciseBinary
             if (isArray)
             {
                 isNullable = true;
-                x = (r:
-                    [
-                        "var size = (int)r.ReadStartArray();", $"var v = new {txt}[size];",
-                        "for (var j = 0; j < size; j++)", "{", $"v[j] = {GetOneRead(txt)};",
-                        "}", "r.ReadEndArray();", $"{tn} = v;"
-                    ],
-                    w:
-                    [
-                        "w.WriteStartArray(null);", $"for (var j = 0; j < {tn}.Length; j++)",
-                        "{", $"{GetOneWrite(txt, $"{tn}[j]")};", "}", "w.WriteEndArray();"
-                    ]);
+                x = GetArrayRead(tn, txt);
             }
             if (isNullable)
             {
                 x = GetNullRead(x, tn);
             }
             return x;
+        }
+
+        private static (string[] r, string[] w) GetDictRead(string name, ITypeSymbol sym, string tn)
+        {
+            var f = TryCreate(name, sym, "dv");
+            var txt = sym.ToTrimDisplay();
+
+            var rr = new List<string>
+            {
+                "var size = (int)r.ReadStartMap();",
+                $"var d = new Dictionary<string, {txt}>(size);", "for (var j = 0; j < size; j++)",
+                "{", $"var dk = {GetOneRead("string")};", $"{sym} dv = default;"
+            };
+            rr.AddRange(f?.r ?? []);
+            rr.Add("d[dk] = dv;");
+            rr.Add("}");
+            rr.Add("r.ReadEndMap();");
+            rr.Add($"{tn} = d;");
+
+            var ww = new List<string> { "w.WriteStartMap(null);", $"foreach (var dv in {tn})", "{" };
+            ww.AddRange(f?.w ?? []);
+            ww.Add("}");
+            ww.Add("w.WriteEndMap();");
+
+            return (r: rr.ToArray(), w: ww.ToArray());
+        }
+
+        private static (string[] r, string[] w) GetListRead(string name, ITypeSymbol sym, string tn)
+        {
+            var f = TryCreate(name, sym);
+            var txt = sym.ToTrimDisplay();
+
+            var rr = new List<string>();
+            rr.Add("var size = (int)r.ReadStartArray();");
+            rr.Add($"var d = new List<{txt}>(size);");
+            rr.Add("for (var j = 0; j < size; j++)");
+            rr.Add("{");
+            rr.AddRange(f.Value.r);
+            rr.Add("}");
+            rr.Add("r.ReadEndArray();");
+            rr.Add($"{tn} = d;");
+
+            var ww = new List<string>();
+            ww.Add("w.WriteStartArray(null);");
+            ww.Add($"foreach (var item in {tn})");
+            ww.Add("{");
+            ww.Add($"{GetOneWrite(txt, "item")};");
+            ww.AddRange(f.Value.w);
+            ww.Add("}");
+            ww.Add("w.WriteEndArray();");
+
+            return (r: rr.ToArray(), w: ww.ToArray());
+        }
+
+        private static (string[] r, string[] w) GetArrayRead(string tn, string txt)
+        {
+            return (r:
+                [
+                    "var size = (int)r.ReadStartArray();", $"var v = new {txt}[size];",
+                    "for (var j = 0; j < size; j++)", "{", $"v[j] = {GetOneRead(txt)};",
+                    "}", "r.ReadEndArray();", $"{tn} = v;"
+                ],
+                w:
+                [
+                    "w.WriteStartArray(null);", $"for (var j = 0; j < {tn}.Length; j++)",
+                    "{", $"{GetOneWrite(txt, $"{tn}[j]")};",
+                    "}", "w.WriteEndArray();"
+                ]);
         }
 
         private static (string[] r, string[] w) GetSubSingle(string tn, string type)
