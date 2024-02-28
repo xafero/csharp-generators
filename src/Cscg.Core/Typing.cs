@@ -128,5 +128,19 @@ namespace Cscg.Core
                     break;
             }
         }
+
+        public static void ExtractBase(this ISymbol symbol, out INamedTypeSymbol baseType,
+            out bool isAbstract, out bool isSealed)
+        {
+            isAbstract = symbol.IsAbstract;
+            isSealed = symbol.IsSealed;
+            baseType = null;
+            if (symbol is ITypeSymbol ts)
+            {
+                var bt = ts.BaseType;
+                var noBase = bt == null || bt.ToTrimDisplay() is "object";
+                if (!noBase) baseType = bt;
+            }
+        }
     }
 }

@@ -61,6 +61,13 @@ namespace Cscg.ConciseBinary
             code.AppendLine($"partial class {name} : {Space}.{IntObjName}");
             code.AppendLine("{");
 
+            var cdSym = sw.GetSymbol(cds);
+            cdSym.ExtractBase(out var cdBase, out _, out var cdSealed);
+
+            var callBase = cdBase != null;
+            var callMode = cdSealed && cdBase == null ? string.Empty
+                : callBase ? "override " : "virtual ";
+
             var reader = new CodeWriter();
             var writer = new CodeWriter();
 
@@ -101,7 +108,7 @@ namespace Cscg.ConciseBinary
             reader.AppendLine("r.ReadEndMap();");
             writer.AppendLine("w.WriteEndMap();");
 
-            code.AppendLine("public void ReadCBOR(Stream stream)");
+            code.AppendLine($"public {callMode}void ReadCBOR(Stream stream)");
             code.AppendLine("{");
             code.AppendLine("byte[] array;");
             code.AppendLine("if (stream is MemoryStream mem)");
@@ -118,12 +125,12 @@ namespace Cscg.ConciseBinary
             code.AppendLine("ReadCBOR(ref reader);");
             code.AppendLine("}");
             code.AppendLine();
-            code.AppendLine("public void ReadCBOR(ref CborReader r)");
+            code.AppendLine($"public {callMode}void ReadCBOR(ref CborReader r)");
             code.AppendLine("{");
             code.AppendLines(reader);
             code.AppendLine("}");
             code.AppendLine();
-            code.AppendLine("public void WriteCBOR(Stream stream)");
+            code.AppendLine($"public {callMode}void WriteCBOR(Stream stream)");
             code.AppendLine("{");
             code.AppendLine("var writer = new CborWriter(CborConformanceMode.Canonical, true);");
             code.AppendLine("WriteCBOR(ref writer);");
@@ -132,7 +139,7 @@ namespace Cscg.ConciseBinary
             code.AppendLine("stream.Flush();");
             code.AppendLine("}");
             code.AppendLine();
-            code.AppendLine("public void WriteCBOR(ref CborWriter w)");
+            code.AppendLine($"public {callMode}void WriteCBOR(ref CborWriter w)");
             code.AppendLine("{");
             code.AppendLines(writer);
             code.AppendLine("}");
