@@ -197,8 +197,13 @@ namespace Cscg.ConciseBinary
                     if (!type.CanBeParent(out _))
                     {
                         isNullable = true;
-                        x = (r: [$"var v = new {type}();", "v.ReadCBOR(ref r);", $"{tn} = v;"],
-                            w: [$"{tn}.WriteCBOR(ref w);"]);
+                        x = GetSubSingle(tn, txt);
+                        break;
+                    }
+                    if (type.SearchType().ToArray() is { Length: >= 1 } sub)
+                    {
+                        isNullable = true;
+                        x = GetSubPoly(tn, sub);
                         break;
                     }
                     return null;
@@ -223,6 +228,44 @@ namespace Cscg.ConciseBinary
                 x = GetNullRead(x, tn);
             }
             return x;
+        }
+
+        private static (string[] r, string[] w) GetSubSingle(string tn, string type)
+        {
+            return (r: [$"var v = new {type}();", "v.ReadCBOR(ref r);", $"{tn} = v;"],
+                w: [$"{tn}.WriteCBOR(ref w);"]);
+        }
+
+        private static (string[] r, string[] w) GetSubPoly(string tn, ClassDeclarationSyntax[] sub)
+        {
+            var read = new List<string>
+            {
+                "r.ReadStartArray();", "var st = r.ReadTextString();"
+            };
+            var write = new List<string>
+            {
+                "w.WriteStartArray(2);", $"w.WriteTextString({tn}.GetType().FullName);"
+            };
+            var idx = 0;
+            foreach (var item in sub)
+            {
+                var isFirst = idx == 0;
+                idx++;
+                var itemFqn = item.GetFqn();
+                var gss = GetSubSingle(tn, itemFqn);
+                read.Add($"{(isFirst ? "" : "else ")}if (st == \"{itemFqn}\")");
+                read.Add("{");
+                read.AddRange(gss.r);
+                read.Add("}");
+                var vr = $"sv{idx}";
+                write.Add($"{(isFirst ? "" : "else ")}if ({tn} is {itemFqn} {vr})");
+                write.Add("{");
+                write.Add(gss.w.Single().Replace(tn, vr));
+                write.Add("}");
+            }
+            write.Add("w.WriteEndArray();");
+            read.Add("r.ReadEndArray();");
+            return (r: read.ToArray(), w: write.ToArray());
         }
 
         private static (string[] r, string[] w) GetNullRead((string[] r, string[] w) x, string tn)

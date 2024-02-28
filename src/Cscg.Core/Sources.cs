@@ -63,5 +63,10 @@ namespace Cscg.Core
             var wrap = new SyntaxWrap(ctx);
             return wrap;
         }
+
+        public static string GetFqn(this ClassDeclarationSyntax clazz)
+        {
+            return $"{clazz.GetParentName()}.{clazz.GetClassName()}";
+        }
     }
 }
