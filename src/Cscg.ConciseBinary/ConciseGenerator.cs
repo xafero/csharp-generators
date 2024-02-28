@@ -81,26 +81,13 @@ namespace Cscg.ConciseBinary
             cdSym.ExtractBase(out var cdBase, out _, out var cdSealed);
 
             var callBase = cdBase != null;
-            var callMode = cdSealed && cdBase == null ? string.Empty
-                : callBase ? "override " : "virtual ";
+            var isAlone = cdSealed && cdBase == null;
+            var callMode = isAlone ? string.Empty : callBase ? "override " : "virtual ";
 
             var readerH = new CodeWriter();
             var readerC = new CodeWriter();
             var writerH = new CodeWriter();
             var writerC = new CodeWriter();
-
-            readerH.AppendLine("var count = (int)r.ReadStartMap();");
-            readerH.AppendLine("string key;");
-            readerH.AppendLine("for (var i = 0; i < count; i++)");
-            readerH.AppendLine("{");
-            readerH.AppendLine("key = r.ReadTextString();");
-            readerH.AppendLine("ReadCBORCore(ref r, key);");
-            readerH.AppendLine("}");
-            readerH.AppendLine("r.ReadEndMap();");
-
-            writerH.AppendLine("w.WriteStartMap(null);");
-            writerH.AppendLine("WriteCBORCore(ref w);");
-            writerH.AppendLine("w.WriteEndMap();");
 
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
@@ -118,7 +105,7 @@ namespace Cscg.ConciseBinary
                         readerC.AppendLines(isr.r);
                     else
                         readerC.AppendLine($"// TODO {propType}");
-                    readerC.AppendLine("return;");
+                    readerC.AppendLine(isAlone ? "continue;" : "return;");
                     readerC.AppendLine("}");
 
                     writerC.AppendLine($"w.WriteTextString(nameof(this.{propName}));");
@@ -128,30 +115,55 @@ namespace Cscg.ConciseBinary
                         writerC.AppendLine($"// TODO {propType}");
                 }
 
+            readerH.AppendLine("var count = (int)r.ReadStartMap();");
+            readerH.AppendLine("string key;");
+            readerH.AppendLine("for (var i = 0; i < count; i++)");
+            readerH.AppendLine("{");
+            readerH.AppendLine("key = r.ReadTextString();");
+            if (isAlone)
+                readerH.AppendLines(readerC);
+            else
+                readerH.AppendLine("ReadCBORCore(ref r, key);");
+            readerH.AppendLine("}");
+            readerH.AppendLine("r.ReadEndMap();");
+
+            writerH.AppendLine("w.WriteStartMap(null);");
+            if (isAlone)
+                writerH.AppendLines(writerC);
+            else
+                writerH.AppendLine("WriteCBORCore(ref w);");
+            writerH.AppendLine("w.WriteEndMap();");
+
             code.AppendLine($"public {callMode}void ReadCBOR(ref CborReader r)");
             code.AppendLine("{");
             code.AppendLines(readerH);
             code.AppendLine("}");
-            code.AppendLine();
 
-            code.AppendLine($"public {callMode}void ReadCBORCore(ref CborReader r, string key)");
-            code.AppendLine("{");
-            if (callBase) code.AppendLine("base.ReadCBORCore(ref r, key);");
-            code.AppendLines(readerC);
-            code.AppendLine("}");
-            code.AppendLine();
+            if (!isAlone)
+            {
+                code.AppendLine();
+                code.AppendLine($"public {callMode}void ReadCBORCore(ref CborReader r, string key)");
+                code.AppendLine("{");
+                if (callBase) code.AppendLine("base.ReadCBORCore(ref r, key);");
+                code.AppendLines(readerC);
+                code.AppendLine("}");
+            }
 
+            code.AppendLine();
             code.AppendLine($"public {callMode}void WriteCBOR(ref CborWriter w)");
             code.AppendLine("{");
             code.AppendLines(writerH);
             code.AppendLine("}");
-            code.AppendLine();
 
-            code.AppendLine($"public {callMode}void WriteCBORCore(ref CborWriter w)");
-            code.AppendLine("{");
-            if (callBase) code.AppendLine("base.WriteCBORCore(ref w);");
-            code.AppendLines(writerC);
-            code.AppendLine("}");
+            if (!isAlone)
+            {
+                code.AppendLine();
+                code.AppendLine($"public {callMode}void WriteCBORCore(ref CborWriter w)");
+                code.AppendLine("{");
+                if (callBase) code.AppendLine("base.WriteCBORCore(ref w);");
+                code.AppendLines(writerC);
+                code.AppendLine("}");
+            }
 
             code.AppendLine("}");
             code.AppendLine("}");
