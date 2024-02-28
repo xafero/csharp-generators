@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using Cscg.Core;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
 
 namespace Cscg.ConciseBinary
 {

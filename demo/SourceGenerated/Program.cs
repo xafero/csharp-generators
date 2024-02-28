@@ -1,9 +1,4 @@
-﻿using System;
-using System.Text;
-using Cscg.AutoGen;
-using SourceGenerated;
-
-namespace SourceGenerated
+﻿namespace SourceGenerated
 {
     public static partial class Program
     {
