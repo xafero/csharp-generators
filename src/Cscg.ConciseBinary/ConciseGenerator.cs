@@ -25,14 +25,30 @@ namespace Cscg.ConciseBinary
 
                 var intCode = Coding.GenerateIntf(IntObjName, Space, new List<string>
                 {
-                    "void ReadCBOR(System.IO.Stream stream)",
-                    "void ReadCBOR(ref System.Formats.Cbor.CborReader reader)",
-                    "void WriteCBOR(System.IO.Stream stream)",
-                    "void WriteCBOR(ref System.Formats.Cbor.CborWriter writer)"
-                });
+                    "void ReadCBOR(ref CborReader reader)",
+                    "void WriteCBOR(ref CborWriter writer)"
+                }, "System.Formats.Cbor");
                 ctx.AddSource($"{IntObjName}.g.cs", Sources.From(intCode));
 
-                var extCode = Coding.GenerateExt(ExtObjName, Space, new List<string>());
+                var extCode = Coding.GenerateExt(ExtObjName, Space, new List<string[]>
+                {
+                    new[]
+                    {
+                        $"public static void ReadCBOR(this {IntObjName} obj, Stream stream)", "{",
+                        "byte[] array;", "if (stream is MemoryStream mem)", "{",
+                        "array = mem.ToArray();", "}", "else", "{", "using var copy = new MemoryStream();",
+                        "stream.CopyTo(copy);", "array = copy.ToArray();", "}",
+                        "var reader = new CborReader(array, CborConformanceMode.Canonical);",
+                        "obj.ReadCBOR(ref reader);", "}", ""
+                    },
+                    new[]
+                    {
+                        $"public static void WriteCBOR(this {IntObjName} obj, Stream stream)", "{",
+                        "var writer = new CborWriter(CborConformanceMode.Canonical, true);",
+                        "obj.WriteCBOR(ref writer);", "var array = writer.Encode();",
+                        "stream.Write(array, 0, array.Length);", "stream.Flush();", "}"
+                    }
+                }, "System.Formats.Cbor", "System.IO");
                 ctx.AddSource($"{ExtObjName}.g.cs", Sources.From(extCode));
             });
 
@@ -49,7 +65,7 @@ namespace Cscg.ConciseBinary
             var name = cds.GetClassName();
             var fileName = $"{name}.g.cs";
             var code = new CodeWriter();
-            code.AppendLine("using autogen;");
+            code.AppendLine($"using {Coding.AutoNamespace};");
             code.AppendLine("using System;");
             code.AppendLine("using System.Collections.Generic;");
             code.AppendLine("using System.Formats.Cbor;");
@@ -108,37 +124,12 @@ namespace Cscg.ConciseBinary
             reader.AppendLine("r.ReadEndMap();");
             writer.AppendLine("w.WriteEndMap();");
 
-            code.AppendLine($"public {callMode}void ReadCBOR(Stream stream)");
-            code.AppendLine("{");
-            code.AppendLine("byte[] array;");
-            code.AppendLine("if (stream is MemoryStream mem)");
-            code.AppendLine("{");
-            code.AppendLine("array = mem.ToArray();");
-            code.AppendLine("}");
-            code.AppendLine("else");
-            code.AppendLine("{");
-            code.AppendLine("using var copy = new MemoryStream();");
-            code.AppendLine("stream.CopyTo(copy);");
-            code.AppendLine("array = copy.ToArray();");
-            code.AppendLine("}");
-            code.AppendLine("var reader = new CborReader(array, CborConformanceMode.Canonical);");
-            code.AppendLine("ReadCBOR(ref reader);");
-            code.AppendLine("}");
-            code.AppendLine();
             code.AppendLine($"public {callMode}void ReadCBOR(ref CborReader r)");
             code.AppendLine("{");
             code.AppendLines(reader);
             code.AppendLine("}");
             code.AppendLine();
-            code.AppendLine($"public {callMode}void WriteCBOR(Stream stream)");
-            code.AppendLine("{");
-            code.AppendLine("var writer = new CborWriter(CborConformanceMode.Canonical, true);");
-            code.AppendLine("WriteCBOR(ref writer);");
-            code.AppendLine("var array = writer.Encode();");
-            code.AppendLine("stream.Write(array, 0, array.Length);");
-            code.AppendLine("stream.Flush();");
-            code.AppendLine("}");
-            code.AppendLine();
+
             code.AppendLine($"public {callMode}void WriteCBOR(ref CborWriter w)");
             code.AppendLine("{");
             code.AppendLines(writer);

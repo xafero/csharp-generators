@@ -31,7 +31,7 @@ namespace Cscg.Binary
                 });
                 ctx.AddSource($"{IntObjName}.g.cs", Sources.From(intCode));
 
-                var extCode = Coding.GenerateExt(ExtObjName, Space, new List<string>());
+                var extCode = Coding.GenerateExt(ExtObjName, Space, new List<string[]>());
                 ctx.AddSource($"{ExtObjName}.g.cs", Sources.From(extCode));
             });
 
@@ -48,7 +48,7 @@ namespace Cscg.Binary
             var name = cds.GetClassName();
             var fileName = $"{name}.g.cs";
             var code = new StringBuilder();
-            code.AppendLine("using autogen;");
+            code.AppendLine($"using {Coding.AutoNamespace};");
             code.AppendLine("using System;");
             code.AppendLine("using System.Text;");
             code.AppendLine("using System.IO;");

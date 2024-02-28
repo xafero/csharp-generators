@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using autogen;
+using Cscg.AutoGen;
 using System.IO;
 using SourceGenerated;
 using SourceGenerated.Complex;

@@ -1,5 +1,5 @@
 ﻿using System;
-using autogen;
+using Cscg.AutoGen;
 
 namespace SourceGenerated.Simple
 {
