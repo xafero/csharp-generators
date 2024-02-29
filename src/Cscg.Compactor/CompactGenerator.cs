@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using System.Xml.Linq;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -47,18 +49,26 @@ namespace Cscg.Compactor
 
         private static void Exec(SourceProductionContext ctx, SyntaxWrap syntax)
         {
-
-
-
-            var x1 = syntax.Class;
-            var x2 = syntax.Symbol;
-            var x3 = syntax.Attribute;
-
-
-
-
-            ;
-
+            var cds = syntax.Class;
+            var space = cds.GetParentName() ?? Coding.AutoNamespace;
+            var name = cds.GetClassName();
+            var fileName = $"{name}.g.cs";
+            var code = new CodeWriter();
+            code.AppendLine($"using {Coding.AutoNamespace};");
+            code.AppendLine("using System;");
+            code.AppendLine("using System.Collections.Generic;");
+            code.AppendLine("using System.Formats.Cbor;");
+            code.AppendLine("using System.Text;");
+            code.AppendLine("using System.IO;");
+            code.AppendLine();
+            code.AppendLine($"namespace {space}");
+            code.AppendLine("{");
+            code.AppendLine($"partial class {name} : {Space}.{IntObjName}");
+            code.AppendLine("{");
+            code.AppendLine(" // TODO ?! ");
+            code.AppendLine("}");
+            code.AppendLine("}");
+            ctx.AddSource(fileName, code.ToString());
         }
     }
 }
