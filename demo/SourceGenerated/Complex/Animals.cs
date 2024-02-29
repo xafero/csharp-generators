@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Cscg.AutoGen;
+using Cscg.Compactor.Lib;
 
 namespace SourceGenerated.Complex
 {

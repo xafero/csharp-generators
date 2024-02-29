@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Formats.Cbor" Version="8.0.0" />
+    <ProjectReference Include="..\..\run\Cscg.Compactor.Lib\Cscg.Compactor.Lib.csproj" />
   </ItemGroup>
 
 </Project>
