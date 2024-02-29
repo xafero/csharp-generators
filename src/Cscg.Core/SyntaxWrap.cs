@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -15,24 +16,29 @@ namespace Cscg.Core
         public Particle GetInfo(ISymbol symbol)
         {
             ITypeSymbol retType;
+            string name;
             switch (symbol)
             {
                 case IFieldSymbol fs:
                     retType = fs.Type;
+                    name = fs.Name;
                     break;
                 case IParameterSymbol rs:
                     retType = rs.Type;
+                    name = rs.Name;
                     break;
                 case IMethodSymbol ms:
                     retType = ms.ReturnType;
+                    name = ms.Name;
                     break;
                 case IPropertySymbol ps:
                     retType = ps.Type;
+                    name = ps.Name;
                     break;
                 default:
                     return null;
             }
-            return new Particle { ReturnType = retType };
+            return new Particle { Name = name, ReturnType = retType };
         }
 
         public ISymbol GetSymbol(SyntaxNode node)
