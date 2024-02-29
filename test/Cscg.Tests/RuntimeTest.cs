@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Cscg.AutoGen;
 using System.IO;
+using Cscg.AutoGen;
 using SourceGenerated;
 using SourceGenerated.Simple;
 using Xunit;

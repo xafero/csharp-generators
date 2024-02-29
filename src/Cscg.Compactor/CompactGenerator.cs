@@ -1,19 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.CodeAnalysis;
-using System;
-using System.Globalization;
-using System.Linq;
+using System.Threading;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Cscg.Core;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Xml.Linq;
 using static Cscg.Core.Sources;
 
 namespace Cscg.Compactor
@@ -33,6 +22,25 @@ namespace Cscg.Compactor
                 var attrCode = Coding.GenerateAttr(BinObjName, Space);
                 ctx.AddSource($"{BinObjName}Attribute.g.cs", From(attrCode));
             });
+
+            const string fqnA = $"{Space}.{BinObjName}Attribute";
+            var sp = igi.SyntaxProvider;
+            igi.RegisterSourceOutput(sp.ForAttributeWithMetadataName(fqnA, Check, Fuck2), Fuck3);
+        }
+
+        private static bool Check(SyntaxNode node, CancellationToken _)
+        {
+            return node is ClassDeclarationSyntax;
+        }
+
+        private static object Fuck2(GeneratorAttributeSyntaxContext ctx, CancellationToken _)
+        {
+            return ctx.TargetNode as ClassDeclarationSyntax;
+        }
+
+        private void Fuck3(SourceProductionContext ctx, object arg2)
+        {
+
         }
     }
 }

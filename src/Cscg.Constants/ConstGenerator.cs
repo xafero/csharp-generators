@@ -73,7 +73,7 @@ namespace Cscg.Constants
         private static void ParseValue(string raw, out bool isConst, out string type, out object val)
         {
             isConst = true;
-            var inv = Sources.Invariant;
+            var inv = Invariant;
             const string prefix = "base64:";
             if (raw.StartsWith(prefix) && raw.Substring(prefix.Length) is { Length: >= 1 } b64)
             {

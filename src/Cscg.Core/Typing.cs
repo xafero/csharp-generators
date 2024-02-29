@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -18,24 +19,24 @@ namespace Cscg.Core
             switch (name)
             {
                 case "Half": return "Half";
-                case "float": return nameof(System.Single);
-                case "string": return nameof(System.String);
-                case "long": return nameof(System.Int64);
-                case "int": return nameof(System.Int32);
-                case "short": return nameof(System.Int16);
-                case "ulong": return nameof(System.UInt64);
-                case "uint": return nameof(System.UInt32);
-                case "ushort": return nameof(System.UInt16);
-                case "bool": return nameof(System.Boolean);
-                case "sbyte": return nameof(System.SByte);
-                case "char": return nameof(System.Char);
-                case "double": return nameof(System.Double);
-                case "decimal": return nameof(System.Decimal);
-                case "byte": return nameof(System.Byte);
-                case "DateTime": return nameof(System.DateTime);
-                case "DateTimeOffset": return nameof(System.DateTimeOffset);
-                case "TimeSpan": return nameof(System.TimeSpan);
-                case "Guid": return nameof(System.Guid);
+                case "float": return nameof(Single);
+                case "string": return nameof(String);
+                case "long": return nameof(Int64);
+                case "int": return nameof(Int32);
+                case "short": return nameof(Int16);
+                case "ulong": return nameof(UInt64);
+                case "uint": return nameof(UInt32);
+                case "ushort": return nameof(UInt16);
+                case "bool": return nameof(Boolean);
+                case "sbyte": return nameof(SByte);
+                case "char": return nameof(Char);
+                case "double": return nameof(Double);
+                case "decimal": return nameof(Decimal);
+                case "byte": return nameof(Byte);
+                case "DateTime": return nameof(DateTime);
+                case "DateTimeOffset": return nameof(DateTimeOffset);
+                case "TimeSpan": return nameof(TimeSpan);
+                case "Guid": return nameof(Guid);
                 default: return $"_{name}";
             }
         }
