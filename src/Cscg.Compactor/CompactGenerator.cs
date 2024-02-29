@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
@@ -57,15 +58,30 @@ namespace Cscg.Compactor
 
         private static void ExecBody(CodeWriter code, ClassDeclarationSyntax cds, SyntaxWrap s)
         {
+            s.Symbol.ExtractBase(out var cdBase, out _, out var cdSealed);
+            var callBase = cdBase != null;
+            var isAlone = cdSealed && cdBase == null;
+            var callMode = isAlone ? string.Empty : callBase ? "override " : "virtual ";
+
             var construct = new CodeWriter();
             var reader = new CodeWriter();
             var writer = new CodeWriter();
+
             construct.AppendLine($"static {cds.GetClassName()}()");
             construct.AppendLine("{");
-            reader.AppendLine("public void ReadBy(ICompactor c)");
+            reader.AppendLine($"public {callMode}void ReadBy(ICompactor c)");
             reader.AppendLine("{");
-            writer.AppendLine("public void WriteBy(ICompactor c)");
+            if (!isAlone)
+            {
+                if (callBase) reader.AppendLine("base.ReadBy(c);");
+            }
+            writer.AppendLine($"public {callMode}void WriteBy(ICompactor c)");
             writer.AppendLine("{");
+            if (!isAlone)
+            {
+                if (callBase) writer.AppendLine("base.WriteBy(c);");
+            }
+
             var registry = new List<string>();
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
@@ -82,6 +98,7 @@ namespace Cscg.Compactor
                     var writeMeth = $"Write{pRt}";
                     writer.AppendLine($"c.{writeMeth}(this.{pName});");
                 }
+
             construct.AppendLines(registry.OrderBy(e => e).Distinct());
             construct.AppendLine("}");
             reader.AppendLine("}");
