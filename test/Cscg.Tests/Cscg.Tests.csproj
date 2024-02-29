@@ -24,11 +24,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\demo\SourceGenerated\SourceGenerated.csproj" />
-    <ProjectReference Include="..\..\src\Cscg.Binary\Cscg.Binary.csproj" />
-    <ProjectReference Include="..\..\src\Cscg.ConciseBinary\Cscg.ConciseBinary.csproj" />
+    <ProjectReference Include="..\..\src\Cscg.Compactor\Cscg.Compactor.csproj" />
     <ProjectReference Include="..\..\src\Cscg.Constants\Cscg.Constants.csproj" />
     <ProjectReference Include="..\..\src\Cscg.Core\Cscg.Core.csproj" />
-    <ProjectReference Include="..\..\src\SqlPreparer\SqlPreparer.csproj" />
   </ItemGroup>
 
 </Project>

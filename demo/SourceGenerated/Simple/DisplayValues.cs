@@ -3,7 +3,7 @@ using Cscg.AutoGen;
 
 namespace SourceGenerated.Simple
 {
-    [BinaryObj]
+    [Compacted]
     public sealed partial class Person
     {
         public string FirstName { get; set; }
@@ -15,7 +15,7 @@ namespace SourceGenerated.Simple
         Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
     }
 
-    [BinaryObj]
+    [Compacted]
     public sealed partial class DisplayValues
     {
         public float AspectRatio { get; set; }
@@ -28,6 +28,7 @@ namespace SourceGenerated.Simple
         public byte[] Image { get; set; }
         public char Letter { get; set; }
         public char[] Letters { get; set; }
+        public Half HalfSize { get; set; }
         public decimal Money { get; set; }
         public WeekDays FreeDay { get; set; }
         public Person Owner { get; set; }
@@ -36,6 +37,7 @@ namespace SourceGenerated.Simple
         public ushort VeryShort { get; set; }
         public uint VeryMid { get; set; }
         public ulong VeryLong { get; set; }
+        public DateTimeOffset TimeOff { get; set; }
         public DateTime TimeStamp { get; set; }
         public TimeSpan Duration { get; set; }
         public Guid Unique { get; set; }

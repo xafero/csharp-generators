@@ -1,6 +1,4 @@
 using System.Formats.Cbor;
-using Cscg.Binary;
-using Cscg.ConciseBinary;
 using Cscg.Constants;
 using Cscg.Tests.Tools;
 using Xunit;

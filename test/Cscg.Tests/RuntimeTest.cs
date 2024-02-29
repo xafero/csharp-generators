@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using Cscg.AutoGen;
 using System.IO;
 using SourceGenerated;
-using SourceGenerated.Complex;
+using SourceGenerated.Simple;
 using Xunit;
 using Xunit.Abstractions;
 using DvS = SourceGenerated.Simple.DisplayValues;
-using DvC = SourceGenerated.Complex.DisplayValues;
-using static SourceGenerated.Complex.Zoos;
 using static Cscg.Tests.Tools.DebugTool;
 
 namespace Cscg.Tests
@@ -111,7 +109,7 @@ namespace Cscg.Tests
             Assert.Equal(expected, actual);
         }
 
-        private static DvC CreateCdv()
+        private static DvS CreateCdv()
             => new()
             {
                 TempDirectory = "help me",
@@ -122,12 +120,24 @@ namespace Cscg.Tests
                 Money = 21111.11m,
                 VeryMid = 3902,
                 VeryLong = 29293,
-                TimeStamp = DateTimeOffset.UtcNow,
+                TimeOff = DateTimeOffset.UtcNow,
+                TimeStamp = DateTime.UtcNow,
                 Owner = new Person { FirstName = "Hans", SecondName = "Gruber" },
                 ShowStatusBar = true,
                 HalfSize = Half.Epsilon,
-                WorkDay = WeekDays.Friday,
-                Image = [1, 3, 23, 42, 3, 1, 35, 7, 48, 9]
+                FreeDay = WeekDays.Friday,
+                Image = [1, 3, 23, 42, 3, 1, 35, 7, 48, 9],
+                VeryShort = 225,
+                AutoSaveKill = 2299,
+                Duration = TimeSpan.FromHours(4.23),
+                Letter = 'w',
+                Letters = ['d', 'z', 'x'],
+                MaybeBool = true,
+                MaybeDate = DateTime.UnixEpoch.AddYears(28),
+                MaybeInt = -902,
+                OneFlag = 39,
+                Unique = Guid.NewGuid(),
+                Vulcan = -36
             };
     }
 }

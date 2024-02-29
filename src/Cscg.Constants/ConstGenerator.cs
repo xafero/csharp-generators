@@ -28,7 +28,7 @@ namespace Cscg.Constants
                 code.AppendLine("public static partial class ConstStrings");
                 code.AppendLine("{");
                 var lines = nac.content.Split('\n');
-                bool isFirst = true;
+                var isFirst = true;
                 foreach (var rawLine in lines)
                 {
                     var line = rawLine.Trim();

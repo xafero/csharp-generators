@@ -52,7 +52,9 @@ namespace SourceGenerated
                 Owner = new Person { FirstName = "Harry", SecondName = "Willy" },
                 MaybeBool = true,
                 MaybeDate = DateTime.UnixEpoch.AddYears(35).AddMonths(2).AddDays(7),
-                MaybeInt = 0x39393045
+                MaybeInt = 0x39393045,
+                HalfSize = Half.MaxValue,
+                TimeOff = DateTimeOffset.UnixEpoch.AddYears(35).AddMonths(2).AddDays(7)
             };
     }
 }

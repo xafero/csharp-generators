@@ -51,7 +51,7 @@ namespace SourceGenerated.Complex
         }
     }
 
-    [ConciseObj]
+    [Compacted]
     public sealed partial class ZooEvent
     {
         public int? Guests { get; set; }
@@ -60,7 +60,7 @@ namespace SourceGenerated.Complex
         public TimeSpan Duration { get; set; }
     }
 
-    [ConciseObj]
+    [Compacted]
     public sealed partial class Zoo
     {
         public List<IAnimal> Animals { get; set; } = new();
@@ -70,38 +70,38 @@ namespace SourceGenerated.Complex
         public short[] Values { get; set; }
     }
 
-    [ConciseObj]
+    [Compacted]
     public sealed partial class Cat : Animal
     {
         public int Cuteness { get; set; }
     }
 
-    [ConciseObj]
+    [Compacted]
     public sealed partial class Tiger : Animal
     {
         public string NickName { get; set; }
     }
 
-    [ConciseObj]
+    [Compacted]
     public sealed partial class Lion : Animal
     {
         public DietInfo Diet { get; set; }
     }
 
-    [ConciseObj]
+    [Compacted]
     public partial class DietInfo
     {
         public string FoodType { get; set; }
         public int QuantityPerDay { get; set; }
     }
 
-    [ConciseObj]
+    [Compacted]
     public sealed partial class ExDietInfo : DietInfo
     {
         public bool Premium { get; set; }
     }
 
-    [ConciseObj]
+    [Compacted]
     public abstract partial class Animal : IAnimal
     {
         public string Name { get; set; }
