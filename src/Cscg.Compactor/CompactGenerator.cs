@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
@@ -21,6 +22,16 @@ namespace Cscg.Compactor
             {
                 var attrCode = Coding.GenerateAttr(BinObjName, Space);
                 ctx.AddSource($"{BinObjName}Attribute.g.cs", From(attrCode));
+
+                var intCode = Coding.GenerateIntf(IntObjName, Space, new List<string>
+                {
+                }, "System.IO");
+                ctx.AddSource($"{IntObjName}.g.cs", From(intCode));
+
+                var extCode = Coding.GenerateExt(ExtObjName, Space, new List<string[]>
+                {
+                }, "System.IO");
+                ctx.AddSource($"{ExtObjName}.g.cs", From(extCode));
             });
 
             const string fqn = $"{Space}.{BinObjName}Attribute";
@@ -28,13 +39,13 @@ namespace Cscg.Compactor
             igi.RegisterSourceOutput(sp.ForAttributeWithMetadataName(fqn, Check, Wrap), Exec);
         }
 
-        private static bool Check(SyntaxNode node, CancellationToken _) 
+        private static bool Check(SyntaxNode node, CancellationToken _)
             => node is ClassDeclarationSyntax;
 
-        private static SyntaxWrap Wrap(GeneratorAttributeSyntaxContext ctx, CancellationToken _) 
+        private static SyntaxWrap Wrap(GeneratorAttributeSyntaxContext ctx, CancellationToken _)
             => ctx.Wrap();
 
-        private void Exec(SourceProductionContext ctx, SyntaxWrap syntax)
+        private static void Exec(SourceProductionContext ctx, SyntaxWrap syntax)
         {
 
 
