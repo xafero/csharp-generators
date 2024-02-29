@@ -58,7 +58,7 @@ namespace Cscg.Core
             return text;
         }
 
-        public static SyntaxWrap Wrap(this GeneratorSyntaxContext ctx)
+        public static SyntaxWrap Wrap(this GeneratorAttributeSyntaxContext ctx)
         {
             var wrap = new SyntaxWrap(ctx);
             return wrap;

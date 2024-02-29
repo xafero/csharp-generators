@@ -1,11 +1,16 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Cscg.Core
 {
-    public class SyntaxWrap(GeneratorSyntaxContext context)
+    public class SyntaxWrap(GeneratorAttributeSyntaxContext context)
     {
-        public ClassDeclarationSyntax Class => context.Node as ClassDeclarationSyntax;
+        public ClassDeclarationSyntax Class => context.TargetNode as ClassDeclarationSyntax;
+
+        public INamedTypeSymbol Symbol => context.TargetSymbol as INamedTypeSymbol;
+
+        public AttributeData Attribute => context.Attributes.First();
 
         public Particle GetInfo(ISymbol symbol)
         {

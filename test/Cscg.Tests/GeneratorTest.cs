@@ -1,4 +1,5 @@
 using System.Formats.Cbor;
+using Cscg.Compactor;
 using Cscg.Constants;
 using Cscg.Tests.Tools;
 using Xunit;
@@ -11,7 +12,7 @@ namespace Cscg.Tests
         [Fact]
         public void TestBinary()
         {
-            var gen = new BinaryGenerator();
+            var gen = new CompactGenerator();
             var (_, source) = GetLocalFile("Simple/DisplayValues.cs");
 
             var input = source.CreateCompilation();
@@ -24,20 +25,7 @@ namespace Cscg.Tests
         [Fact]
         public void TestConcise()
         {
-            var gen = new ConciseGenerator();
-            var (_, source) = GetLocalFile("Complex/DisplayValues.cs");
-
-            var input = source.CreateCompilation(addedRefs: [GetMetaRef<CborReader>()]);
-            var (output, run) = input.RunGenerators(out var dia, [gen], []);
-
-            dia.CheckNoError(output, 6);
-            run.CheckNoError(5);
-        }
-
-        [Fact]
-        public void TestConciseA()
-        {
-            var gen = new ConciseGenerator();
+            var gen = new CompactGenerator();
             var (_, source) = GetLocalFile("Complex/Animals.cs");
 
             var input = source.CreateCompilation(addedRefs: [GetMetaRef<CborReader>()]);

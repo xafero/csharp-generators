@@ -23,23 +23,30 @@ namespace Cscg.Compactor
                 ctx.AddSource($"{BinObjName}Attribute.g.cs", From(attrCode));
             });
 
-            const string fqnA = $"{Space}.{BinObjName}Attribute";
+            const string fqn = $"{Space}.{BinObjName}Attribute";
             var sp = igi.SyntaxProvider;
-            igi.RegisterSourceOutput(sp.ForAttributeWithMetadataName(fqnA, Check, Fuck2), Fuck3);
+            igi.RegisterSourceOutput(sp.ForAttributeWithMetadataName(fqn, Check, Wrap), Exec);
         }
 
-        private static bool Check(SyntaxNode node, CancellationToken _)
-        {
-            return node is ClassDeclarationSyntax;
-        }
+        private static bool Check(SyntaxNode node, CancellationToken _) 
+            => node is ClassDeclarationSyntax;
 
-        private static object Fuck2(GeneratorAttributeSyntaxContext ctx, CancellationToken _)
-        {
-            return ctx.TargetNode as ClassDeclarationSyntax;
-        }
+        private static SyntaxWrap Wrap(GeneratorAttributeSyntaxContext ctx, CancellationToken _) 
+            => ctx.Wrap();
 
-        private void Fuck3(SourceProductionContext ctx, object arg2)
+        private void Exec(SourceProductionContext ctx, SyntaxWrap syntax)
         {
+
+
+
+            var x1 = syntax.Class;
+            var x2 = syntax.Symbol;
+            var x3 = syntax.Attribute;
+
+
+
+
+            ;
 
         }
     }
