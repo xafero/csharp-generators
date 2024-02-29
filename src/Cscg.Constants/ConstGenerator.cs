@@ -1,7 +1,6 @@
 using System;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
 using static Cscg.Core.Sources;
@@ -21,14 +20,15 @@ namespace Cscg.Constants
             {
                 const string space = Coding.AutoNamespace;
                 var className = $"ConstStrings.{nac.name}";
-                var code = new StringBuilder();
+                var code = new CodeWriter();
                 code.AppendLine("using System;");
                 code.AppendLine();
-                code.AppendLine($"namespace {space};");
-                code.AppendLine();
+                code.AppendLine($"namespace {space}");
+                code.AppendLine("{");
                 code.AppendLine("public static partial class ConstStrings");
-                code.Append("{");
+                code.AppendLine("{");
                 var lines = nac.content.Split('\n');
+                bool isFirst = true;
                 foreach (var rawLine in lines)
                 {
                     var line = rawLine.Trim();
@@ -58,9 +58,13 @@ namespace Cscg.Constants
                         ParseValue(raw, out isConst, out type, out val);
                     }
                     var mode = isConst ? "const" : "static readonly";
-                    code.AppendLine();
-                    code.AppendLine($"\tpublic {mode} {type} {key} = {val};");
+                    if (isFirst)
+                        isFirst = false;
+                    else
+                        code.AppendLine();
+                    code.AppendLine($"public {mode} {type} {key} = {val};");
                 }
+                code.AppendLine("}");
                 code.AppendLine("}");
                 spc.AddSource(className, code.ToString());
             });
