@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Formats.Cbor;
+using R = System.Formats.Cbor.CborReader;
+using W = System.Formats.Cbor.CborWriter;
 
 // ReSharper disable UnusedMember.Global
 
