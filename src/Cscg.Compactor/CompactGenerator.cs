@@ -85,11 +85,11 @@ namespace Cscg.Compactor
                     writerC.AppendLine(writeLine.Replace(")(", ", "));
                 }
 
-            var readerH = GetReadHeader(isAlone, readerC);
-            var writerH = GetWriteHeader(isAlone, writerC);
+            var readerH = GetCborReadHead(isAlone, readerC);
+            var writerH = GetCborWriteHead(isAlone, writerC);
 
-            var reader = GetReadCode(isAlone, callBase, callMode, readerH, readerC);
-            var writer = GetWriteCode(isAlone, callBase, callMode, writerH, writerC);
+            var reader = GetReadCode(isAlone, callBase, callMode, readerH, readerC, "Cbor", "CborReader");
+            var writer = GetWriteCode(isAlone, callBase, callMode, writerH, writerC, "Cbor", "CborWriter");
 
             var construct = GetConstruct(cds, registry);
 

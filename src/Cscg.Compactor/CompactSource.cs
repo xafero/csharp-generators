@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using Cscg.Compactor.Lib;
 using Cscg.Core;
@@ -35,7 +34,7 @@ namespace Cscg.Compactor
             }
         }
 
-        internal static CodeWriter GetReadHeader(bool isAlone, CodeWriter readerC)
+        internal static CodeWriter GetCborReadHead(bool isAlone, CodeWriter readerC)
         {
             var readerH = new CodeWriter();
             readerH.AppendLine("var count = (int)r.ReadStartMap();");
@@ -52,7 +51,7 @@ namespace Cscg.Compactor
             return readerH;
         }
 
-        internal static CodeWriter GetWriteHeader(bool isAlone, CodeWriter writerC)
+        internal static CodeWriter GetCborWriteHead(bool isAlone, CodeWriter writerC)
         {
             var writerH = new CodeWriter();
             writerH.AppendLine("w.WriteStartMap(null);");
@@ -65,10 +64,10 @@ namespace Cscg.Compactor
         }
 
         internal static CodeWriter GetReadCode(bool isAlone, bool callBase, string callMode,
-            CodeWriter readerH, CodeWriter readerC)
+            CodeWriter readerH, CodeWriter readerC, string fmt, string clazz)
         {
             var reader = new CodeWriter();
-            reader.AppendLine($"public {callMode}void ReadCbor(ref CborReader r)");
+            reader.AppendLine($"public {callMode}void Read{fmt}(ref {clazz} r)");
             reader.AppendLine("{");
             reader.AppendLines(readerH);
             reader.AppendLine("}");
@@ -76,9 +75,9 @@ namespace Cscg.Compactor
             if (!isAlone)
             {
                 reader.AppendLine();
-                reader.AppendLine($"public {callMode}void ReadCborCore(ref CborReader r, string key)");
+                reader.AppendLine($"public {callMode}void Read{fmt}Core(ref {clazz} r, string key)");
                 reader.AppendLine("{");
-                if (callBase) reader.AppendLine("base.ReadCborCore(ref r, key);");
+                if (callBase) reader.AppendLine($"base.Read{fmt}Core(ref r, key);");
                 reader.AppendLines(readerC);
                 reader.AppendLine("}");
             }
@@ -86,10 +85,10 @@ namespace Cscg.Compactor
         }
 
         internal static CodeWriter GetWriteCode(bool isAlone, bool callBase, string callMode,
-            CodeWriter writerH, CodeWriter writerC)
+            CodeWriter writerH, CodeWriter writerC, string fmt, string clazz)
         {
             var writer = new CodeWriter();
-            writer.AppendLine($"public {callMode}void WriteCbor(ref CborWriter w)");
+            writer.AppendLine($"public {callMode}void Write{fmt}(ref {clazz} w)");
             writer.AppendLine("{");
             writer.AppendLines(writerH);
             writer.AppendLine("}");
@@ -97,9 +96,9 @@ namespace Cscg.Compactor
             if (!isAlone)
             {
                 writer.AppendLine();
-                writer.AppendLine($"public {callMode}void WriteCborCore(ref CborWriter w)");
+                writer.AppendLine($"public {callMode}void Write{fmt}Core(ref {clazz} w)");
                 writer.AppendLine("{");
-                if (callBase) writer.AppendLine("base.WriteCborCore(ref w);");
+                if (callBase) writer.AppendLine($"base.Write{fmt}Core(ref w);");
                 writer.AppendLines(writerC);
                 writer.AppendLine("}");
             }
