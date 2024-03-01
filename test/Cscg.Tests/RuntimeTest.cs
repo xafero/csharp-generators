@@ -64,23 +64,30 @@ namespace Cscg.Tests
         }
         
         [Theory]
-        [InlineData("e")]
-        [InlineData("s")]
-        public void TestBinary(string mode)
+        [InlineData("d", "e")]
+        [InlineData("d", "s")]
+        [InlineData("a", "e")]
+        [InlineData("a", "s")]
+        public void TestBinary(string cla, string mode)
         {
-            var input = mode == "e" ? new DvS() : Program.CreateSample();
+            ICompacted input = cla == "d"
+                ? (mode == "e" ? new DvS() : CreateCdv())
+                : (mode == "e" ? new Zoo() : CreateZoo());
             byte[] bytes;
             using (var mem = new MemoryStream())
             {
                 input.WriteBinary(mem);
                 bytes = mem.ToArray();
             }
-            var output = new DvS();
+            ICompacted output = cla == "d"
+                ? new DvS()
+                : new Zoo();
             using (var mem = new MemoryStream(bytes))
                 output.ReadBinary(mem);
 
             var expected = ToJson(input);
             var actual = ToJson(output);
+            _out.WriteLine(actual);
             Assert.Equal(expected, actual);
         }
 
@@ -128,6 +135,11 @@ namespace Cscg.Tests
                 input.WriteJson(mem);
                 bytes = mem.ToArray();
             }
+
+            File.WriteAllBytes($"hello_{cla}_{mode}.json", bytes);
+
+
+
             ICompacted output = cla == "d"
                 ? new DvS()
                 : new Zoo();
@@ -136,7 +148,41 @@ namespace Cscg.Tests
 
             var expected = ToJson(input);
             var actual = ToJson(output);
-            _out.WriteLine(ToCborJson(bytes));
+            _out.WriteLine(actual);
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [InlineData("d", "e")]
+        [InlineData("d", "s")]
+        [InlineData("a", "e")]
+        [InlineData("a", "s")]
+        public void TestXml(string cla, string mode)
+        {
+            ICompacted input = cla == "d"
+                ? (mode == "e" ? new DvS() : CreateCdv())
+                : (mode == "e" ? new Zoo() : CreateZoo());
+            byte[] bytes;
+            using (var mem = new MemoryStream())
+            {
+                input.WriteXml(mem);
+                bytes = mem.ToArray();
+            }
+
+            File.WriteAllBytes($"hello_{cla}_{mode}.xml", bytes);
+
+
+
+
+            ICompacted output = cla == "d"
+                ? new DvS()
+                : new Zoo();
+            using (var mem = new MemoryStream(bytes))
+                output.ReadXml(mem);
+
+            var expected = ToJson(input);
+            var actual = ToJson(output);
+            _out.WriteLine(actual);
             Assert.Equal(expected, actual);
         }
 
