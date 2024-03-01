@@ -9,7 +9,7 @@ namespace Cscg.Compactor.Lib
         {
             var reader = XmlReader.Create(stream, new XmlReaderSettings
             {
-                CloseInput = false
+                CloseInput = false, ConformanceLevel = ConformanceLevel.Auto
             });
             obj.ReadXml(ref reader);
             reader.Dispose();
@@ -19,7 +19,8 @@ namespace Cscg.Compactor.Lib
         {
             var writer = XmlWriter.Create(stream, new XmlWriterSettings
             {
-                CloseOutput = false
+                CloseOutput = false, ConformanceLevel = ConformanceLevel.Auto,
+                WriteEndDocumentOnClose = true
             });
             obj.WriteXml(ref writer);
             writer.Flush();

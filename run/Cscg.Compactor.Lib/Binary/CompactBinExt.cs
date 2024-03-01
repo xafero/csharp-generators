@@ -41,7 +41,7 @@ namespace Cscg.Compactor.Lib
 
         public static DateTimeOffset ReadDateTimeOffset(this ICompacted _, ref R r)
         {
-            return DateTimeOffset.FromFileTime(r.ReadInt64());
+            return DateTimeOffset.FromUnixTimeMilliseconds(r.ReadInt64());
         }
 
         public static decimal ReadDecimal(this ICompacted _, ref R r)
@@ -184,7 +184,23 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteByteArray(this ICompacted _, ref W w, byte[] v)
         {
+            if (v == null)
+            {
+                WriteNull(ref w, true);
+                return;
+            }
+            WriteNull(ref w, false);
             w.Write(v);
+        }
+
+        private static void WriteNull(ref W w, bool e)
+        {
+            w.Write7BitEncodedInt(e ? 0 : 1);
+        }
+
+        private static bool IsNull(ref R r)
+        {
+            return r.Read7BitEncodedInt() == 0;
         }
 
         public static void WriteChar(this ICompacted _, ref W w, char v)
@@ -194,6 +210,12 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteCharArray(this ICompacted _, ref W w, char[] v)
         {
+            if (v == null)
+            {
+                WriteNull(ref w, true);
+                return;
+            }
+            WriteNull(ref w, false);
             w.Write(v);
         }
 
@@ -204,7 +226,7 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteDateTimeOffset(this ICompacted _, ref W w, DateTimeOffset v)
         {
-            w.Write(v.ToFileTime());
+            w.Write(v.ToUnixTimeMilliseconds());
         }
 
         public static void WriteDecimal(this ICompacted _, ref W w, decimal v)
@@ -264,21 +286,45 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteNullableBool(this ICompacted _, ref W w, bool? v)
         {
+            if (v == null)
+            {
+                WriteNull(ref w, true);
+                return;
+            }
+            WriteNull(ref w, false);
             WriteBool(_, ref w, v.Value);
         }
 
         public static void WriteNullableDateTime(this ICompacted _, ref W w, DateTime? v)
         {
+            if (v == null)
+            {
+                WriteNull(ref w, true);
+                return;
+            }
+            WriteNull(ref w, false);
             WriteDateTime(_, ref w, v.Value);
         }
 
         public static void WriteNullableDouble(this ICompacted _, ref W w, double? v)
         {
+            if (v == null)
+            {
+                WriteNull(ref w, true);
+                return;
+            }
+            WriteNull(ref w, false);
             WriteDouble(_, ref w, v.Value);
         }
 
         public static void WriteNullableInt(this ICompacted _, ref W w, int? v)
         {
+            if (v == null)
+            {
+                WriteNull(ref w, true);
+                return;
+            }
+            WriteNull(ref w, false);
             WriteInt(_, ref w, v.Value);
         }
 
@@ -309,6 +355,11 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteString(this ICompacted _, ref W w, string v)
         {
+            if (v == null)
+            {
+                w.Write(0);
+                return;
+            }
             w.Write(v);
         }
 
