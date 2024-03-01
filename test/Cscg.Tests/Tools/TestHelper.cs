@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
+using System.Xml;
 using Cscg.Compactor.Lib;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -19,6 +21,7 @@ namespace Cscg.Tests.Tools
             var references = new[]
             {
                 GetMetaRef<CompactedAttribute>(), GetMetaRef<object>("System.Collections.dll"),
+                GetMetaRef<Utf8JsonWriter>(), GetMetaRef<XmlWriter>(),
                 GetMetaRef<Binder>(), GetMetaRef(typeof(Console)), GetMetaRef<object>("System.Runtime.dll")
             }
             .Concat(addedRefs ?? []).ToArray();

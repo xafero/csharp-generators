@@ -5,11 +5,7 @@ namespace Cscg.Compactor.Lib
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class CompactedAttribute : Attribute
     {
-        public CompactedAttribute()
-        {
-        }
-
-        public CompactedAttribute(DataFormat format)
+        public CompactedAttribute(DataFormat format = DataFormat.All)
         {
             Format = format;
         }

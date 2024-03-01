@@ -3,7 +3,7 @@ using Cscg.Compactor.Lib;
 
 namespace SourceGenerated.Simple
 {
-    [Compacted(DataFormat.Cbor)]
+    [Compacted]
     public sealed partial class Person
     {
         public string FirstName { get; set; }
@@ -15,7 +15,7 @@ namespace SourceGenerated.Simple
         Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
     }
 
-    [Compacted(DataFormat.Cbor)]
+    [Compacted]
     public sealed partial class DisplayValues
     {
         public float AspectRatio { get; set; }

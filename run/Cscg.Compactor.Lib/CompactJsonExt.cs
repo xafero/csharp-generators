@@ -12,16 +12,16 @@ namespace Cscg.Compactor.Lib
             {
                 CommentHandling = JsonCommentHandling.Disallow
             });
-            // TODO obj.ReadJson(ref reader);
+            obj.ReadJson(ref reader);
         }
 
         public static void WriteJson(this ICompacted obj, Stream stream)
         {
-            using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+            var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
             {
                 Indented = true
             });
-            // TODO obj.WriteJson(ref writer);
+            obj.WriteJson(ref writer);
             writer.Flush();
             stream.Flush();
         }

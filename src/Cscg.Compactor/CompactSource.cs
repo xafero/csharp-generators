@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Cscg.Compactor.Lib;
 using Cscg.Core;
@@ -34,6 +35,23 @@ namespace Cscg.Compactor
             }
         }
 
+        internal static CodeWriter GetJsonReadHead(bool isAlone, CodeWriter readerC)
+        {
+            var readerH = new CodeWriter();
+            readerH.AppendLine("r.Read();");
+            readerH.AppendLine("string key;");
+            readerH.AppendLine("while (r.Read())");
+            readerH.AppendLine("{");
+            readerH.AppendLine("key = r.GetString();");
+            if (isAlone)
+                readerH.AppendLines(readerC);
+            else
+                readerH.AppendLine("ReadJsonCore(ref r, key);");
+            readerH.AppendLine("}");
+            readerH.AppendLine("r.Read();");
+            return readerH;
+        }
+
         internal static CodeWriter GetCborReadHead(bool isAlone, CodeWriter readerC)
         {
             var readerH = new CodeWriter();
@@ -49,6 +67,18 @@ namespace Cscg.Compactor
             readerH.AppendLine("}");
             readerH.AppendLine("r.ReadEndMap();");
             return readerH;
+        }
+
+        internal static CodeWriter GetJsonWriteHead(bool isAlone, CodeWriter writerC)
+        {
+            var writerH = new CodeWriter();
+            writerH.AppendLine("w.WriteStartObject(null);");
+            if (isAlone)
+                writerH.AppendLines(writerC);
+            else
+                writerH.AppendLine("WriteJsonCore(ref w);");
+            writerH.AppendLine("w.WriteEndObject();");
+            return writerH;
         }
 
         internal static CodeWriter GetCborWriteHead(bool isAlone, CodeWriter writerC)

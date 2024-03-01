@@ -39,6 +39,8 @@ namespace Cscg.Compactor
             code.AppendLine("using System.Collections.Generic;");
             code.AppendLine("using System.Formats.Cbor;");
             code.AppendLine("using System.Text;");
+            code.AppendLine("using System.Text.Json;");
+            code.AppendLine("using System.Xml;");
             code.AppendLine("using System.IO;");
             code.AppendLine();
             code.AppendLine($"namespace {space}");
@@ -88,16 +90,46 @@ namespace Cscg.Compactor
             var readerH = GetCborReadHead(isAlone, readerC);
             var writerH = GetCborWriteHead(isAlone, writerC);
 
-            var reader = GetReadCode(isAlone, callBase, callMode, readerH, readerC, "Cbor", "CborReader");
-            var writer = GetWriteCode(isAlone, callBase, callMode, writerH, writerC, "Cbor", "CborWriter");
+            var rr = new CodeWriter();
+            var ww = new CodeWriter();
+
+            if (f.HasFlag(DataFormat.Cbor))
+            {
+                rr.AppendLines(GetReadCode(isAlone, callBase, callMode, readerH, readerC, "Cbor", "CborReader"));
+                rr.AppendLine();
+                ww.AppendLines(GetWriteCode(isAlone, callBase, callMode, writerH, writerC, "Cbor", "CborWriter"));
+                ww.AppendLine();
+            }
+            if (f.HasFlag(DataFormat.Json))
+            {
+                readerH = GetJsonReadHead(isAlone, readerC);
+                writerH = GetJsonWriteHead(isAlone, writerC);
+                rr.AppendLines(GetReadCode(isAlone, callBase, callMode, readerH, readerC, "Json", "Utf8JsonReader"));
+                rr.AppendLine();
+                ww.AppendLines(GetWriteCode(isAlone, callBase, callMode, writerH, writerC, "Json", "Utf8JsonWriter"));
+                ww.AppendLine();
+            }
+            if (f.HasFlag(DataFormat.Xml))
+            {
+                rr.AppendLines(GetReadCode(isAlone, callBase, callMode, readerH, readerC, "Xml", "XmlReader"));
+                rr.AppendLine();
+                ww.AppendLines(GetWriteCode(isAlone, callBase, callMode, writerH, writerC, "Xml", "XmlWriter"));
+                ww.AppendLine();
+            }
+            if (f.HasFlag(DataFormat.Binary))
+            {
+                rr.AppendLines(GetReadCode(isAlone, callBase, callMode, readerH, readerC, "Binary", "BinaryReader"));
+                rr.AppendLine();
+                ww.AppendLines(GetWriteCode(isAlone, callBase, callMode, writerH, writerC, "Binary", "BinaryWriter"));
+                ww.AppendLine();
+            }
 
             var construct = GetConstruct(cds, registry);
-
             code.AppendLines(construct);
             code.AppendLine();
-            code.AppendLines(reader);
+            code.AppendLines(rr);
             code.AppendLine();
-            code.AppendLines(writer);
+            code.AppendLines(ww);
         }
 
         private static (string fqn, string name, string[] leafs) Simplify(ITypeSymbol type)
