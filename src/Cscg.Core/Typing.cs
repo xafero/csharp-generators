@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -143,5 +144,11 @@ namespace Cscg.Core
                 if (!noBase) baseType = bt;
             }
         }
+
+        public static IEnumerable<(string k, TypedConstant v)> FindArgs(this AttributeData ad)
+            => ad.ConstructorArguments
+                .Select((tc, id) => (k: id.ToString(), v: tc))
+                .Concat(ad.NamedArguments
+                    .Select(n => (k: n.Key, v: n.Value)));
     }
 }

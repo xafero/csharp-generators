@@ -67,5 +67,10 @@ namespace Cscg.Compactor.Lib
         Dictionary<string, T> ReadDict<T>();
         double? ReadNullableDouble();
         void WriteNullableDouble(double? value);
+        void WriteStartObject();
+        void WriteEndObject();
+        void WriteProperty(string name);
+        void WriteStartArray();
+        void WriteEndArray();
     }
 }

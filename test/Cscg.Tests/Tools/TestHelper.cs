@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Cscg.Compactor.Lib;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
@@ -17,6 +18,7 @@ namespace Cscg.Tests.Tools
         {
             var references = new[]
             {
+                GetMetaRef<CompactedAttribute>(), GetMetaRef<object>("System.Collections.dll"),
                 GetMetaRef<Binder>(), GetMetaRef(typeof(Console)), GetMetaRef<object>("System.Runtime.dll")
             }
             .Concat(addedRefs ?? []).ToArray();

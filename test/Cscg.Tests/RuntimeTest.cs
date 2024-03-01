@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Cscg.AutoGen;
 using SourceGenerated;
+using SourceGenerated.Complex;
 using SourceGenerated.Simple;
 using Xunit;
 using Xunit.Abstractions;
@@ -59,7 +60,7 @@ namespace Cscg.Tests
             var actual = ToJson(output);
             Assert.Equal(expected, actual);
         }
-
+        
         [Theory]
         [InlineData("e")]
         [InlineData("s")]

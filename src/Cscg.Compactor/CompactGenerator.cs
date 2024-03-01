@@ -1,25 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Cscg.Compactor.Lib;
+using static Cscg.Compactor.CompactSource;
 
 namespace Cscg.Compactor
 {
     [Generator(LanguageNames.CSharp)]
     public sealed class CompactGenerator : IIncrementalGenerator
     {
-        private const string LibSpace = "Cscg.Compactor.Lib";
-        private const string Space = Coding.AutoNamespace;
-        private const string BinObjName = "Compacted";
-        private const string ExtObjName = "CompactedExt";
-        private const string IntObjName = "ICompacted";
-        private const string ItfObjName = "ICompactor";
-        private const string RflObjName = "Reflections";
-
         public void Initialize(IncrementalGeneratorInitializationContext igi)
         {
             const string fqn = $"{LibSpace}.{BinObjName}Attribute";
@@ -35,6 +28,7 @@ namespace Cscg.Compactor
 
         private static void Exec(SourceProductionContext ctx, SyntaxWrap syntax)
         {
+            syntax.Attribute.ExtractArg(out var fmt);
             var cds = syntax.Class;
             var space = cds.GetParentName() ?? Coding.AutoNamespace;
             var name = cds.GetClassName();
@@ -43,6 +37,7 @@ namespace Cscg.Compactor
             code.AppendLine($"using {LibSpace};");
             code.AppendLine("using System;");
             code.AppendLine("using System.Collections.Generic;");
+            code.AppendLine("using System.Formats.Cbor;");
             code.AppendLine("using System.Text;");
             code.AppendLine("using System.IO;");
             code.AppendLine();
@@ -50,37 +45,29 @@ namespace Cscg.Compactor
             code.AppendLine("{");
             code.AppendLine($"partial class {name} : {IntObjName}");
             code.AppendLine("{");
-            ExecBody(code, cds, syntax);
+            ExecBody(code, cds, syntax, fmt);
             code.AppendLine("}");
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
         }
 
-        private static void ExecBody(CodeWriter code, ClassDeclarationSyntax cds, SyntaxWrap s)
+        private static void ExecBody(CodeWriter code, ClassDeclarationSyntax cds, SyntaxWrap s, DataFormat f)
         {
-            s.Symbol.ExtractBase(out var cdBase, out _, out var cdSealed);
-            var callBase = cdBase != null;
-            var isAlone = cdSealed && cdBase == null;
+            s.Symbol.ExtractBase(out var cBase, out _, out var cSealed);
+            var callBase = cBase != null;
+            var isAlone = cSealed && cBase == null;
             var callMode = isAlone ? string.Empty : callBase ? "override " : "virtual ";
 
             var construct = new CodeWriter();
+            var readerH = new CodeWriter();
+            var readerC = new CodeWriter();
             var reader = new CodeWriter();
+            var writerH = new CodeWriter();
+            var writerC = new CodeWriter();
             var writer = new CodeWriter();
 
             construct.AppendLine($"static {cds.GetClassName()}()");
             construct.AppendLine("{");
-            reader.AppendLine($"public {callMode}void ReadBy(ICompactor c)");
-            reader.AppendLine("{");
-            if (!isAlone)
-            {
-                if (callBase) reader.AppendLine("base.ReadBy(c);");
-            }
-            writer.AppendLine($"public {callMode}void WriteBy(ICompactor c)");
-            writer.AppendLine("{");
-            if (!isAlone)
-            {
-                if (callBase) writer.AppendLine("base.WriteBy(c);");
-            }
 
             var registry = new List<string>();
             foreach (var member in cds.Members)
@@ -93,16 +80,68 @@ namespace Cscg.Compactor
                     GenerateTypeReg(registry, pFull, leafs);
 
                     var readMeth = $"Read{pRt}";
-                    reader.AppendLine($"this.{pName} = c.{readMeth}();");
+                    readerC.AppendLine($"if (key == nameof(this.{pName}))");
+                    readerC.AppendLine("{");
+                    readerC.AppendLine($"this.{pName} = this.{readMeth}(ref r);");
+                    readerC.AppendLine(isAlone ? "continue;" : "return;");
+                    readerC.AppendLine("}");
 
                     var writeMeth = $"Write{pRt}";
-                    writer.AppendLine($"c.{writeMeth}(this.{pName});");
+                    writerC.AppendLine($"this.WriteProperty(ref w, \"{pName}\");");
+                    writerC.AppendLine($"this.{writeMeth}(ref w, this.{pName});");
                 }
+
+            readerH.AppendLine("var count = (int)r.ReadStartMap();");
+            readerH.AppendLine("string key;");
+            readerH.AppendLine("for (var i = 0; i < count; i++)");
+            readerH.AppendLine("{");
+            readerH.AppendLine("key = r.ReadTextString();");
+            if (isAlone)
+                readerH.AppendLines(readerC);
+            else
+                readerH.AppendLine("ReadCBORCore(ref r, key);");
+            readerH.AppendLine("}");
+            readerH.AppendLine("r.ReadEndMap();");
+
+            writerH.AppendLine("w.WriteStartMap(null);");
+            if (isAlone)
+                writerH.AppendLines(writerC);
+            else
+                writerH.AppendLine("WriteCBORCore(ref w);");
+            writerH.AppendLine("w.WriteEndMap();");
+
+            reader.AppendLine($"public {callMode}void ReadCBOR(ref CborReader r)");
+            reader.AppendLine("{");
+            reader.AppendLines(readerH);
+            reader.AppendLine("}");
+
+            if (!isAlone)
+            {
+                reader.AppendLine();
+                reader.AppendLine($"public {callMode}void ReadCBORCore(ref CborReader r, string key)");
+                reader.AppendLine("{");
+                if (callBase) reader.AppendLine("base.ReadCBORCore(ref r, key);");
+                reader.AppendLines(readerC);
+                reader.AppendLine("}");
+            }
+
+            writer.AppendLine($"public {callMode}void WriteCBOR(ref CborWriter w)");
+            writer.AppendLine("{");
+            writer.AppendLines(writerH);
+            writer.AppendLine("}");
+
+            if (!isAlone)
+            {
+                writer.AppendLine();
+                writer.AppendLine($"public {callMode}void WriteCBORCore(ref CborWriter w)");
+                writer.AppendLine("{");
+                if (callBase) writer.AppendLine("base.WriteCBORCore(ref w);");
+                writer.AppendLines(writerC);
+                writer.AppendLine("}");
+            }
 
             construct.AppendLines(registry.OrderBy(e => e).Distinct());
             construct.AppendLine("}");
-            reader.AppendLine("}");
-            writer.AppendLine("}");
 
             code.AppendLines(construct);
             code.AppendLine();

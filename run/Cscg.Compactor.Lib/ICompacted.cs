@@ -2,8 +2,5 @@
 {
     public interface ICompacted
     {
-        void ReadBy(ICompactor c);
-
-        void WriteBy(ICompactor c);
     }
 }

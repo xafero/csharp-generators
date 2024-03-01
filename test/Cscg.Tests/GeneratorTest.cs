@@ -15,7 +15,7 @@ namespace Cscg.Tests
             var gen = new CompactGenerator();
             var (_, source) = GetLocalFile("Simple/DisplayValues.cs");
 
-            var input = source.CreateCompilation();
+            var input = source.CreateCompilation(addedRefs: [GetMetaRef<CborReader>()]);
             var (output, run) = input.RunGenerators(out var dia, [gen], []);
 
             dia.CheckNoError(output, 6);
