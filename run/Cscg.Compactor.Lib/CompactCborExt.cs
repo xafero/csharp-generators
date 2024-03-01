@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Formats.Cbor;
-using System.IO;
 
 // ReSharper disable UnusedMember.Global
 
@@ -9,27 +8,15 @@ namespace Cscg.Compactor.Lib
 {
     public static class CompactCborExt
     {
-        public static void ReadCbor(this ICompacted obj, Stream stream)
-        {
-            var array = stream.ToBytes();
-            var reader = new CborReader(array, CborConformanceMode.Canonical);
-            obj.ReadCbor(ref reader);
-        }
-
-        public static void WriteCbor(this ICompacted obj, Stream stream)
-        {
-            var writer = new CborWriter(CborConformanceMode.Canonical, true);
-            obj.WriteCbor(ref writer);
-            var array = writer.Encode();
-            stream.Write(array, 0, array.Length);
-            stream.Flush();
-        }
-
         public static void WriteProperty(this ICompacted _, ref CborWriter w, string v)
-            => w.WriteTextString(v);
+        {
+            w.WriteTextString(v);
+        }
 
-        public static string ReadString(this ICompacted _, ref CborReader r) 
-            => IsNull(ref r) ? null : r.ReadTextString();
+        public static string ReadString(this ICompacted _, ref CborReader r)
+        {
+            return IsNull(ref r) ? null : r.ReadTextString();
+        }
 
         public static void WriteString(this ICompacted _, ref CborWriter w, string v)
         {
@@ -38,61 +25,101 @@ namespace Cscg.Compactor.Lib
         }
 
         public static void WriteInt(this ICompacted _, ref CborWriter w, int v)
-            => w.WriteInt32(v);
+        {
+            w.WriteInt32(v);
+        }
 
         public static void WriteIntEnum<T>(this ICompacted _, ref CborWriter w, T v)
-            where T : Enum => w.WriteInt32((int)(object)v);
+            where T : Enum
+        {
+            w.WriteInt32((int)(object)v);
+        }
 
         public static int ReadInt(this ICompacted _, ref CborReader r)
-            => r.ReadInt32();
+        {
+            return r.ReadInt32();
+        }
 
         public static T ReadIntEnum<T>(this ICompacted _, ref CborReader r)
-            where T : Enum => (T)(object)r.ReadInt32();
+            where T : Enum
+        {
+            return (T)(object)r.ReadInt32();
+        }
 
         public static float ReadFloat(this ICompacted _, ref CborReader r)
-            => r.ReadSingle();
+        {
+            return r.ReadSingle();
+        }
 
         public static bool ReadBool(this ICompacted _, ref CborReader r)
-            => r.ReadBoolean();
+        {
+            return r.ReadBoolean();
+        }
 
         public static long ReadLong(this ICompacted _, ref CborReader r)
-            => r.ReadInt64();
+        {
+            return r.ReadInt64();
+        }
 
         public static short ReadShort(this ICompacted _, ref CborReader r)
-            => (short)r.ReadInt32();
+        {
+            return (short)r.ReadInt32();
+        }
 
         public static byte ReadByte(this ICompacted _, ref CborReader r)
-            => (byte)r.ReadInt32();
+        {
+            return (byte)r.ReadInt32();
+        }
 
         public static Guid ReadGuid(this ICompacted _, ref CborReader r)
-            => new(r.ReadByteString());
+        {
+            return new Guid(r.ReadByteString());
+        }
 
         public static TimeSpan ReadTimeSpan(this ICompacted _, ref CborReader r)
-            => TimeSpan.FromTicks(r.ReadInt64());
+        {
+            return TimeSpan.FromTicks(r.ReadInt64());
+        }
 
         public static DateTime ReadDateTime(this ICompacted _, ref CborReader r)
-            => DateTime.FromBinary(r.ReadInt64());
+        {
+            return DateTime.FromBinary(r.ReadInt64());
+        }
 
         public static ulong ReadUlong(this ICompacted _, ref CborReader r)
-            => r.ReadUInt64();
+        {
+            return r.ReadUInt64();
+        }
 
         public static DateTimeOffset ReadDateTimeOffset(this ICompacted _, ref CborReader r)
-            => r.ReadDateTimeOffset();
+        {
+            return r.ReadDateTimeOffset();
+        }
 
         public static uint ReadUint(this ICompacted _, ref CborReader r)
-            => r.ReadUInt32();
+        {
+            return r.ReadUInt32();
+        }
 
         public static ushort ReadUshort(this ICompacted _, ref CborReader r)
-            => (ushort)r.ReadInt32();
+        {
+            return (ushort)r.ReadInt32();
+        }
 
         public static sbyte ReadSbyte(this ICompacted _, ref CborReader r)
-            => (sbyte)r.ReadInt32();
+        {
+            return (sbyte)r.ReadInt32();
+        }
 
         public static decimal ReadDecimal(this ICompacted _, ref CborReader r)
-            => r.ReadDecimal();
+        {
+            return r.ReadDecimal();
+        }
 
         public static double ReadDouble(this ICompacted _, ref CborReader r)
-            => r.ReadDouble();
+        {
+            return r.ReadDouble();
+        }
 
         public static T ReadExact<T>(this ICompacted _, string type, ref CborReader r)
             where T : ICompacted
@@ -104,34 +131,54 @@ namespace Cscg.Compactor.Lib
         }
 
         public static Half ReadHalf(this ICompacted _, ref CborReader r)
-            => r.ReadHalf();
+        {
+            return r.ReadHalf();
+        }
 
         public static char[] ReadCharArray(this ICompacted _, ref CborReader r)
-            => IsNull(ref r) ? null : r.ReadTextString().ToCharArray();
+        {
+            return IsNull(ref r) ? null : r.ReadTextString().ToCharArray();
+        }
 
         public static char ReadChar(this ICompacted _, ref CborReader r)
-            => (char)r.ReadInt32();
+        {
+            return (char)r.ReadInt32();
+        }
 
         public static byte[] ReadByteArray(this ICompacted _, ref CborReader r)
-            => IsNull(ref r) ? null : r.ReadByteString();
+        {
+            return IsNull(ref r) ? null : r.ReadByteString();
+        }
 
         public static bool? ReadNullableBool(this ICompacted _, ref CborReader r)
-            => IsNull(ref r) ? null : r.ReadBoolean();
+        {
+            return IsNull(ref r) ? null : r.ReadBoolean();
+        }
 
         public static int? ReadNullableInt(this ICompacted _, ref CborReader r)
-            => IsNull(ref r) ? null : r.ReadInt32();
+        {
+            return IsNull(ref r) ? null : r.ReadInt32();
+        }
 
         public static double? ReadNullableDouble(this ICompacted _, ref CborReader r)
-            => IsNull(ref r) ? null : r.ReadDouble();
+        {
+            return IsNull(ref r) ? null : r.ReadDouble();
+        }
 
         public static DateTime? ReadNullableDateTime(this ICompacted c, ref CborReader r)
-            => IsNull(ref r) ? null : c.ReadDateTime(ref r);
+        {
+            return IsNull(ref r) ? null : c.ReadDateTime(ref r);
+        }
 
         public static void WriteFloat(this ICompacted _, ref CborWriter w, float v)
-            => w.WriteSingle(v);
+        {
+            w.WriteSingle(v);
+        }
 
         public static void WriteBool(this ICompacted _, ref CborWriter w, bool v)
-            => w.WriteBoolean(v);
+        {
+            w.WriteBoolean(v);
+        }
 
         public static void WriteNullableDateTime(this ICompacted _, ref CborWriter w, DateTime? v)
         {
@@ -158,31 +205,49 @@ namespace Cscg.Compactor.Lib
         }
 
         public static void WriteGuid(this ICompacted _, ref CborWriter w, Guid v)
-            => w.WriteByteString(v.ToByteArray());
+        {
+            w.WriteByteString(v.ToByteArray());
+        }
 
         public static void WriteTimeSpan(this ICompacted _, ref CborWriter w, TimeSpan v)
-            => w.WriteInt64(v.Ticks);
+        {
+            w.WriteInt64(v.Ticks);
+        }
 
         public static void WriteDateTime(this ICompacted _, ref CborWriter w, DateTime v)
-            => w.WriteInt64(v.ToBinary());
+        {
+            w.WriteInt64(v.ToBinary());
+        }
 
         public static void WriteDateTimeOffset(this ICompacted _, ref CborWriter w, DateTimeOffset v)
-            => w.WriteDateTimeOffset(v);
+        {
+            w.WriteDateTimeOffset(v);
+        }
 
         public static void WriteUlong(this ICompacted _, ref CborWriter w, ulong v)
-            => w.WriteUInt64(v);
+        {
+            w.WriteUInt64(v);
+        }
 
         public static void WriteUint(this ICompacted _, ref CborWriter w, uint v)
-            => w.WriteUInt32(v);
+        {
+            w.WriteUInt32(v);
+        }
 
         public static void WriteUshort(this ICompacted _, ref CborWriter w, ushort v)
-            => w.WriteInt32(v);
+        {
+            w.WriteInt32(v);
+        }
 
         public static void WriteSbyte(this ICompacted _, ref CborWriter w, sbyte v)
-            => w.WriteInt32(v);
+        {
+            w.WriteInt32(v);
+        }
 
         public static void WriteDouble(this ICompacted _, ref CborWriter w, double v)
-            => w.WriteDouble(v);
+        {
+            w.WriteDouble(v);
+        }
 
         public static void WriteExact<T>(this ICompacted _, string __, ref CborWriter w, T v)
         {
@@ -193,10 +258,14 @@ namespace Cscg.Compactor.Lib
         }
 
         public static void WriteDecimal(this ICompacted _, ref CborWriter w, decimal v)
-            => w.WriteDecimal(v);
+        {
+            w.WriteDecimal(v);
+        }
 
         public static void WriteHalf(this ICompacted _, ref CborWriter w, Half v)
-            => w.WriteHalf(v);
+        {
+            w.WriteHalf(v);
+        }
 
         public static void WriteCharArray(this ICompacted _, ref CborWriter w, char[] v)
         {
@@ -205,7 +274,9 @@ namespace Cscg.Compactor.Lib
         }
 
         public static void WriteChar(this ICompacted _, ref CborWriter w, char v)
-            => w.WriteInt32(v);
+        {
+            w.WriteInt32(v);
+        }
 
         public static void WriteByteArray(this ICompacted _, ref CborWriter w, byte[] v)
         {
@@ -214,13 +285,19 @@ namespace Cscg.Compactor.Lib
         }
 
         public static void WriteByte(this ICompacted _, ref CborWriter w, byte v)
-            => w.WriteInt32(v);
+        {
+            w.WriteInt32(v);
+        }
 
         public static void WriteShort(this ICompacted _, ref CborWriter w, short v)
-            => w.WriteInt32(v);
+        {
+            w.WriteInt32(v);
+        }
 
         public static void WriteLong(this ICompacted _, ref CborWriter w, long v)
-            => w.WriteInt64(v);
+        {
+            w.WriteInt64(v);
+        }
 
         public static T ReadOneOf<T>(this ICompacted _, ref CborReader r)
         {
@@ -277,8 +354,10 @@ namespace Cscg.Compactor.Lib
             return array;
         }
 
-        private static bool IsNull(ref CborReader r) 
-            => r.PeekState() == CborReaderState.Null;
+        private static bool IsNull(ref CborReader r)
+        {
+            return r.PeekState() == CborReaderState.Null;
+        }
 
         public static void WriteList<T>(this ICompacted _, ref CborWriter w, IEnumerable<T> v)
         {
