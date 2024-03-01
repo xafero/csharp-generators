@@ -16,5 +16,12 @@ namespace Cscg.Compactor.Lib
         {
             Creators[realType] = creator;
         }
+
+        public static T Create<T>(string type)
+        {
+            Creators.TryGetValue(type, out var func);
+            var obj = func?.Invoke();
+            return (T)obj;
+        }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Cscg.AutoGen;
+using Cscg.Compactor.Lib;
 using SourceGenerated;
 using SourceGenerated.Complex;
 using SourceGenerated.Simple;
@@ -9,6 +10,7 @@ using Xunit;
 using Xunit.Abstractions;
 using DvS = SourceGenerated.Simple.DisplayValues;
 using static Cscg.Tests.Tools.DebugTool;
+using static SourceGenerated.Complex.Zoos;
 
 namespace Cscg.Tests
 {
@@ -89,20 +91,20 @@ namespace Cscg.Tests
         [InlineData("a", "s")]
         public void TestConcise(string cla, string mode)
         {
-            IConciseObj input = cla == "d"
-                ? (mode == "e" ? new DvC() : CreateCdv())
+            ICompacted input = cla == "d"
+                ? (mode == "e" ? new DvS() : CreateCdv())
                 : (mode == "e" ? new Zoo() : CreateZoo());
             byte[] bytes;
             using (var mem = new MemoryStream())
             {
-                input.WriteCBOR(mem);
+                input.WriteCbor(mem);
                 bytes = mem.ToArray();
             }
-            IConciseObj output = cla == "d"
-                ? new DvC()
+            ICompacted output = cla == "d"
+                ? new DvS()
                 : new Zoo();
             using (var mem = new MemoryStream(bytes))
-                output.ReadCBOR(mem);
+                output.ReadCbor(mem);
 
             var expected = ToJson(input);
             var actual = ToJson(output);

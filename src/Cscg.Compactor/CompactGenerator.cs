@@ -58,16 +58,8 @@ namespace Cscg.Compactor
             var isAlone = cSealed && cBase == null;
             var callMode = isAlone ? string.Empty : callBase ? "override " : "virtual ";
 
-            var construct = new CodeWriter();
-            var readerH = new CodeWriter();
             var readerC = new CodeWriter();
-            var reader = new CodeWriter();
-            var writerH = new CodeWriter();
             var writerC = new CodeWriter();
-            var writer = new CodeWriter();
-
-            construct.AppendLine($"static {cds.GetClassName()}()");
-            construct.AppendLine("{");
 
             var registry = new List<string>();
             foreach (var member in cds.Members)
@@ -80,68 +72,26 @@ namespace Cscg.Compactor
                     GenerateTypeReg(registry, pFull, leafs);
 
                     var readMeth = $"Read{pRt}";
+                    var readLine = $"this.{pName} = this.{readMeth}(ref r);";
                     readerC.AppendLine($"if (key == nameof(this.{pName}))");
                     readerC.AppendLine("{");
-                    readerC.AppendLine($"this.{pName} = this.{readMeth}(ref r);");
+                    readerC.AppendLine(readLine.Replace(")(", ", "));
                     readerC.AppendLine(isAlone ? "continue;" : "return;");
                     readerC.AppendLine("}");
 
                     var writeMeth = $"Write{pRt}";
-                    writerC.AppendLine($"this.WriteProperty(ref w, \"{pName}\");");
-                    writerC.AppendLine($"this.{writeMeth}(ref w, this.{pName});");
+                    var writeLine = $"this.{writeMeth}(ref w, this.{pName});";
+                    writerC.AppendLine($"this.WriteProperty(ref w, nameof(this.{pName}));");
+                    writerC.AppendLine(writeLine.Replace(")(", ", "));
                 }
 
-            readerH.AppendLine("var count = (int)r.ReadStartMap();");
-            readerH.AppendLine("string key;");
-            readerH.AppendLine("for (var i = 0; i < count; i++)");
-            readerH.AppendLine("{");
-            readerH.AppendLine("key = r.ReadTextString();");
-            if (isAlone)
-                readerH.AppendLines(readerC);
-            else
-                readerH.AppendLine("ReadCBORCore(ref r, key);");
-            readerH.AppendLine("}");
-            readerH.AppendLine("r.ReadEndMap();");
+            var readerH = GetReadHeader(isAlone, readerC);
+            var writerH = GetWriteHeader(isAlone, writerC);
 
-            writerH.AppendLine("w.WriteStartMap(null);");
-            if (isAlone)
-                writerH.AppendLines(writerC);
-            else
-                writerH.AppendLine("WriteCBORCore(ref w);");
-            writerH.AppendLine("w.WriteEndMap();");
+            var reader = GetReadCode(isAlone, callBase, callMode, readerH, readerC);
+            var writer = GetWriteCode(isAlone, callBase, callMode, writerH, writerC);
 
-            reader.AppendLine($"public {callMode}void ReadCBOR(ref CborReader r)");
-            reader.AppendLine("{");
-            reader.AppendLines(readerH);
-            reader.AppendLine("}");
-
-            if (!isAlone)
-            {
-                reader.AppendLine();
-                reader.AppendLine($"public {callMode}void ReadCBORCore(ref CborReader r, string key)");
-                reader.AppendLine("{");
-                if (callBase) reader.AppendLine("base.ReadCBORCore(ref r, key);");
-                reader.AppendLines(readerC);
-                reader.AppendLine("}");
-            }
-
-            writer.AppendLine($"public {callMode}void WriteCBOR(ref CborWriter w)");
-            writer.AppendLine("{");
-            writer.AppendLines(writerH);
-            writer.AppendLine("}");
-
-            if (!isAlone)
-            {
-                writer.AppendLine();
-                writer.AppendLine($"public {callMode}void WriteCBORCore(ref CborWriter w)");
-                writer.AppendLine("{");
-                if (callBase) writer.AppendLine("base.WriteCBORCore(ref w);");
-                writer.AppendLines(writerC);
-                writer.AppendLine("}");
-            }
-
-            construct.AppendLines(registry.OrderBy(e => e).Distinct());
-            construct.AppendLine("}");
+            var construct = GetConstruct(cds, registry);
 
             code.AppendLines(construct);
             code.AppendLine();
@@ -172,7 +122,7 @@ namespace Cscg.Compactor
             {
                 if (!type.CanBeParent(out _))
                 {
-                    name = $"Exact<{type}>";
+                    name = $"Exact<{type}>(\"{type}\")";
                     leafs = [type.ToString()];
                 }
                 else if (type.IsTyped(out _, out var ta, out var isList, out var isDict))

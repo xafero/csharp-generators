@@ -18,8 +18,8 @@ namespace Cscg.Tests
             var input = source.CreateCompilation(addedRefs: [GetMetaRef<CborReader>()]);
             var (output, run) = input.RunGenerators(out var dia, [gen], []);
 
-            dia.CheckNoError(output, 6);
-            run.CheckNoError(5);
+            dia.CheckNoError(output, 3);
+            run.CheckNoError(2);
         }
 
         [Fact]
@@ -31,8 +31,8 @@ namespace Cscg.Tests
             var input = source.CreateCompilation(addedRefs: [GetMetaRef<CborReader>()]);
             var (output, run) = input.RunGenerators(out var dia, [gen], []);
 
-            dia.CheckNoError(output, 12);
-            run.CheckNoError(11);
+            dia.CheckNoError(output, 9);
+            run.CheckNoError(8);
         }
 
         [Fact]

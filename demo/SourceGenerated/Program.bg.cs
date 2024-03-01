@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Cscg.Compactor.Lib;
 using SourceGenerated.Simple;
 
 namespace SourceGenerated
