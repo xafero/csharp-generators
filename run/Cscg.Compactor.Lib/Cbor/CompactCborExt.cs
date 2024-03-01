@@ -22,7 +22,11 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteString(this ICompacted _, ref W w, string v)
         {
-            if (v == null) { w.WriteNull(); return; }
+            if (v == null)
+            {
+                w.WriteNull();
+                return;
+            }
             w.WriteTextString(v);
         }
 
@@ -184,25 +188,41 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteNullableDateTime(this ICompacted _, ref W w, DateTime? v)
         {
-            if (v == null) { w.WriteNull(); return; }
+            if (v == null)
+            {
+                w.WriteNull();
+                return;
+            }
             w.WriteInt64(v.Value.ToBinary());
         }
 
         public static void WriteNullableInt(this ICompacted _, ref W w, int? v)
         {
-            if (v == null) { w.WriteNull(); return; }
+            if (v == null)
+            {
+                w.WriteNull();
+                return;
+            }
             w.WriteInt32(v.Value);
         }
 
         public static void WriteNullableDouble(this ICompacted _, ref W w, double? v)
         {
-            if (v == null) { w.WriteNull(); return; }
+            if (v == null)
+            {
+                w.WriteNull();
+                return;
+            }
             w.WriteDouble(v.Value);
         }
 
         public static void WriteNullableBool(this ICompacted _, ref W w, bool? v)
         {
-            if (v == null) { w.WriteNull(); return; }
+            if (v == null)
+            {
+                w.WriteNull();
+                return;
+            }
             w.WriteBoolean(v.Value);
         }
 
@@ -271,7 +291,11 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteCharArray(this ICompacted _, ref W w, char[] v)
         {
-            if (v == null) { w.WriteNull(); return; }
+            if (v == null)
+            {
+                w.WriteNull();
+                return;
+            }
             w.WriteTextString(v);
         }
 
@@ -282,7 +306,11 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteByteArray(this ICompacted _, ref W w, byte[] v)
         {
-            if (v == null) { w.WriteNull(); return; }
+            if (v == null)
+            {
+                w.WriteNull();
+                return;
+            }
             w.WriteByteString(v);
         }
 
@@ -363,7 +391,11 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteList<T>(this ICompacted _, ref W w, IEnumerable<T> v)
         {
-            if (v == null) { w.WriteNull(); return; }
+            if (v == null)
+            {
+                w.WriteNull();
+                return;
+            }
             w.WriteStartArray(null);
             foreach (var item in v)
                 ((ICompacted)item).WriteCbor(ref w);
@@ -372,7 +404,11 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteArray<T>(this ICompacted _, ref W w, T[] v)
         {
-            if (v == null) { w.WriteNull(); return; }
+            if (v == null)
+            {
+                w.WriteNull();
+                return;
+            }
             w.WriteStartArray(null);
             foreach (var item in v)
                 ((ICompacted)item).WriteCbor(ref w);
@@ -398,7 +434,11 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteDict<T>(this ICompacted _, ref W w, IEnumerable<KeyValuePair<string, T>> v)
         {
-            if (v == null) { w.WriteNull(); return; }
+            if (v == null)
+            {
+                w.WriteNull();
+                return;
+            }
             w.WriteStartMap(null);
             foreach (var item in v)
             {
@@ -415,7 +455,11 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteShortArray(this ICompacted c, ref W w, short[] v)
         {
-            if (v == null) { w.WriteNull(); return; }
+            if (v == null)
+            {
+                w.WriteNull();
+                return;
+            }
             w.WriteStartArray(null);
             foreach (var item in v)
                 c.WriteShort(ref w, item);

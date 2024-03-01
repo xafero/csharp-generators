@@ -6,7 +6,7 @@ using System.Xml;
 
 namespace Cscg.Compactor.Lib
 {
-    public interface ICompacted
+    public interface ICborCompacted
     {
         public void WriteCbor(ref CborWriter w)
         {
@@ -17,7 +17,10 @@ namespace Cscg.Compactor.Lib
         {
             throw new NotImplementedException();
         }
+    }
 
+    public interface IJsonCompacted
+    {
         public void WriteJson(ref Utf8JsonWriter w)
         {
             throw new NotImplementedException();
@@ -27,7 +30,10 @@ namespace Cscg.Compactor.Lib
         {
             throw new NotImplementedException();
         }
+    }
 
+    public interface IBinCompacted
+    {
         public void WriteBinary(ref BinaryWriter w)
         {
             throw new NotImplementedException();
@@ -37,7 +43,10 @@ namespace Cscg.Compactor.Lib
         {
             throw new NotImplementedException();
         }
+    }
 
+    public interface IXmlCompacted
+    {
         public void WriteXml(ref XmlWriter w)
         {
             throw new NotImplementedException();
@@ -47,5 +56,9 @@ namespace Cscg.Compactor.Lib
         {
             throw new NotImplementedException();
         }
+    }
+
+    public interface ICompacted : IBinCompacted, IXmlCompacted, IJsonCompacted, ICborCompacted
+    {
     }
 }

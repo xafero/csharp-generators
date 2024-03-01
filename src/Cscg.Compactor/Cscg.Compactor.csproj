@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\run\Cscg.Compactor.Lib\DataFormat.cs" Link="DataFormat.cs" />
+    <Compile Include="..\..\run\Cscg.Compactor.Lib\API\DataFormat.cs" Link="DataFormat.cs" />
   </ItemGroup>
 
 </Project>
