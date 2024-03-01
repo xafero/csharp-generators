@@ -62,7 +62,7 @@ namespace Cscg.Tests
             var actual = ToJson(output);
             Assert.Equal(expected, actual);
         }
-        
+
         [Theory]
         [InlineData("d", "e")]
         [InlineData("d", "s")]
@@ -79,6 +79,8 @@ namespace Cscg.Tests
                 input.WriteBinary(mem);
                 bytes = mem.ToArray();
             }
+            File.WriteAllBytes($"{nameof(TestBinary)}_{cla}_{mode}.bin", bytes);
+
             ICompacted output = cla == "d"
                 ? new DvS()
                 : new Zoo();
@@ -107,6 +109,8 @@ namespace Cscg.Tests
                 input.WriteCbor(mem);
                 bytes = mem.ToArray();
             }
+            File.WriteAllBytes($"{nameof(TestConcise)}_{cla}_{mode}.cbor", bytes);
+
             ICompacted output = cla == "d"
                 ? new DvS()
                 : new Zoo();
@@ -115,6 +119,7 @@ namespace Cscg.Tests
 
             var expected = ToJson(input);
             var actual = ToJson(output);
+            _out.WriteLine(actual);
             _out.WriteLine(ToCborJson(bytes));
             Assert.Equal(expected, actual);
         }
@@ -135,10 +140,7 @@ namespace Cscg.Tests
                 input.WriteJson(mem);
                 bytes = mem.ToArray();
             }
-
-            File.WriteAllBytes($"hello_{cla}_{mode}.json", bytes);
-
-
+            File.WriteAllBytes($"{nameof(TestJson)}_{cla}_{mode}.json", bytes);
 
             ICompacted output = cla == "d"
                 ? new DvS()
@@ -168,11 +170,7 @@ namespace Cscg.Tests
                 input.WriteXml(mem);
                 bytes = mem.ToArray();
             }
-
-            File.WriteAllBytes($"hello_{cla}_{mode}.xml", bytes);
-
-
-
+            File.WriteAllBytes($"{nameof(TestXml)}_{cla}_{mode}.xml", bytes);
 
             ICompacted output = cla == "d"
                 ? new DvS()
