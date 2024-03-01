@@ -15,8 +15,6 @@ namespace Cscg.Compactor.Lib
 
         Xml = 0b00001000,
 
-        // All = Binary | Cbor | Json | Xml
-
-        All = Json | Cbor
+        All = Binary | Cbor | Json | Xml
     }
 }
