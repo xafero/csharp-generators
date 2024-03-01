@@ -87,14 +87,13 @@ namespace Cscg.Compactor
                     writerC.AppendLine(writeLine.Replace(")(", ", "));
                 }
 
-            var readerH = GetCborReadHead(isAlone, readerC);
-            var writerH = GetCborWriteHead(isAlone, writerC);
-
             var rr = new CodeWriter();
             var ww = new CodeWriter();
 
             if (f.HasFlag(DataFormat.Cbor))
             {
+                var readerH = GetCborReadHead(isAlone, readerC);
+                var writerH = GetCborWriteHead(isAlone, writerC);
                 rr.AppendLines(GetReadCode(isAlone, callBase, callMode, readerH, readerC, "Cbor", "CborReader"));
                 rr.AppendLine();
                 ww.AppendLines(GetWriteCode(isAlone, callBase, callMode, writerH, writerC, "Cbor", "CborWriter"));
@@ -102,8 +101,8 @@ namespace Cscg.Compactor
             }
             if (f.HasFlag(DataFormat.Json))
             {
-                readerH = GetJsonReadHead(isAlone, readerC);
-                writerH = GetJsonWriteHead(isAlone, writerC);
+                var readerH = GetJsonReadHead(isAlone, readerC);
+                var writerH = GetJsonWriteHead(isAlone, writerC);
                 rr.AppendLines(GetReadCode(isAlone, callBase, callMode, readerH, readerC, "Json", "Utf8JsonReader"));
                 rr.AppendLine();
                 ww.AppendLines(GetWriteCode(isAlone, callBase, callMode, writerH, writerC, "Json", "Utf8JsonWriter"));
@@ -111,6 +110,8 @@ namespace Cscg.Compactor
             }
             if (f.HasFlag(DataFormat.Xml))
             {
+                var readerH = GetXmlReadHead(isAlone, readerC);
+                var writerH = GetXmlWriteHead(isAlone, writerC);
                 rr.AppendLines(GetReadCode(isAlone, callBase, callMode, readerH, readerC, "Xml", "XmlReader"));
                 rr.AppendLine();
                 ww.AppendLines(GetWriteCode(isAlone, callBase, callMode, writerH, writerC, "Xml", "XmlWriter"));
@@ -118,6 +119,8 @@ namespace Cscg.Compactor
             }
             if (f.HasFlag(DataFormat.Binary))
             {
+                var readerH = GetBinReadHead(isAlone, readerC);
+                var writerH = GetBinWriteHead(isAlone, writerC);
                 rr.AppendLines(GetReadCode(isAlone, callBase, callMode, readerH, readerC, "Binary", "BinaryReader"));
                 rr.AppendLine();
                 ww.AppendLines(GetWriteCode(isAlone, callBase, callMode, writerH, writerC, "Binary", "BinaryWriter"));

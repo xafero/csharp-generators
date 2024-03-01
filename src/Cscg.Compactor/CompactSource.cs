@@ -52,6 +52,40 @@ namespace Cscg.Compactor
             return readerH;
         }
 
+        internal static CodeWriter GetXmlReadHead(bool isAlone, CodeWriter readerC)
+        {
+            var readerH = new CodeWriter();
+            readerH.AppendLine("var count = (int)r.ReadStartMap();");
+            readerH.AppendLine("string key;");
+            readerH.AppendLine("for (var i = 0; i < count; i++)");
+            readerH.AppendLine("{");
+            readerH.AppendLine("key = r.ReadTextString();");
+            if (isAlone)
+                readerH.AppendLines(readerC);
+            else
+                readerH.AppendLine("ReadXmlCore(ref r, key);");
+            readerH.AppendLine("}");
+            readerH.AppendLine("r.ReadEndMap();");
+            return readerH;
+        }
+
+        internal static CodeWriter GetBinReadHead(bool isAlone, CodeWriter readerC)
+        {
+            var readerH = new CodeWriter();
+            readerH.AppendLine("var count = (int)r.ReadStartMap();");
+            readerH.AppendLine("string key;");
+            readerH.AppendLine("for (var i = 0; i < count; i++)");
+            readerH.AppendLine("{");
+            readerH.AppendLine("key = r.ReadTextString();");
+            if (isAlone)
+                readerH.AppendLines(readerC);
+            else
+                readerH.AppendLine("ReadBinaryCore(ref r, key);");
+            readerH.AppendLine("}");
+            readerH.AppendLine("r.ReadEndMap();");
+            return readerH;
+        }
+
         internal static CodeWriter GetCborReadHead(bool isAlone, CodeWriter readerC)
         {
             var readerH = new CodeWriter();
@@ -78,6 +112,30 @@ namespace Cscg.Compactor
             else
                 writerH.AppendLine("WriteJsonCore(ref w);");
             writerH.AppendLine("w.WriteEndObject();");
+            return writerH;
+        }
+
+        internal static CodeWriter GetXmlWriteHead(bool isAlone, CodeWriter writerC)
+        {
+            var writerH = new CodeWriter();
+            writerH.AppendLine("w.WriteStartMap(null);");
+            if (isAlone)
+                writerH.AppendLines(writerC);
+            else
+                writerH.AppendLine("WriteXmlCore(ref w);");
+            writerH.AppendLine("w.WriteEndMap();");
+            return writerH;
+        }
+
+        internal static CodeWriter GetBinWriteHead(bool isAlone, CodeWriter writerC)
+        {
+            var writerH = new CodeWriter();
+            writerH.AppendLine("w.WriteStartMap(null);");
+            if (isAlone)
+                writerH.AppendLines(writerC);
+            else
+                writerH.AppendLine("WriteBinaryCore(ref w);");
+            writerH.AppendLine("w.WriteEndMap();");
             return writerH;
         }
 
