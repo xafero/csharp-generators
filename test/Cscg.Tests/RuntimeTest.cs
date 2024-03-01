@@ -112,6 +112,34 @@ namespace Cscg.Tests
             Assert.Equal(expected, actual);
         }
 
+        [Theory]
+        [InlineData("d", "e")]
+        [InlineData("d", "s")]
+        [InlineData("a", "e")]
+        [InlineData("a", "s")]
+        public void TestJson(string cla, string mode)
+        {
+            ICompacted input = cla == "d"
+                ? (mode == "e" ? new DvS() : CreateCdv())
+                : (mode == "e" ? new Zoo() : CreateZoo());
+            byte[] bytes;
+            using (var mem = new MemoryStream())
+            {
+                input.WriteJson(mem);
+                bytes = mem.ToArray();
+            }
+            ICompacted output = cla == "d"
+                ? new DvS()
+                : new Zoo();
+            using (var mem = new MemoryStream(bytes))
+                output.ReadJson(mem);
+
+            var expected = ToJson(input);
+            var actual = ToJson(output);
+            _out.WriteLine(ToCborJson(bytes));
+            Assert.Equal(expected, actual);
+        }
+
         private static DvS CreateCdv()
             => new()
             {

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Cscg.Compactor.Lib;
 using Cscg.Core;
@@ -42,6 +41,7 @@ namespace Cscg.Compactor
             readerH.AppendLine("string key;");
             readerH.AppendLine("while (r.Read())");
             readerH.AppendLine("{");
+            readerH.AppendLine("r.Read();");
             readerH.AppendLine("key = r.GetString();");
             if (isAlone)
                 readerH.AppendLines(readerC);
@@ -72,7 +72,7 @@ namespace Cscg.Compactor
         internal static CodeWriter GetJsonWriteHead(bool isAlone, CodeWriter writerC)
         {
             var writerH = new CodeWriter();
-            writerH.AppendLine("w.WriteStartObject(null);");
+            writerH.AppendLine("w.WriteStartObject();");
             if (isAlone)
                 writerH.AppendLines(writerC);
             else
