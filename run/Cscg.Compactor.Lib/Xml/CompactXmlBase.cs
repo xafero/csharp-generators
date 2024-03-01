@@ -7,22 +7,24 @@ namespace Cscg.Compactor.Lib
     {
         public static void ReadXml(this ICompacted obj, Stream stream)
         {
-            using var reader = XmlReader.Create(stream, new XmlReaderSettings
+            var reader = XmlReader.Create(stream, new XmlReaderSettings
             {
                 CloseInput = false
             });
-            // TODO obj.ReadXml(ref reader);
+            obj.ReadXml(ref reader);
+            reader.Dispose();
         }
 
         public static void WriteXml(this ICompacted obj, Stream stream)
         {
-            using var writer = XmlWriter.Create(stream, new XmlWriterSettings
+            var writer = XmlWriter.Create(stream, new XmlWriterSettings
             {
                 CloseOutput = false
             });
-            // TODO obj.WriteXml(ref writer);
+            obj.WriteXml(ref writer);
             writer.Flush();
             stream.Flush();
+            writer.Dispose();
         }
     }
 }

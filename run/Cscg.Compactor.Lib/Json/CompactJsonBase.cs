@@ -1,8 +1,6 @@
 ﻿using System.IO;
 using System.Text.Json;
 
-// ReSharper disable UnusedMember.Global
-
 namespace Cscg.Compactor.Lib
 {
     public static class CompactJsonBase
@@ -26,6 +24,7 @@ namespace Cscg.Compactor.Lib
             obj.WriteJson(ref writer);
             writer.Flush();
             stream.Flush();
+            writer.Dispose();
         }
     }
 }

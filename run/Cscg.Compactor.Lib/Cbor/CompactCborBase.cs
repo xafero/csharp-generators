@@ -1,8 +1,6 @@
 ﻿using System.Formats.Cbor;
 using System.IO;
 
-// ReSharper disable UnusedMember.Global
-
 namespace Cscg.Compactor.Lib
 {
     public static class CompactCborBase
