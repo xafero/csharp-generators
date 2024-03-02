@@ -186,44 +186,44 @@ namespace Cscg.Compactor.Lib
             w.WriteBoolean(v);
         }
 
-        public static void WriteNullableDateTime(this ICompacted _, ref W w, DateTime? v)
+        public static void WriteNullableDateTime(this ICompacted c, ref W w, DateTime? v)
         {
             if (v == null)
             {
                 w.WriteNull();
                 return;
             }
-            w.WriteInt64(v.Value.ToBinary());
+            c.WriteDateTime(ref w, v.Value);
         }
 
-        public static void WriteNullableInt(this ICompacted _, ref W w, int? v)
+        public static void WriteNullableInt(this ICompacted c, ref W w, int? v)
         {
             if (v == null)
             {
                 w.WriteNull();
                 return;
             }
-            w.WriteInt32(v.Value);
+            c.WriteInt(ref w, v.Value);
         }
 
-        public static void WriteNullableDouble(this ICompacted _, ref W w, double? v)
+        public static void WriteNullableDouble(this ICompacted c, ref W w, double? v)
         {
             if (v == null)
             {
                 w.WriteNull();
                 return;
             }
-            w.WriteDouble(v.Value);
+            c.WriteDouble(ref w, v.Value);
         }
 
-        public static void WriteNullableBool(this ICompacted _, ref W w, bool? v)
+        public static void WriteNullableBool(this ICompacted c, ref W w, bool? v)
         {
             if (v == null)
             {
                 w.WriteNull();
                 return;
             }
-            w.WriteBoolean(v.Value);
+            c.WriteBool(ref w, v.Value);
         }
 
         public static void WriteGuid(this ICompacted _, ref W w, Guid v)
@@ -332,7 +332,9 @@ namespace Cscg.Compactor.Lib
         public static T ReadOneOf<T>(this ICompacted _, ref R r)
         {
             if (IsNull(ref r)) return default;
-            throw new NotImplementedException();
+            var v = Activator.CreateInstance<T>();
+            ((ICompacted)v).ReadCbor(ref r);
+            return v;
         }
 
         public static void WriteOneOf<T>(this ICompacted _, ref W w, T v)
@@ -386,7 +388,9 @@ namespace Cscg.Compactor.Lib
 
         private static bool IsNull(ref R r)
         {
-            return r.PeekState() == CborReaderState.Null;
+            var isNull = r.PeekState() == CborReaderState.Null;
+            if (isNull) r.ReadNull();
+            return isNull;
         }
 
         public static void WriteList<T>(this ICompacted _, ref W w, IEnumerable<T> v)
