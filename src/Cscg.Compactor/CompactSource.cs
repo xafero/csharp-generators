@@ -37,18 +37,21 @@ namespace Cscg.Compactor
         internal static CodeWriter GetJsonReadHead(bool isAlone, CodeWriter readerC)
         {
             var readerH = new CodeWriter();
-            readerH.AppendLine("r.Read();");
             readerH.AppendLine("string key;");
             readerH.AppendLine("while (r.Read())");
             readerH.AppendLine("{");
-            readerH.AppendLine("r.Read();");
+            readerH.AppendLine("if (r.TokenType == JsonTokenType.PropertyName)");
+            readerH.AppendLine("{");
             readerH.AppendLine("key = r.GetString();");
+            readerH.AppendLine("r.Read();");
             if (isAlone)
                 readerH.AppendLines(readerC);
             else
                 readerH.AppendLine("ReadJsonCore(ref r, key);");
             readerH.AppendLine("}");
-            readerH.AppendLine("r.Read();");
+            readerH.AppendLine("else if (r.TokenType == JsonTokenType.EndObject)");
+            readerH.AppendLine("break;");
+            readerH.AppendLine("}");
             return readerH;
         }
 

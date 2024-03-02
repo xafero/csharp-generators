@@ -62,6 +62,8 @@ namespace Cscg.Compactor.Lib
 
         public static T ReadExact<T>(this ICompacted _, string type, ref R r) where T : ICompacted
         {
+            if (IsNull(ref r))
+                return default;
             var obj = Reflections.Create<T>(type);
             obj.ReadJson(ref r);
             return obj;
@@ -79,7 +81,7 @@ namespace Cscg.Compactor.Lib
 
         public static Half ReadHalf(this ICompacted _, ref R r)
         {
-            return (Half)r.GetInt16();
+            return (Half)r.GetSingle();
         }
 
         public static T ReadIntEnum<T>(this ICompacted _, ref R r)
@@ -256,7 +258,7 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteHalf(this ICompacted _, ref W w, Half v)
         {
-            w.WriteNumberValue((int)v);
+            w.WriteNumberValue((float)v);
         }
 
         public static void WriteInt(this ICompacted _, ref W w, int v)
