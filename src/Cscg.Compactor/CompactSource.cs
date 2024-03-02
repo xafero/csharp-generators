@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Cscg.Compactor.Lib;
 using Cscg.Core;
@@ -78,9 +79,9 @@ namespace Cscg.Compactor
         internal static CodeWriter GetBinReadHead(bool isAlone, CodeWriter readerC)
         {
             var readerH = new CodeWriter();
-            readerH.AppendLine("var count = (int)r.Read7BitEncodedInt();");
+            readerH.AppendLine("var current = r.Read7BitEncodedInt();");
             readerH.AppendLine("string key;");
-            readerH.AppendLine("for (var i = 0; i < count; i++)");
+            readerH.AppendLine("while ((current = r.Read7BitEncodedInt()) != 'e')");
             readerH.AppendLine("{");
             readerH.AppendLine("key = r.ReadString();");
             if (isAlone)
@@ -88,7 +89,6 @@ namespace Cscg.Compactor
             else
                 readerH.AppendLine("ReadBinaryCore(ref r, key);");
             readerH.AppendLine("}");
-            readerH.AppendLine("r.Read7BitEncodedInt();");
             return readerH;
         }
 
