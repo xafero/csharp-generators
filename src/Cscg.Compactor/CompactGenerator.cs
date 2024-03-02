@@ -55,6 +55,7 @@ namespace Cscg.Compactor
 
         private static void ExecBody(CodeWriter code, ClassDeclarationSyntax cds, SyntaxWrap s, DataFormat f)
         {
+            var fqn = cds.GetFqn();
             s.Symbol.ExtractBase(out var cBase, out _, out var cSealed);
             var callBase = cBase != null;
             var isAlone = cSealed && cBase == null;
@@ -111,7 +112,7 @@ namespace Cscg.Compactor
             if (f.HasFlag(DataFormat.Xml))
             {
                 var readerH = GetXmlReadHead(isAlone, readerC);
-                var writerH = GetXmlWriteHead(isAlone, writerC);
+                var writerH = GetXmlWriteHead(isAlone, writerC, fqn.Split('.').Last());
                 rr.AppendLines(GetReadCode(isAlone, callBase, callMode, readerH, readerC, "Xml", "XmlReader"));
                 rr.AppendLine();
                 ww.AppendLines(GetWriteCode(isAlone, callBase, callMode, writerH, writerC, "Xml", "XmlWriter"));

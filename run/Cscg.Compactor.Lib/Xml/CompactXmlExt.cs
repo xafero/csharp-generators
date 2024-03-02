@@ -177,41 +177,49 @@ namespace Cscg.Compactor.Lib
         public static void WriteBool(this ICompacted _, ref W w, bool v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteByte(this ICompacted _, ref W w, byte v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteByteArray(this ICompacted _, ref W w, byte[] v)
         {
             w.WriteString(Convert.ToBase64String(v));
+            w.WriteEndElement();
         }
 
         public static void WriteChar(this ICompacted _, ref W w, char v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteCharArray(this ICompacted _, ref W w, char[] v)
         {
-            w.WriteValue(v);
+            w.WriteValue(new string(v));
+            w.WriteEndElement();
         }
 
         public static void WriteDateTime(this ICompacted _, ref W w, DateTime v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteDateTimeOffset(this ICompacted _, ref W w, DateTimeOffset v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteDecimal(this ICompacted _, ref W w, decimal v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteDict<T>(this ICompacted _, ref W w, IEnumerable<KeyValuePair<string, T>> v)
@@ -222,36 +230,43 @@ namespace Cscg.Compactor.Lib
         public static void WriteDouble(this ICompacted _, ref W w, double v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteExact<T>(this ICompacted _, string __, ref W w, T v)
         {
-            // TODO ?
+            if (v is ICompacted item) item.WriteXml(ref w);
+            w.WriteEndElement();
         }
 
         public static void WriteFloat(this ICompacted _, ref W w, float v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteGuid(this ICompacted _, ref W w, Guid v)
         {
-            w.WriteValue(v);
+            w.WriteValue(v.ToString());
+            w.WriteEndElement();
         }
 
         public static void WriteHalf(this ICompacted _, ref W w, Half v)
         {
-            w.WriteValue(v);
+            w.WriteValue((float)v);
+            w.WriteEndElement();
         }
 
         public static void WriteInt(this ICompacted _, ref W w, int v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteIntEnum<T>(this ICompacted _, ref W w, T v)
         {
             w.WriteValue((int)(object)v);
+            w.WriteEndElement();
         }
 
         public static void WriteList<T>(this ICompacted _, ref W w, IEnumerable<T> v)
@@ -262,53 +277,58 @@ namespace Cscg.Compactor.Lib
         public static void WriteLong(this ICompacted _, ref W w, long v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteNullableBool(this ICompacted _, ref W w, bool? v)
         {
             if (v == null)
             {
-                w.WriteString(null);
+                w.WriteEndElement();
                 return;
             }
             w.WriteValue(v.Value);
+            w.WriteEndElement();
         }
 
         public static void WriteNullableDateTime(this ICompacted _, ref W w, DateTime? v)
         {
             if (v == null)
             {
-                w.WriteString(null);
+                w.WriteEndElement();
                 return;
             }
             w.WriteValue(v.Value);
+            w.WriteEndElement();
         }
 
         public static void WriteNullableDouble(this ICompacted _, ref W w, double? v)
         {
             if (v == null)
             {
-                w.WriteString(null);
+                w.WriteEndElement();
                 return;
             }
             w.WriteValue(v.Value);
+            w.WriteEndElement();
         }
 
         public static void WriteNullableInt(this ICompacted _, ref W w, int? v)
         {
             if (v == null)
             {
-                w.WriteString(null);
+                w.WriteEndElement();
                 return;
             }
             w.WriteValue(v.Value);
+            w.WriteEndElement();
         }
 
         public static void WriteOneOf<T>(this ICompacted _, ref W w, T v)
         {
             if (v == null)
             {
-                w.WriteString(null);
+                w.WriteEndElement();
                 return;
             }
             // TODO ?
@@ -317,24 +337,25 @@ namespace Cscg.Compactor.Lib
         public static void WriteProperty(this ICompacted _, ref W w, string name)
         {
             w.WriteStartElement(name);
-            w.WriteEndElement();
         }
 
         public static void WriteSbyte(this ICompacted _, ref W w, sbyte v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteShort(this ICompacted _, ref W w, short v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteShortArray(this ICompacted _, ref W w, short[] v)
         {
             if (v == null)
             {
-                w.WriteString(null);
+                w.WriteEndElement();
                 return;
             }
             // TODO ?
@@ -344,30 +365,35 @@ namespace Cscg.Compactor.Lib
         {
             if (v == null)
             {
-                w.WriteString(null);
+                w.WriteEndElement();
                 return;
             }
             w.WriteString(v);
+            w.WriteEndElement();
         }
 
         public static void WriteTimeSpan(this ICompacted _, ref W w, TimeSpan v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteUint(this ICompacted _, ref W w, uint v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
 
         public static void WriteUlong(this ICompacted _, ref W w, ulong v)
         {
             w.WriteValue((decimal)v);
+            w.WriteEndElement();
         }
 
         public static void WriteUshort(this ICompacted _, ref W w, ushort v)
         {
             w.WriteValue(v);
+            w.WriteEndElement();
         }
     }
 }

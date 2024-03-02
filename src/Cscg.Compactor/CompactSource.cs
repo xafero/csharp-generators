@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
 using Cscg.Compactor.Lib;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
@@ -119,15 +120,15 @@ namespace Cscg.Compactor
             return writerH;
         }
 
-        internal static CodeWriter GetXmlWriteHead(bool isAlone, CodeWriter writerC)
+        internal static CodeWriter GetXmlWriteHead(bool isAlone, CodeWriter writerC, string type)
         {
             var writerH = new CodeWriter();
-            writerH.AppendLine("w.WriteStartDocument();");
+            writerH.AppendLine($"w.WriteStartElement(\"{type}\");");
             if (isAlone)
                 writerH.AppendLines(writerC);
             else
                 writerH.AppendLine("WriteXmlCore(ref w);");
-            writerH.AppendLine("w.WriteEndDocument();");
+            writerH.AppendLine("w.WriteEndElement();");
             return writerH;
         }
 
