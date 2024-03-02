@@ -52,7 +52,8 @@ namespace Cscg.Compactor.Lib
 
         public static IDictionary<string, T> ReadDict<T>(this ICompacted c, ref R r)
         {
-            throw new NotImplementedException();
+            // TODO ?
+            return default;
         }
 
         public static double ReadDouble(this ICompacted _, ref R r)
@@ -96,7 +97,20 @@ namespace Cscg.Compactor.Lib
 
         public static List<T> ReadList<T>(this ICompacted c, ref R r)
         {
-            throw new NotImplementedException();
+            if (IsNull(ref r))
+                return default;
+            var d = new List<T>();
+            r.Read();
+            while (r.Read())
+            {
+                if (r.TokenType == JsonTokenType.EndArray)
+                    break;
+                // TODO ?!
+                // var item = Activator.CreateInstance<T>();
+                // item.ReadJson(ref r);
+                // d.Add(item);
+            }
+            return d;
         }
 
         public static long ReadLong(this ICompacted _, ref R r)
@@ -126,7 +140,8 @@ namespace Cscg.Compactor.Lib
 
         public static T ReadOneOf<T>(this ICompacted c, ref R r)
         {
-            throw new NotImplementedException();
+            // TODO ?
+            return default;
         }
 
         public static sbyte ReadSbyte(this ICompacted _, ref R r)
@@ -141,7 +156,8 @@ namespace Cscg.Compactor.Lib
 
         public static short[] ReadShortArray(this ICompacted c, ref R r)
         {
-            throw new NotImplementedException();
+            // TODO ?
+            return default;
         }
 
         public static string ReadString(this ICompacted _, ref R r)
