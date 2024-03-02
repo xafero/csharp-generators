@@ -50,7 +50,7 @@ namespace Cscg.Compactor.Lib
             return r.GetDecimal();
         }
 
-        public static IDictionary<string, T> ReadDict<T>(this ICompacted c, ref R r)
+        public static IDictionary<string, T> ReadDict<T>(this ICompacted c, string type, ref R r)
         {
             // TODO ?
             return default;
@@ -95,7 +95,7 @@ namespace Cscg.Compactor.Lib
             return r.GetInt32();
         }
 
-        public static List<T> ReadList<T>(this ICompacted c, ref R r)
+        public static List<T> ReadList<T>(this ICompacted c, string type, ref R r)
         {
             if (IsNull(ref r))
                 return default;
@@ -138,7 +138,7 @@ namespace Cscg.Compactor.Lib
             return IsNull(ref r) ? null : r.GetInt32();
         }
 
-        public static T ReadOneOf<T>(this ICompacted c, ref R r)
+        public static T ReadOneOf<T>(this ICompacted c, string type, ref R r)
         {
             // TODO ?
             return default;
@@ -235,7 +235,7 @@ namespace Cscg.Compactor.Lib
             w.WriteNumberValue(v);
         }
 
-        public static void WriteDict<T>(this ICompacted _, ref W w, IEnumerable<KeyValuePair<string, T>> v)
+        public static void WriteDict<T>(this ICompacted _, string type, ref W w, IEnumerable<KeyValuePair<string, T>> v)
         {
             if (v == null)
             {
@@ -287,7 +287,7 @@ namespace Cscg.Compactor.Lib
             w.WriteNumberValue((int)(object)v);
         }
 
-        public static void WriteList<T>(this ICompacted _, ref W w, IEnumerable<T> v)
+        public static void WriteList<T>(this ICompacted _, string type, ref W w, IEnumerable<T> v)
         {
             if (v == null)
             {
@@ -347,7 +347,7 @@ namespace Cscg.Compactor.Lib
             c.WriteInt(ref w, v.Value);
         }
 
-        public static void WriteOneOf<T>(this ICompacted _, ref W w, T v)
+        public static void WriteOneOf<T>(this ICompacted _, string type, ref W w, T v)
         {
             if (v == null)
             {

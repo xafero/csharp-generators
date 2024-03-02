@@ -167,7 +167,7 @@ namespace Cscg.Compactor
                     {
                         var lt = ta.First();
                         var lts = Simplify(lt);
-                        name = $"List<{lt}>";
+                        name = $"List<{lt}>(\"{lt}\")";
                         full = lts.fqn;
                         leafs = lts.leafs;
                     }
@@ -175,14 +175,14 @@ namespace Cscg.Compactor
                     {
                         var dt = ta.Last();
                         var dts = Simplify(dt);
-                        name = $"Dict<{dt}>";
+                        name = $"Dict<{dt}>(\"{dt}\")";
                         full = dts.fqn;
                         leafs = dts.leafs;
                     }
                 }
                 else
                 {
-                    name = $"OneOf<{type}>";
+                    name = $"OneOf<{type}>(\"{type}\")";
                     leafs = type.SearchType().Select(s => s.GetFqn()).ToArray();
                 }
             }

@@ -329,7 +329,7 @@ namespace Cscg.Compactor.Lib
             w.WriteInt64(v);
         }
 
-        public static T ReadOneOf<T>(this ICompacted _, ref R r)
+        public static T ReadOneOf<T>(this ICompacted _, string type, ref R r)
         {
             if (IsNull(ref r)) return default;
             var v = Activator.CreateInstance<T>();
@@ -337,7 +337,7 @@ namespace Cscg.Compactor.Lib
             return v;
         }
 
-        public static void WriteOneOf<T>(this ICompacted _, ref W w, T v)
+        public static void WriteOneOf<T>(this ICompacted _, string type, ref W w, T v)
         {
             if (v is ICompacted item)
                 item.WriteCbor(ref w);
@@ -345,7 +345,7 @@ namespace Cscg.Compactor.Lib
                 w.WriteNull();
         }
 
-        public static List<T> ReadList<T>(this ICompacted _, ref R r)
+        public static List<T> ReadList<T>(this ICompacted _, string type, ref R r)
         {
             if (IsNull(ref r)) return default;
             var size = (int)r.ReadStartArray();
@@ -360,7 +360,7 @@ namespace Cscg.Compactor.Lib
             return d;
         }
 
-        public static Dictionary<string, T> ReadDict<T>(this ICompacted _, ref R r)
+        public static Dictionary<string, T> ReadDict<T>(this ICompacted _, string type, ref R r)
         {
             if (IsNull(ref r)) return default;
             var size = (int)r.ReadStartMap();
@@ -393,7 +393,7 @@ namespace Cscg.Compactor.Lib
             return isNull;
         }
 
-        public static void WriteList<T>(this ICompacted _, ref W w, IEnumerable<T> v)
+        public static void WriteList<T>(this ICompacted _, string type, ref W w, IEnumerable<T> v)
         {
             if (v == null)
             {
@@ -436,7 +436,7 @@ namespace Cscg.Compactor.Lib
             return v;
         }
 
-        public static void WriteDict<T>(this ICompacted _, ref W w, IEnumerable<KeyValuePair<string, T>> v)
+        public static void WriteDict<T>(this ICompacted _, string type, ref W w, IEnumerable<KeyValuePair<string, T>> v)
         {
             if (v == null)
             {

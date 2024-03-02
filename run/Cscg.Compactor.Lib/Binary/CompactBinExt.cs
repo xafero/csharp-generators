@@ -55,7 +55,7 @@ namespace Cscg.Compactor.Lib
             return r.ReadDecimal();
         }
 
-        public static Dictionary<string, T> ReadDict<T>(this ICompacted c, ref R r)
+        public static Dictionary<string, T> ReadDict<T>(this ICompacted c, string type, ref R r)
         {
             var count = ReadLength(ref r);
             if (count == null)
@@ -109,7 +109,7 @@ namespace Cscg.Compactor.Lib
             return r.ReadInt32();
         }
 
-        public static List<T> ReadList<T>(this ICompacted _, ref R r)
+        public static List<T> ReadList<T>(this ICompacted _, string type, ref R r)
         {
             var count = ReadLength(ref r);
             if (count == null)
@@ -149,7 +149,7 @@ namespace Cscg.Compactor.Lib
             return IsNull(ref r) ? null : ReadInt(_, ref r);
         }
 
-        public static T ReadOneOf<T>(this ICompacted _, ref R r)
+        public static T ReadOneOf<T>(this ICompacted _, string type, ref R r)
         {
             if (IsNull(ref r)) return default;
             var item = Activator.CreateInstance<T>();
@@ -253,7 +253,7 @@ namespace Cscg.Compactor.Lib
             w.Write(v);
         }
 
-        public static void WriteDict<T>(this ICompacted _, ref W w, IEnumerable<KeyValuePair<string, T>> v)
+        public static void WriteDict<T>(this ICompacted _, string type, ref W w, IEnumerable<KeyValuePair<string, T>> v)
         {
             if (v == null) { w.Write7BitEncodedInt(-1); return; }
             var copy = v.ToArray(); w.Write7BitEncodedInt(copy.Length);
@@ -300,7 +300,7 @@ namespace Cscg.Compactor.Lib
             w.Write((int)(object)v);
         }
 
-        public static void WriteList<T>(this ICompacted _, ref W w, IEnumerable<T> v)
+        public static void WriteList<T>(this ICompacted _, string type, ref W w, IEnumerable<T> v)
         {
             if (v == null) { w.Write7BitEncodedInt(-1); return; }
             var copy = v.ToArray(); w.Write7BitEncodedInt(copy.Length);
@@ -336,7 +336,7 @@ namespace Cscg.Compactor.Lib
             WriteInt(_, ref w, v.Value);
         }
 
-        public static void WriteOneOf<T>(this ICompacted _, ref W w, T v)
+        public static void WriteOneOf<T>(this ICompacted _, string type, ref W w, T v)
         {
             if (v == null) { WriteNull(ref w, true); return; } WriteNull(ref w, false);
             ((ICompacted)v).WriteBinary(ref w);
