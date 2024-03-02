@@ -19,7 +19,7 @@ namespace Cscg.Compactor.Lib
         {
             var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
             {
-                Indented = true
+                Indented = false
             });
             obj.WriteJson(ref writer);
             writer.Flush();
