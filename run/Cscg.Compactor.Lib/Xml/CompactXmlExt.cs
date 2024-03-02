@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml;
 using R = System.Xml.XmlReader;
 using W = System.Xml.XmlWriter;
@@ -12,46 +13,55 @@ namespace Cscg.Compactor.Lib
     {
         public static bool ReadBool(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return r.ReadContentAsBoolean();
         }
 
         public static byte ReadByte(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return XmlConvert.ToByte(r.ReadContentAsString());
         }
 
         public static byte[] ReadByteArray(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return Convert.FromBase64String(r.ReadContentAsString());
         }
 
         public static char ReadChar(this ICompacted _, ref R r)
         {
-            return XmlConvert.ToChar(r.ReadContentAsString());
+            if (IsNull(ref r)) return default;
+            return (char)r.ReadContentAsInt();
         }
 
         public static char[] ReadCharArray(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return r.ReadContentAsString().ToCharArray();
         }
 
         public static DateTime ReadDateTime(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return r.ReadContentAsDateTime();
         }
 
         public static DateTimeOffset ReadDateTimeOffset(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return r.ReadContentAsDateTimeOffset();
         }
 
         public static decimal ReadDecimal(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return r.ReadContentAsDecimal();
         }
 
         public static IDictionary<string, T> ReadDict<T>(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             var d = new Dictionary<string, T>();
             // TODO ?
             return d;
@@ -59,11 +69,13 @@ namespace Cscg.Compactor.Lib
 
         public static double ReadDouble(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return r.ReadContentAsDouble();
         }
 
         public static T ReadExact<T>(this ICompacted _, string type, ref R r) where T : ICompacted
         {
+            if (IsNull(ref r)) return default;
             var v = Reflections.Create<T>(type);
             v.ReadXml(ref r);
             return v;
@@ -71,31 +83,37 @@ namespace Cscg.Compactor.Lib
 
         public static float ReadFloat(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return r.ReadContentAsFloat();
         }
 
         public static Guid ReadGuid(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return new Guid(r.ReadContentAsString());
         }
 
         public static Half ReadHalf(this ICompacted _, ref R r)
         {
-            return (Half)r.ReadContentAsInt();
+            if (IsNull(ref r)) return default;
+            return (Half)r.ReadContentAsFloat();
         }
 
         public static T ReadIntEnum<T>(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return (T)(object)r.ReadContentAsInt();
         }
 
         public static int ReadInt(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return r.ReadContentAsInt();
         }
 
         public static List<T> ReadList<T>(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             var d = new List<T>();
             // TODO ?
             return d;
@@ -103,74 +121,95 @@ namespace Cscg.Compactor.Lib
 
         public static long ReadLong(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return r.ReadContentAsLong();
         }
 
         public static bool? ReadNullableBool(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return r.ReadContentAsBoolean();
         }
 
         public static DateTime? ReadNullableDateTime(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return r.ReadContentAsDateTime();
         }
 
         public static double? ReadNullableDouble(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return r.ReadContentAsDouble();
         }
 
         public static int? ReadNullableInt(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return r.ReadContentAsInt();
         }
 
         public static T ReadOneOf<T>(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             // TODO ?
             return default;
         }
 
         public static sbyte ReadSbyte(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return XmlConvert.ToSByte(r.ReadContentAsString());
         }
 
         public static short ReadShort(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return XmlConvert.ToInt16(r.ReadContentAsString());
         }
 
         public static short[] ReadShortArray(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             var array = new short[0];
             // TODO ?
             return array;
         }
 
+        private static bool IsNull(ref R r)
+        {
+            if (r.IsEmptyElement) return true;
+            r.Read();
+            return false;
+        }
+
         public static string ReadString(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return null;
             return r.ReadContentAsString();
         }
 
         public static TimeSpan ReadTimeSpan(this ICompacted _, ref R r)
         {
-            return TimeSpan.FromTicks(r.ReadContentAsLong());
+            if (IsNull(ref r)) return default;
+            return TimeSpan.Parse(r.ReadContentAsString());
         }
 
         public static uint ReadUint(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return XmlConvert.ToUInt32(r.ReadContentAsString());
         }
 
         public static ulong ReadUlong(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return XmlConvert.ToUInt64(r.ReadContentAsString());
         }
 
         public static ushort ReadUshort(this ICompacted _, ref R r)
         {
+            if (IsNull(ref r)) return default;
             return XmlConvert.ToUInt16(r.ReadContentAsString());
         }
 
@@ -188,7 +227,8 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteByteArray(this ICompacted _, ref W w, byte[] v)
         {
-            w.WriteString(Convert.ToBase64String(v));
+            if (v != null)
+                w.WriteString(Convert.ToBase64String(v));
             w.WriteEndElement();
         }
 
@@ -200,7 +240,8 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteCharArray(this ICompacted _, ref W w, char[] v)
         {
-            w.WriteValue(new string(v));
+            if (v != null)
+                w.WriteValue(new string(v));
             w.WriteEndElement();
         }
 
@@ -374,7 +415,7 @@ namespace Cscg.Compactor.Lib
 
         public static void WriteTimeSpan(this ICompacted _, ref W w, TimeSpan v)
         {
-            w.WriteValue(v);
+            w.WriteValue(v.ToString());
             w.WriteEndElement();
         }
 

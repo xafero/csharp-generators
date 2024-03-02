@@ -112,7 +112,7 @@ namespace Cscg.Compactor
             if (f.HasFlag(DataFormat.Xml))
             {
                 var readerH = GetXmlReadHead(isAlone, readerC);
-                var writerH = GetXmlWriteHead(isAlone, writerC, fqn.Split('.').Last());
+                var writerH = GetXmlWriteHead(isAlone, writerC, fqn);
                 rr.AppendLines(GetReadCode(isAlone, callBase, callMode, readerH, readerC, "Xml", "XmlReader"));
                 rr.AppendLine();
                 ww.AppendLines(GetWriteCode(isAlone, callBase, callMode, writerH, writerC, "Xml", "XmlWriter"));

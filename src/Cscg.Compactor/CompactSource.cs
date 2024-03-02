@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Xml;
 using Cscg.Compactor.Lib;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
@@ -59,18 +58,20 @@ namespace Cscg.Compactor
         internal static CodeWriter GetXmlReadHead(bool isAlone, CodeWriter readerC)
         {
             var readerH = new CodeWriter();
-            readerH.AppendLine("r.ReadStartElement();");
-            readerH.AppendLine("var count = (int)r.ReadContentAsInt();");
             readerH.AppendLine("string key;");
-            readerH.AppendLine("for (var i = 0; i < count; i++)");
+            readerH.AppendLine("while (r.Read())");
             readerH.AppendLine("{");
-            readerH.AppendLine("key = r.ReadString();");
+            readerH.AppendLine("if (r.NodeType == XmlNodeType.Element)");
+            readerH.AppendLine("{");
+            readerH.AppendLine("if (r.Name == \"object\") continue;");
+            readerH.AppendLine("key = r.Name;");
             if (isAlone)
                 readerH.AppendLines(readerC);
             else
                 readerH.AppendLine("ReadXmlCore(ref r, key);");
             readerH.AppendLine("}");
-            readerH.AppendLine("r.ReadEndElement();");
+            readerH.AppendLine("else if (r.NodeType == XmlNodeType.EndElement && r.Name == \"object\") break;");
+            readerH.AppendLine("}");
             return readerH;
         }
 
@@ -123,7 +124,8 @@ namespace Cscg.Compactor
         internal static CodeWriter GetXmlWriteHead(bool isAlone, CodeWriter writerC, string type)
         {
             var writerH = new CodeWriter();
-            writerH.AppendLine($"w.WriteStartElement(\"{type}\");");
+            writerH.AppendLine($"w.WriteStartElement(\"object\");");
+            writerH.AppendLine($"w.WriteAttributeString(\"type\", \"{type}\");");
             if (isAlone)
                 writerH.AppendLines(writerC);
             else
