@@ -64,8 +64,8 @@ namespace Cscg.Compactor.Lib
             for (var i = 0; i < count; i++)
             {
                 var key = c.ReadString(ref r);
-                var val = Activator.CreateInstance<T>();
-                ((ICompacted)val).ReadBinary(ref r);
+                var (val, obj) = Reflections.Create<T, IBinCompacted>(type);
+                obj.ReadBinary(ref r);
                 d[key] = val;
             }
             return d;
@@ -76,11 +76,12 @@ namespace Cscg.Compactor.Lib
             return r.ReadDouble();
         }
 
-        public static T ReadExact<T>(this ICompacted _, string type, ref R r) where T : ICompacted
+        public static T ReadExact<T>(this ICompacted _, string type, ref R r)
         {
-            if (IsNull(ref r)) return default;
-            var item = Activator.CreateInstance<T>();
-            item.ReadBinary(ref r);
+            if (IsNull(ref r)) 
+                return default;
+            var (item, obj) = Reflections.Create<T, IBinCompacted>(type);
+            obj.ReadBinary(ref r);
             return item;
         }
 
@@ -117,9 +118,9 @@ namespace Cscg.Compactor.Lib
             var d = new List<T>();
             for (var i = 0; i < count; i++)
             {
-                // var item = Activator.CreateInstance<T>();
-                // ((ICompacted)item).ReadBinary(ref r);
-                // TODO d.Add(item);
+                var (item, obj) = Reflections.Create<T, IBinCompacted>(type);
+                obj.ReadBinary(ref r);
+                d.Add(item);
             }
             return d;
         }
@@ -151,9 +152,10 @@ namespace Cscg.Compactor.Lib
 
         public static T ReadOneOf<T>(this ICompacted _, string type, ref R r)
         {
-            if (IsNull(ref r)) return default;
-            var item = Activator.CreateInstance<T>();
-            ((ICompacted)item).ReadBinary(ref r);
+            if (IsNull(ref r)) 
+                return default;
+            var (item, obj) = Reflections.Create<T, IBinCompacted>(type);
+            obj.ReadBinary(ref r);
             return item;
         }
 

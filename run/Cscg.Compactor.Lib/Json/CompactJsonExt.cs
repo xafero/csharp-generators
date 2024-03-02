@@ -61,13 +61,13 @@ namespace Cscg.Compactor.Lib
             return r.GetDouble();
         }
 
-        public static T ReadExact<T>(this ICompacted _, string type, ref R r) where T : ICompacted
+        public static T ReadExact<T>(this ICompacted _, string type, ref R r)
         {
             if (IsNull(ref r))
                 return default;
-            var obj = Reflections.Create<T>(type);
+            var (item, obj) = Reflections.Create<T, IJsonCompacted>(type);
             obj.ReadJson(ref r);
-            return obj;
+            return item;
         }
 
         public static float ReadFloat(this ICompacted _, ref R r)
@@ -100,15 +100,15 @@ namespace Cscg.Compactor.Lib
             if (IsNull(ref r))
                 return default;
             var d = new List<T>();
-            r.Read();
             while (r.Read())
             {
+                if (r.TokenType == JsonTokenType.StartArray)
+                    continue;
                 if (r.TokenType == JsonTokenType.EndArray)
                     break;
-                // TODO ?!
-                // var item = Activator.CreateInstance<T>();
-                // item.ReadJson(ref r);
-                // d.Add(item);
+                var (item, obj) = Reflections.Create<T, IJsonCompacted>(type);
+                obj?.ReadJson(ref r);
+                d.Add(item);
             }
             return d;
         }

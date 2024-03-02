@@ -74,10 +74,11 @@ namespace Cscg.Compactor.Lib
 
         public static T ReadExact<T>(this ICompacted _, string type, ref R r) where T : ICompacted
         {
-            if (IsNull(ref r)) return default;
-            var v = Reflections.Create<T>(type);
-            v.ReadXml(ref r);
-            return v;
+            if (IsNull(ref r))
+                return default;
+            var (item, obj) = Reflections.Create<T, IXmlCompacted>(type);
+            obj.ReadXml(ref r);
+            return item;
         }
 
         public static float ReadFloat(this ICompacted _, ref R r)

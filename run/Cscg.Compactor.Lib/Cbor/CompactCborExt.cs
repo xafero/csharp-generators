@@ -130,10 +130,11 @@ namespace Cscg.Compactor.Lib
         public static T ReadExact<T>(this ICompacted _, string type, ref R r)
             where T : ICompacted
         {
-            if (IsNull(ref r)) return default;
-            var found = Reflections.Create<T>(type);
-            found.ReadCbor(ref r);
-            return found;
+            if (IsNull(ref r)) 
+                return default;
+            var (item, obj) = Reflections.Create<T, ICborCompacted>(type);
+            obj.ReadCbor(ref r);
+            return item;
         }
 
         public static Half ReadHalf(this ICompacted _, ref R r)
@@ -332,9 +333,9 @@ namespace Cscg.Compactor.Lib
         public static T ReadOneOf<T>(this ICompacted _, string type, ref R r)
         {
             if (IsNull(ref r)) return default;
-            var v = Activator.CreateInstance<T>();
-            ((ICompacted)v).ReadCbor(ref r);
-            return v;
+            var (item, obj) = Reflections.Create<T, ICborCompacted>(type);
+            obj.ReadCbor(ref r);
+            return item;
         }
 
         public static void WriteOneOf<T>(this ICompacted _, string type, ref W w, T v)
@@ -352,8 +353,8 @@ namespace Cscg.Compactor.Lib
             var d = new List<T>(size);
             for (var j = 0; j < size; j++)
             {
-                var dv = Activator.CreateInstance<T>();
-                if (dv is ICompacted dvi) dvi.ReadCbor(ref r);
+                var (dv, dvi) = Reflections.Create<T, ICborCompacted>(type);
+                dvi.ReadCbor(ref r);
                 d.Add(dv);
             }
             r.ReadEndArray();
@@ -368,8 +369,8 @@ namespace Cscg.Compactor.Lib
             for (var j = 0; j < size; j++)
             {
                 var dk = r.ReadTextString();
-                var dv = Activator.CreateInstance<T>();
-                if (dv is ICompacted dvi) dvi.ReadCbor(ref r);
+                var (dv, dvi) = Reflections.Create<T, ICborCompacted>(type);
+                dvi.ReadCbor(ref r);
                 d[dk] = dv;
             }
             r.ReadEndMap();
@@ -419,14 +420,15 @@ namespace Cscg.Compactor.Lib
             w.WriteEndArray();
         }
 
-        public static T[] ReadArray<T>(this ICompacted _, ref R r)
+        private static T[] ReadArray<T>(this ICompacted _, Func<T> create, ref R r)
         {
-            if (IsNull(ref r)) return null;
+            if (IsNull(ref r))
+                return null;
             var size = (int)r.ReadStartArray();
             var v = new T[size];
             for (var j = 0; j < size; j++)
             {
-                if (Activator.CreateInstance<T>() is ICompacted c)
+                if (create() is ICompacted c)
                 {
                     c.ReadCbor(ref r);
                     v[j] = (T)c;

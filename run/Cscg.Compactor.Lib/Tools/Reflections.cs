@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Cscg.Compactor.Lib
 {
@@ -17,11 +18,12 @@ namespace Cscg.Compactor.Lib
             Creators[realType] = creator;
         }
 
-        public static T Create<T>(string type)
+        public static (TR, TH) Create<TR, TH>(string type)
         {
-            Creators.TryGetValue(type, out var func);
-            var obj = func?.Invoke();
-            return (T)obj;
+            if (!Creators.TryGetValue(type, out var func))
+                throw new InvalidOperationException(type);
+            var obj = func.Invoke();
+            return ((TR)obj, (TH)obj);
         }
     }
 }
