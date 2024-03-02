@@ -195,7 +195,7 @@ namespace Cscg.Compactor
                 return;
             foreach (var leaf in leafs)
             {
-                code.Add($"{RflObjName}.CanBe(\"{baseType}\", \"{leaf}\");");
+                // code.Add($"{RflObjName}.CanBe(\"{baseType}\", \"{leaf}\");");
                 code.Add($"{RflObjName}.Learn(\"{leaf}\", () => new {leaf}());");
             }
         }
