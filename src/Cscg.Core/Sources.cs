@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis;
@@ -28,17 +27,6 @@ namespace Cscg.Core
         public static bool HasEnding(this AdditionalText file, string ending)
             => file.Path.EndsWith($".{ending}");
 
-        public static bool HasThisAttribute(this SyntaxNode syntax, string name)
-            => syntax is ClassDeclarationSyntax { AttributeLists.Count: >= 1 } clazz
-               && clazz.AttributeLists.Any(al =>
-                   al.Attributes.Any(a => a.Name.ToString() == name));
-
-        private static ClassDeclarationSyntax GetTarget(this GeneratorSyntaxContext context)
-        {
-            var classDeclaration = (ClassDeclarationSyntax)context.Node;
-            return classDeclaration;
-        }
-
         public static string GetParentName(this ClassDeclarationSyntax cds)
         {
             if (cds.Parent is NamespaceDeclarationSyntax nds)
@@ -49,12 +37,6 @@ namespace Cscg.Core
         public static string GetClassName(this ClassDeclarationSyntax cds)
         {
             var text = cds.Identifier.Text.TrimNull();
-            return text;
-        }
-
-        public static string GetName(this PropertyDeclarationSyntax pds)
-        {
-            var text = pds.Identifier.Text.TrimNull();
             return text;
         }
 

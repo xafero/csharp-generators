@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using Cscg.Compactor.Lib.Cbor;
-using Cscg.Compactor.Lib.Xml;
 using R = System.Text.Json.Utf8JsonReader;
 using W = System.Text.Json.Utf8JsonWriter;
 

@@ -1,70 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Cscg.Core
 {
     public static class Typing
     {
-        public static string Parse(TypeSyntax type, out int arrayRank, out bool canNull)
-        {
-            var name = type.GetText().ToString().TrimNull();
-            arrayRank = name.Count(n => n == '[');
-            if (arrayRank >= 1)
-                name = name.Split(['['], 2).First();
-            canNull = name.EndsWith("?");
-            if (canNull)
-                name = name.Substring(0, name.Length - 1);
-            switch (name)
-            {
-                case "Half": return "Half";
-                case "float": return nameof(Single);
-                case "string": return nameof(String);
-                case "long": return nameof(Int64);
-                case "int": return nameof(Int32);
-                case "short": return nameof(Int16);
-                case "ulong": return nameof(UInt64);
-                case "uint": return nameof(UInt32);
-                case "ushort": return nameof(UInt16);
-                case "bool": return nameof(Boolean);
-                case "sbyte": return nameof(SByte);
-                case "char": return nameof(Char);
-                case "double": return nameof(Double);
-                case "decimal": return nameof(Decimal);
-                case "byte": return nameof(Byte);
-                case "DateTime": return nameof(DateTime);
-                case "DateTimeOffset": return nameof(DateTimeOffset);
-                case "TimeSpan": return nameof(TimeSpan);
-                case "Guid": return nameof(Guid);
-                default: return $"_{name}";
-            }
-        }
-
-        public static bool UnwrapNullable(this INamedTypeSymbol symbol, out ITypeSymbol found)
-        {
-            if (symbol.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T
-                && symbol.TypeArguments[0] is var nullType)
-            {
-                found = nullType;
-                return true;
-            }
-            found = symbol;
-            return false;
-        }
-
-        public static bool IsArray(this ITypeSymbol type, out ITypeSymbol underlying)
-        {
-            if (Is(type, TypeKind.Array))
-            {
-                underlying = (type as IArrayTypeSymbol)?.ElementType;
-                return true;
-            }
-            underlying = null;
-            return false;
-        }
-
         public static bool IsTyped(this ITypeSymbol type, out ITypeSymbol orig,
             out ITypeSymbol[] args, out bool isList, out bool isDict)
         {
