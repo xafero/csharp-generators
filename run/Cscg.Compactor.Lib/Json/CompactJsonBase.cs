@@ -1,11 +1,12 @@
 ﻿using System.IO;
 using System.Text.Json;
+using Cscg.Compactor.Lib.Tools;
 
-namespace Cscg.Compactor.Lib
+namespace Cscg.Compactor.Lib.Json
 {
     public static class CompactJsonBase
     {
-        public static void ReadJson(this ICompacted obj, Stream stream)
+        public static void ReadJson(this IJsonCompacted obj, Stream stream)
         {
             var array = stream.ToBytes();
             var reader = new Utf8JsonReader(array, new JsonReaderOptions
@@ -15,7 +16,7 @@ namespace Cscg.Compactor.Lib
             obj.ReadJson(ref reader);
         }
 
-        public static void WriteJson(this ICompacted obj, Stream stream)
+        public static void WriteJson(this IJsonCompacted obj, Stream stream)
         {
             var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
             {

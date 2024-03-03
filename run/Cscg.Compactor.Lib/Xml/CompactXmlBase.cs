@@ -1,11 +1,11 @@
 ﻿using System.IO;
 using System.Xml;
 
-namespace Cscg.Compactor.Lib
+namespace Cscg.Compactor.Lib.Xml
 {
     public static class CompactXmlBase
     {
-        public static void ReadXml(this ICompacted obj, Stream stream)
+        public static void ReadXml(this IXmlCompacted obj, Stream stream)
         {
             var reader = XmlReader.Create(stream, new XmlReaderSettings
             {
@@ -15,7 +15,7 @@ namespace Cscg.Compactor.Lib
             reader.Dispose();
         }
 
-        public static void WriteXml(this ICompacted obj, Stream stream)
+        public static void WriteXml(this IXmlCompacted obj, Stream stream)
         {
             var writer = XmlWriter.Create(stream, new XmlWriterSettings
             {

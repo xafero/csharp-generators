@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Cscg.Compactor.Lib;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Cscg.Compactor.Lib;
 using static Cscg.Compactor.CompactSource;
 
 namespace Cscg.Compactor
@@ -29,23 +29,20 @@ namespace Cscg.Compactor
         private static void Exec(SourceProductionContext ctx, SyntaxWrap syntax)
         {
             syntax.Attribute.ExtractArg(out var fmt);
+            GetInterfaces(fmt, out var usings, out var interfaces);
             var cds = syntax.Class;
             var space = cds.GetParentName() ?? Coding.AutoNamespace;
             var name = cds.GetClassName();
             var fileName = $"{name}.g.cs";
             var code = new CodeWriter();
             code.AppendLine($"using {LibSpace};");
-            code.AppendLine("using System;");
-            code.AppendLine("using System.Collections.Generic;");
-            code.AppendLine("using System.Formats.Cbor;");
-            code.AppendLine("using System.Text;");
-            code.AppendLine("using System.Text.Json;");
-            code.AppendLine("using System.Xml;");
-            code.AppendLine("using System.IO;");
+            foreach (var @using in usings.OrderBy(e => e).Distinct())
+                code.AppendLine($"using {@using};");
             code.AppendLine();
             code.AppendLine($"namespace {space}");
             code.AppendLine("{");
-            code.AppendLine($"partial class {name} : {IntObjName}");
+            var interfaceStr = string.Join(", ", interfaces);
+            code.AppendLine($"partial class {name} : {interfaceStr}");
             code.AppendLine("{");
             ExecBody(code, cds, syntax, fmt);
             code.AppendLine("}");

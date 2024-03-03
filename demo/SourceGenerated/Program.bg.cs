@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using Cscg.Compactor.Lib;
+using Cscg.Compactor.Lib.Binary;
 using SourceGenerated.Simple;
 
 namespace SourceGenerated

@@ -1,4 +1,4 @@
-﻿namespace Cscg.Compactor.Lib
+﻿namespace Cscg.Compactor.Lib.Tools
 {
     public delegate object Creator();
 }

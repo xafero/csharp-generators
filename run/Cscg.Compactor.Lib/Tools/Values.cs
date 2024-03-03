@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Cscg.Compactor.Lib
+namespace Cscg.Compactor.Lib.Tools
 {
     public static class Values
     {

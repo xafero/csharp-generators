@@ -10,11 +10,7 @@ namespace Cscg.Compactor
     internal static class CompactSource
     {
         internal const string LibSpace = "Cscg.Compactor.Lib";
-        private const string Space = Coding.AutoNamespace;
         internal const string BinObjName = "Compacted";
-        private const string ExtObjName = "CompactedExt";
-        internal const string IntObjName = "ICompacted";
-        private const string ItfObjName = "ICompactor";
         internal const string RflObjName = "Reflections";
 
         internal static void ExtractArg(this AttributeData ad, out DataFormat format)
@@ -207,6 +203,38 @@ namespace Cscg.Compactor
             construct.AppendLines(registry.OrderBy(e => e).Distinct());
             construct.AppendLine("}");
             return construct;
+        }
+
+        public static void GetInterfaces(DataFormat format,
+            out List<string> usings, out List<string> interfaces)
+        {
+            usings = [];
+            interfaces = [];
+
+            if (format.HasFlag(DataFormat.Binary))
+            {
+                usings.Add("System.IO");
+                usings.Add($"{LibSpace}.Binary");
+                interfaces.Add("IBinCompacted");
+            }
+            if (format.HasFlag(DataFormat.Cbor))
+            {
+                usings.Add("System.Formats.Cbor");
+                usings.Add($"{LibSpace}.Cbor");
+                interfaces.Add("ICborCompacted");
+            }
+            if (format.HasFlag(DataFormat.Xml))
+            {
+                usings.Add("System.Xml");
+                usings.Add($"{LibSpace}.Xml");
+                interfaces.Add("IXmlCompacted");
+            }
+            if (format.HasFlag(DataFormat.Json))
+            {
+                usings.Add("System.Text.Json");
+                usings.Add($"{LibSpace}.Json");
+                interfaces.Add("IJsonCompacted");
+            }
         }
     }
 }

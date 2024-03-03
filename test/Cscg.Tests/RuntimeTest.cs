@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Cscg.AutoGen;
-using Cscg.Compactor.Lib;
+using Cscg.Compactor.Lib.Binary;
+using Cscg.Compactor.Lib.Cbor;
+using Cscg.Compactor.Lib.Json;
+using Cscg.Compactor.Lib.Xml;
 using SourceGenerated;
 using SourceGenerated.Complex;
 using SourceGenerated.Simple;
@@ -71,7 +73,7 @@ namespace Cscg.Tests
         [InlineData("a", "s")]
         public void TestBinary(string cla, string mode)
         {
-            ICompacted input = cla == "d"
+            IBinCompacted input = cla == "d"
                 ? (mode == "e" ? new DvS() : CreateCdv())
                 : (mode == "e" ? new Zoo() : CreateZoo());
             byte[] bytes;
@@ -82,7 +84,7 @@ namespace Cscg.Tests
             }
             File.WriteAllBytes($"{nameof(TestBinary)}_{cla}_{mode}.bin", bytes);
 
-            ICompacted output = cla == "d"
+            IBinCompacted output = cla == "d"
                 ? new DvS()
                 : new Zoo();
             using (var mem = new MemoryStream(bytes))
@@ -101,7 +103,7 @@ namespace Cscg.Tests
         [InlineData("a", "s")]
         public void TestConcise(string cla, string mode)
         {
-            ICompacted input = cla == "d"
+            ICborCompacted input = cla == "d"
                 ? (mode == "e" ? new DvS() : CreateCdv())
                 : (mode == "e" ? new Zoo() : CreateZoo());
             byte[] bytes;
@@ -112,7 +114,7 @@ namespace Cscg.Tests
             }
             File.WriteAllBytes($"{nameof(TestConcise)}_{cla}_{mode}.cbor", bytes);
 
-            ICompacted output = cla == "d"
+            ICborCompacted output = cla == "d"
                 ? new DvS()
                 : new Zoo();
             using (var mem = new MemoryStream(bytes))
@@ -135,7 +137,7 @@ namespace Cscg.Tests
         [InlineData("a", "s")]
         public void TestJson(string cla, string mode)
         {
-            ICompacted input = cla == "d"
+            IJsonCompacted input = cla == "d"
                 ? (mode == "e" ? new DvS() : CreateCdv())
                 : (mode == "e" ? new Zoo() : CreateZoo());
             byte[] bytes;
@@ -146,7 +148,7 @@ namespace Cscg.Tests
             }
             File.WriteAllBytes($"{nameof(TestJson)}_{cla}_{mode}.json", bytes);
 
-            ICompacted output = cla == "d"
+            IJsonCompacted output = cla == "d"
                 ? new DvS()
                 : new Zoo();
             using (var mem = new MemoryStream(bytes))
@@ -165,7 +167,7 @@ namespace Cscg.Tests
         [InlineData("a", "s")]
         public void TestXml(string cla, string mode)
         {
-            ICompacted input = cla == "d"
+            IXmlCompacted input = cla == "d"
                 ? (mode == "e" ? new DvS() : CreateCdv())
                 : (mode == "e" ? new Zoo() : CreateZoo());
             byte[] bytes;
@@ -176,7 +178,7 @@ namespace Cscg.Tests
             }
             File.WriteAllBytes($"{nameof(TestXml)}_{cla}_{mode}.xml", bytes);
 
-            ICompacted output = cla == "d"
+            IXmlCompacted output = cla == "d"
                 ? new DvS()
                 : new Zoo();
             using (var mem = new MemoryStream(bytes))

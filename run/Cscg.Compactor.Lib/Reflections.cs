@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Cscg.Compactor.Lib.Tools;
+
+// ReSharper disable UnusedMember.Global
 
 namespace Cscg.Compactor.Lib
 {
