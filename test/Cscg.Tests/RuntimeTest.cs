@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Cscg.AutoGen;
 using Cscg.Compactor.Lib;
 using SourceGenerated;
@@ -116,6 +117,9 @@ namespace Cscg.Tests
                 : new Zoo();
             using (var mem = new MemoryStream(bytes))
                 output.ReadCbor(mem);
+
+            if (input is Zoo z)
+                z.AnimalDiets = new SortedDictionary<string, DietInfo>(z.AnimalDiets);
 
             var expected = ToJson(input);
             var actual = ToJson(output);

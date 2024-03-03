@@ -60,7 +60,7 @@ namespace Cscg.Compactor.Lib
             var count = ReadLength(ref r);
             if (count == null)
                 return null;
-            var d = new Dictionary<string, T>();
+            var d = new Dictionary<string, T>(count.Value);
             for (var i = 0; i < count; i++)
             {
                 var key = r.ReadString();
@@ -130,24 +130,24 @@ namespace Cscg.Compactor.Lib
             return r.ReadInt64();
         }
 
-        public static bool? ReadNullableBool(this ICompacted _, ref R r)
+        public static bool? ReadNullableBool(this ICompacted c, ref R r)
         {
-            return IsNull(ref r) ? null : r.ReadBoolean();
+            return IsNull(ref r) ? null : c.ReadBool(ref r);
         }
 
-        public static DateTime? ReadNullableDateTime(this ICompacted _, ref R r)
+        public static DateTime? ReadNullableDateTime(this ICompacted c, ref R r)
         {
-            return IsNull(ref r) ? null : ReadDateTime(_, ref r);
+            return IsNull(ref r) ? null : c.ReadDateTime(ref r);
         }
 
-        public static double? ReadNullableDouble(this ICompacted _, ref R r)
+        public static double? ReadNullableDouble(this ICompacted c, ref R r)
         {
-            return IsNull(ref r) ? null : ReadDouble(_, ref r);
+            return IsNull(ref r) ? null : c.ReadDouble(ref r);
         }
 
-        public static int? ReadNullableInt(this ICompacted _, ref R r)
+        public static int? ReadNullableInt(this ICompacted c, ref R r)
         {
-            return IsNull(ref r) ? null : ReadInt(_, ref r);
+            return IsNull(ref r) ? null : c.ReadInt(ref r);
         }
 
         public static T ReadOneOf<T>(this ICompacted _, string __, ref R r)
@@ -179,7 +179,7 @@ namespace Cscg.Compactor.Lib
 
         private delegate T Reader<out T>(ref R r);
 
-        private static T[] ReadArray<T>(this ICompacted c, ref R r, Reader<T> reader)
+        private static T[] ReadArray<T>(this ICompacted _, ref R r, Reader<T> reader)
         {
             var count = ReadLength(ref r);
             if (count == null)
@@ -296,7 +296,7 @@ namespace Cscg.Compactor.Lib
             w.Write(v);
         }
 
-        public static void WriteExact<T>(this ICompacted c, string __, ref W w, T v)
+        public static void WriteExact<T>(this ICompacted _, string __, ref W w, T v)
         {
             if (v == null || v is not IBinCompacted bc)
             {
