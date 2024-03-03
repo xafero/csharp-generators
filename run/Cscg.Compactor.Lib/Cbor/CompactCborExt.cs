@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Formats.Cbor;
 using System.Linq;
-using Cscg.Compactor.Lib.Tools;
 using R = System.Formats.Cbor.CborReader;
 using W = System.Formats.Cbor.CborWriter;
 

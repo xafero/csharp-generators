@@ -17,6 +17,8 @@ namespace Cscg.Compactor.Lib
 
         public static (TR, TH) Create<TR, TH>(string type)
         {
+            if (string.IsNullOrWhiteSpace(type))
+                throw new ArgumentNullException(nameof(type), "No type given!");
             if (!Creators.TryGetValue(type, out var func))
                 throw new InvalidOperationException(type);
             var obj = func.Invoke();

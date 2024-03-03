@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using Cscg.Compactor.Lib.Tools;
 using R = System.Text.Json.Utf8JsonReader;
 using W = System.Text.Json.Utf8JsonWriter;
 

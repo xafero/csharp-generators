@@ -44,7 +44,8 @@ namespace SourceGenerated.Complex
             zoo.AnimalDiets[zoo.Favorite.Name] = new ExDietInfo
             {
                 FoodType = "Special",
-                Premium = true
+                Premium = true,
+                QuantityPerDay = 401
             };
             zoo.Values = [38, 29, 13, 47];
             return zoo;
