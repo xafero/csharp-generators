@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
+using Cscg.Compactor.Lib.Cbor;
+using Cscg.Compactor.Lib.Xml;
 using R = System.Text.Json.Utf8JsonReader;
 using W = System.Text.Json.Utf8JsonWriter;
 
@@ -50,10 +53,21 @@ namespace Cscg.Compactor.Lib.Json
             return r.GetDecimal();
         }
 
-        public static IDictionary<string, T> ReadDict<T>(this IJsonCompacted c, string type, ref R r)
+        public static Dictionary<string, T> ReadDict<T>(this IJsonCompacted c, string type, ref R r)
         {
-            // TODO ?
-            return default;
+            if (IsNull(ref r))
+                return default;
+            var d = new Dictionary<string, T>();
+            while (r.Read())
+            {
+                if (r.TokenType == JsonTokenType.EndObject)
+                    break;
+                var key = r.GetString()!;
+                r.Read();
+                var val = c.ReadOneOf<T>(type, ref r);
+                d[key] = val;
+            }
+            return d;
         }
 
         public static double ReadDouble(this IJsonCompacted _, ref R r)
@@ -97,20 +111,8 @@ namespace Cscg.Compactor.Lib.Json
 
         public static List<T> ReadList<T>(this IJsonCompacted c, string type, ref R r)
         {
-            if (IsNull(ref r))
-                return default;
-            var d = new List<T>();
-            while (r.Read())
-            {
-                if (r.TokenType == JsonTokenType.StartArray)
-                    continue;
-                if (r.TokenType == JsonTokenType.EndArray)
-                    break;
-                var (item, obj) = Reflections.Create<T, IJsonCompacted>(type);
-                obj?.ReadJson(ref r);
-                d.Add(item);
-            }
-            return d;
+            var list = c.ReadList(ref r, (ref R x) => c.ReadOneOf<T>(type, ref x));
+            return list;
         }
 
         public static long ReadLong(this IJsonCompacted _, ref R r)
@@ -138,10 +140,17 @@ namespace Cscg.Compactor.Lib.Json
             return IsNull(ref r) ? null : r.GetInt32();
         }
 
-        public static T ReadOneOf<T>(this IJsonCompacted c, string type, ref R r)
+        public static T ReadOneOf<T>(this IJsonCompacted _, string __, ref R r)
         {
-            // TODO ?
-            return default;
+            if (IsNull(ref r))
+                return default;
+            if (r.TokenType == JsonTokenType.StartArray)
+                r.Read();
+            var real = r.GetString();
+            var (item, obj) = Reflections.Create<T, IJsonCompacted>(real);
+            obj.ReadJson(ref r);
+            r.Read();
+            return item;
         }
 
         public static sbyte ReadSbyte(this IJsonCompacted _, ref R r)
@@ -156,8 +165,27 @@ namespace Cscg.Compactor.Lib.Json
 
         public static short[] ReadShortArray(this IJsonCompacted c, ref R r)
         {
-            // TODO ?
-            return default;
+            var list = c.ReadList(ref r, c.ReadShort);
+            return list?.ToArray();
+        }
+
+        private delegate T Reader<out T>(ref R r);
+
+        private static List<T> ReadList<T>(this IJsonCompacted _, ref R r, Reader<T> reader)
+        {
+            if (IsNull(ref r))
+                return default;
+            var d = new List<T>();
+            while (r.Read())
+            {
+                if (r.TokenType == JsonTokenType.StartArray)
+                    continue;
+                if (r.TokenType == JsonTokenType.EndArray)
+                    break;
+                var item = reader(ref r);
+                d.Add(item);
+            }
+            return d;
         }
 
         public static string ReadString(this IJsonCompacted _, ref R r)
@@ -235,7 +263,8 @@ namespace Cscg.Compactor.Lib.Json
             w.WriteNumberValue(v);
         }
 
-        public static void WriteDict<T>(this IJsonCompacted _, string type, ref W w, IEnumerable<KeyValuePair<string, T>> v)
+        public static void WriteDict<T>(this IJsonCompacted c, string type, ref W w,
+            IEnumerable<KeyValuePair<string, T>> v)
         {
             if (v == null)
             {
@@ -246,7 +275,7 @@ namespace Cscg.Compactor.Lib.Json
             foreach (var item in v)
             {
                 w.WritePropertyName(item.Key);
-                ((IJsonCompacted)item.Value).WriteJson(ref w);
+                c.WriteOneOf(type, ref w, item.Value);
             }
             w.WriteEndObject();
         }
@@ -258,8 +287,10 @@ namespace Cscg.Compactor.Lib.Json
 
         public static void WriteExact<T>(this IJsonCompacted _, string __, ref W w, T v)
         {
-            if (v is IJsonCompacted item) item.WriteJson(ref w);
-            else w.WriteNullValue();
+            if (v is IJsonCompacted item) 
+                item.WriteJson(ref w);
+            else 
+                w.WriteNullValue();
         }
 
         public static void WriteFloat(this IJsonCompacted _, ref W w, float v)
@@ -287,19 +318,9 @@ namespace Cscg.Compactor.Lib.Json
             w.WriteNumberValue((int)(object)v);
         }
 
-        public static void WriteList<T>(this IJsonCompacted _, string type, ref W w, IEnumerable<T> v)
+        public static void WriteList<T>(this IJsonCompacted c, string type, ref W w, IEnumerable<T> v)
         {
-            if (v == null)
-            {
-                w.WriteNullValue();
-                return;
-            }
-            w.WriteStartArray();
-            foreach (var item in v)
-            {
-                ((IJsonCompacted)item).WriteJson(ref w);
-            }
-            w.WriteEndArray();
+            c.WriteArray(ref w, v?.ToArray(), (T i, ref W x) => c.WriteOneOf(type, ref x, i));
         }
 
         public static void WriteLong(this IJsonCompacted _, ref W w, long v)
@@ -347,14 +368,18 @@ namespace Cscg.Compactor.Lib.Json
             c.WriteInt(ref w, v.Value);
         }
 
-        public static void WriteOneOf<T>(this IJsonCompacted _, string type, ref W w, T v)
+        public static void WriteOneOf<T>(this IJsonCompacted _, string __, ref W w, T v)
         {
-            if (v == null)
+            if (v == null || v is not IJsonCompacted jc)
             {
                 w.WriteNullValue();
                 return;
             }
-            ((IJsonCompacted)v).WriteJson(ref w);
+            w.WriteStartArray();
+            var fqn = v.GetType().FullName;
+            w.WriteStringValue(fqn);
+            jc.WriteJson(ref w);
+            w.WriteEndArray();
         }
 
         public static void WriteProperty(this IJsonCompacted _, ref W w, string name)
@@ -374,15 +399,23 @@ namespace Cscg.Compactor.Lib.Json
 
         public static void WriteShortArray(this IJsonCompacted c, ref W w, short[] v)
         {
+            c.WriteArray(ref w, v, (short i, ref W x) => c.WriteShort(ref x, i));
+        }
+
+        private static void WriteArray<T>(this IJsonCompacted _, ref W w, IReadOnlyCollection<T> v, Writer<T> f)
+        {
             if (v == null)
             {
                 w.WriteNullValue();
                 return;
             }
             w.WriteStartArray();
-            foreach (var item in v) c.WriteShort(ref w, item);
+            foreach (var item in v)
+                f(item, ref w);
             w.WriteEndArray();
         }
+
+        public delegate void Writer<in T>(T item, ref W w);
 
         public static void WriteString(this IJsonCompacted _, ref W w, string v)
         {
