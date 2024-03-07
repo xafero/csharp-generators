@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
+using Tomlyn;
 using static Cscg.Core.Sources;
 
 namespace Cscg.TOML
@@ -19,6 +21,9 @@ namespace Cscg.TOML
 
         private static void Proc(SourceProductionContext spc, (string name, string content) nac)
         {
+            var model = Toml.ToModel(nac.content, nac.name);
+            // TODO ?
+
             const string space = Coding.AutoNamespace;
             var className = $"TomlFun.{nac.name}";
             var code = new CodeWriter();
@@ -28,6 +33,7 @@ namespace Cscg.TOML
             code.AppendLine("{");
             code.AppendLine("public static partial class TomlFun");
             code.AppendLine("{");
+            code.AppendLine(" // " + Toml.FromModel(model));
             code.AppendLine("}");
             code.AppendLine("}");
             spc.AddSource(className, code.ToString());
