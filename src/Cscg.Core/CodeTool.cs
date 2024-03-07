@@ -14,15 +14,17 @@ namespace Cscg.Core
             string type = "class", params string[] interfaces)
         {
             var interfaceStr = string.Join(", ", interfaces);
-            code.AppendLine($"partial {type} {name} : {interfaceStr}");
+            if (interfaceStr.Length != 0)
+                interfaceStr = $" : {interfaceStr}";
+            code.AppendLine($"partial {type} {name}{interfaceStr}");
         }
 
-        public static string CreateAttribute(string name)
+        public static string CreateAttribute(string name, string space)
         {
             var code = new CodeWriter();
             code.AppendLine("using System;");
             code.AppendLine();
-            code.AppendLine("namespace Cscg.AdoNet.Lib");
+            code.AppendLine($"namespace {space}");
             code.AppendLine("{");
             code.AppendLine("[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]");
             code.AppendLine($"public sealed class {name} : Attribute");
@@ -30,6 +32,21 @@ namespace Cscg.Core
             code.AppendLine($"public {name}()");
             code.AppendLine("{");
             code.AppendLine("}");
+            code.AppendLine("}");
+            code.AppendLine("}");
+            return code.ToString();
+        }
+
+        public static string CreateClass(string name, string space, CodeWriter body)
+        {
+            var code = new CodeWriter();
+            code.AppendLine("using System;");
+            code.AppendLine();
+            code.AppendLine($"namespace {space}");
+            code.AppendLine("{");
+            code.AppendLine($"public sealed class {name}");
+            code.AppendLine("{");
+            code.AppendLines(body);
             code.AppendLine("}");
             code.AppendLine("}");
             return code.ToString();
