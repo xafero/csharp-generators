@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Version>0.0.1</Version>
-    <Description>C# source generator based on TOML config</Description>
+    <Description>C# source generator for database queries</Description>
     <IsRoslynComponent>true</IsRoslynComponent>
   </PropertyGroup>
 
@@ -10,17 +10,10 @@
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="$(OutputPath)\Cscg.Core.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(OutputPath)\Tomlyn.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Cscg.Core\Cscg.Core.csproj" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Tomlyn">
-      <HintPath>..\..\lib\Tomlyn.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

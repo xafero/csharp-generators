@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\demo\SourceGenerated\SourceGenerated.csproj" />
+    <ProjectReference Include="..\..\src\Cscg.AdoNet\Cscg.AdoNet.csproj" />
     <ProjectReference Include="..\..\src\Cscg.Compactor\Cscg.Compactor.csproj" />
     <ProjectReference Include="..\..\src\Cscg.Constants\Cscg.Constants.csproj" />
     <ProjectReference Include="..\..\src\Cscg.Core\Cscg.Core.csproj" />
