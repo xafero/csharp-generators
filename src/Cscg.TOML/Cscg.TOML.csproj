@@ -14,11 +14,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Tomlyn" Version="0.17.0" PrivateAssets="all" />
+    <ProjectReference Include="..\Cscg.Core\Cscg.Core.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Cscg.Core\Cscg.Core.csproj" PrivateAssets="all" />
+    <Reference Include="Tomlyn">
+      <HintPath>..\..\lib\Tomlyn.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
