@@ -20,13 +20,13 @@ namespace Cscg.TOML
         private static void Proc(SourceProductionContext spc, (string name, string content) nac)
         {
             const string space = Coding.AutoNamespace;
-            var className = $"ConstStrings.{nac.name}";
+            var className = $"TomlFun.{nac.name}";
             var code = new CodeWriter();
             code.AppendLine("using System;");
             code.AppendLine();
             code.AppendLine($"namespace {space}");
             code.AppendLine("{");
-            code.AppendLine("public static partial class ConstStrings");
+            code.AppendLine("public static partial class TomlFun");
             code.AppendLine("{");
             code.AppendLine("}");
             code.AppendLine("}");
