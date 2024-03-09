@@ -30,6 +30,18 @@ namespace SourceGenerated.Sql
         public List<Person> Owners { get; set; }
     }
 
+    [Mapping]
+    public partial class HousePerson
+    {
+        [Foreign(Table = "House", Column = "MyId")]
+        [Column]
+        public int HousesMyId { get; set; }
+
+        [Foreign(Table = "Persons", Column = "Id")]
+        [Column]
+        public int OwnersId { get; set; }
+    }
+
     [Table]
     public partial class Blog
     {
@@ -73,7 +85,7 @@ namespace SourceGenerated.Sql
         [Column]
         public string UserId { get; set; }
 
-        [Foreign(Table = "Profile", Column = nameof(Profile.ProfileId))]
+        [Foreign(Table = "Profile", Column = nameof(Profile.ProfileId), Unique = true)]
         [Column]
         public long ProfileId { get; set; }
 

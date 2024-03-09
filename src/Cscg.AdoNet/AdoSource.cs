@@ -5,6 +5,7 @@
         internal const string LibSpace = "Cscg.AdoNet.Lib";
 
         internal const string TableAttrName = "Table";
+        internal const string MappingAttrName = "Mapping";
         internal const string ColAttrName = "Column";
         internal const string KeyAttrName = "Key";
         internal const string ForeignAttrName = "Foreign";

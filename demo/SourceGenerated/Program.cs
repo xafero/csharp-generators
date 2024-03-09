@@ -28,6 +28,9 @@ namespace SourceGenerated
             fw.WriteLine(Post.CreateTable());
             fw.WriteLine();
             fw.WriteLine();
+            fw.WriteLine(HousePerson.CreateTable());
+            fw.WriteLine();
+            fw.WriteLine();
             fw.WriteLine(User.CreateTable());
             fw.WriteLine();
             fw.WriteLine();

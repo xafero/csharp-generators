@@ -1,4 +1,6 @@
-﻿using Cscg.Core;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Cscg.Core;
 using Microsoft.CodeAnalysis;
 
 namespace Cscg.AdoNet
@@ -48,8 +50,8 @@ namespace Cscg.AdoNet
             return (res, cond.Trim());
         }
 
-        public static (string[] i, string[] o) GetForeign(
-            string table, string prop, string ds, string dp)
+        public static (string[] i, string[] o) GetForeign(string table, string prop,
+            string ds, string dp, bool unique)
         {
             ds = ds.Trim('"');
             var cstr = $"CONSTRAINT \"\"FK_{table}_{ds}_{prop}\"\" " +
@@ -57,9 +59,21 @@ namespace Cscg.AdoNet
                        $" \"\"{ds}\"\" (\"{dp}\") ON DELETE CASCADE";
             cstr = "@\"    " + cstr + ",\",";
             var index = $"IX_{table}_{prop}";
-            var ix = $"CREATE INDEX \"\"{index}\"\" ON \"\"{table}\"\" (\"\"{prop}\"\");";
-            ix = "@\"" + ix + "\"";
+            var mod = " ";
+            if (unique)
+                mod += "UNIQUE ";
+            var ix = $"CREATE{mod}INDEX \"\"{index}\"\" ON \"\"{table}\"\" (\"\"{prop}\"\");";
+            ix = "@\"" + ix + "\",";
             return ([cstr], [ix]);
+        }
+
+        public static string GetMapKey(string table, IEnumerable<string> keys)
+        {
+            var props = string.Join(", ", keys.Select(k => $"\"{Quote(k)}\""));
+            var cstr = $"CONSTRAINT \"\"PK_{table}\"\" " +
+                       $"PRIMARY KEY ({props})";
+            cstr = "@\"    " + cstr + ",\",";
+            return cstr;
         }
     }
 }

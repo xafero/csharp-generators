@@ -14,6 +14,7 @@ namespace Cscg.AdoNet
     public sealed class AdoGenerator : IIncrementalGenerator
     {
         private static readonly string TableAn = GetAttributeName(TableAttrName);
+        private static readonly string MappingAn = GetAttributeName(MappingAttrName);
         private static readonly string ColAn = GetAttributeName(ColAttrName);
         private static readonly string KeyAn = GetAttributeName(KeyAttrName);
         private static readonly string ForeignAn = GetAttributeName(ForeignAttrName);
@@ -23,8 +24,12 @@ namespace Cscg.AdoNet
             igi.RegisterPostInitializationOutput(PostInitial);
 
             var sp = igi.SyntaxProvider;
+
             var tableAf = GetFullName(LibSpace, TableAn);
             igi.RegisterSourceOutput(sp.ForAttributeWithMetadataName(tableAf, Check, Wrap), Exec);
+
+            var mapAf = GetFullName(LibSpace, MappingAn);
+            igi.RegisterSourceOutput(sp.ForAttributeWithMetadataName(mapAf, Check, Wrap), Exec);
         }
 
         private static void PostInitial(IncrementalGeneratorPostInitializationContext ctx)
@@ -34,6 +39,16 @@ namespace Cscg.AdoNet
                 Lines = { "public string Name { get; set; }" }
             }, default, default, AttributeTargets.Class);
             ctx.AddSource($"{TableAn}.cs", tableAc);
+
+            var mapAc = CreateAttribute(MappingAn, LibSpace, new CodeWriter
+            {
+                Lines =
+                {
+                    "public string First { get; set; }",
+                    "public string Second { get; set; }"
+                }
+            }, default, default, AttributeTargets.Class);
+            ctx.AddSource($"{MappingAn}.cs", mapAc);
 
             var colAc = CreateAttribute(ColAn, LibSpace, new CodeWriter
             {
@@ -49,7 +64,12 @@ namespace Cscg.AdoNet
 
             var forAc = CreateAttribute(ForeignAn, LibSpace, new CodeWriter
             {
-                Lines = { "public string Table { get; set; }", "public string Column { get; set; }" }
+                Lines =
+                {
+                    "public string Table { get; set; }",
+                    "public string Column { get; set; }",
+                    "public bool Unique { get; set; }"
+                }
             }, default, default, AttributeTargets.Property, AttributeTargets.Field);
             ctx.AddSource($"{ForeignAn}.cs", forAc);
 
@@ -82,7 +102,8 @@ namespace Cscg.AdoNet
             var body = new CodeWriter();
             body.AppendLine("public static string CreateTable()");
             body.AppendLine("{");
-            var tableName = BuildPlural(name);
+            var isMap = ccs.TryGetValue(MappingAn, out _);
+            var tableName = isMap ? name : BuildPlural(name);
             if (ccs.TryGetValue($"{TableAn}_Name", out var tbn)) tableName = tbn;
             var table = SqliteSource.Quote(tableName);
             body.AppendLine("var sql = string.Join(Environment.NewLine, [");
@@ -90,6 +111,7 @@ namespace Cscg.AdoNet
 
             var after = new List<string>();
             var inner = new List<string>();
+            var mapPk = new List<string>();
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
                 {
@@ -110,11 +132,21 @@ namespace Cscg.AdoNet
                     {
                         ppa.TryGetValue($"{ForeignAn}_Table", out var ft);
                         ppa.TryGetValue($"{ForeignAn}_Column", out var fc);
-                        var (fi, fo) = SqliteSource.GetForeign(tableName, ppName, ft, fc);
+                        ppa.TryGetValue($"{ForeignAn}_Unique", out var fu);
+                        var u = fu == "true";
+                        var (fi, fo) = SqliteSource.GetForeign(tableName, ppName, ft, fc, u);
                         inner.AddRange(fi);
-                        after.AddRange(fo);
+                        if (isMap)
+                            mapPk.Add(ppName);
+                        else
+                            after.AddRange(fo);
                     }
                 }
+
+            if (isMap)
+            {
+                inner.Insert(0, SqliteSource.GetMapKey(tableName, mapPk));
+            }
 
             foreach (var item in inner)
             {
@@ -128,6 +160,7 @@ namespace Cscg.AdoNet
                 body.ModifyLast(l => l + ",");
                 body.AppendLines(["\"\",", "\"\","]);
                 body.AppendLines(after);
+                body.ModifyLast(l => l.Replace(";\",", ";\""));
             }
             body.AppendLine("]);");
             body.AppendLine("return sql;");
