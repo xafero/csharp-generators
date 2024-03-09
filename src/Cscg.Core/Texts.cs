@@ -11,5 +11,11 @@
         {
             return text.Substring(0, 1).ToUpper() + text.Substring(1);
         }
+
+        public static string ToString(bool? value)
+        {
+            if (value is { } b) return b ? "true" : "false";
+            return null;
+        }
     }
 }

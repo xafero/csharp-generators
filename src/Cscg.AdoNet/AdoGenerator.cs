@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -25,13 +26,22 @@ namespace Cscg.AdoNet
 
         private static void PostInitial(IncrementalGeneratorPostInitializationContext ctx)
         {
-            var tableAc = CreateAttribute(TableAn, LibSpace);
+            var tableAc = CreateAttribute(TableAn, LibSpace, new CodeWriter
+            {
+                Lines = { "public string? Name { get; }" }
+            }, default, default, AttributeTargets.Class);
             ctx.AddSource($"{TableAn}.cs", tableAc);
 
-            var colAc = CreateAttribute(ColAn, LibSpace);
+            var colAc = CreateAttribute(ColAn, LibSpace, new CodeWriter
+            {
+                Lines = { "public string? Name { get; }" }
+            }, default, default, AttributeTargets.Property, AttributeTargets.Field);
             ctx.AddSource($"{ColAn}.cs", colAc);
 
-            var keyAc = CreateAttribute(KeyAn, LibSpace);
+            var keyAc = CreateAttribute(KeyAn, LibSpace, new CodeWriter
+            {
+                Lines = { "public string? Name { get; }" }
+            }, default, default, AttributeTargets.Property, AttributeTargets.Field);
             ctx.AddSource($"{KeyAn}.cs", keyAc);
 
             // var dbsBody = new CodeWriter();

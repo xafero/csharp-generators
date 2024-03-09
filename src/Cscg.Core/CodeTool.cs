@@ -29,14 +29,19 @@ namespace Cscg.Core
         }
 
         public static string CreateAttribute(string name, string space, CodeWriter body = null,
-            AttributeTargets dst = AttributeTargets.Class)
+            bool inherit = false, bool multi = false, params AttributeTargets[] targets)
         {
+            if (targets == null || targets.Length == 0) targets = [AttributeTargets.All];
+            var dst = string.Join(" | ", targets.Select(t => $"AttributeTargets.{t}"));
+            var inh = Texts.ToString(inherit);
+            var mul = Texts.ToString(multi);
+
             var code = new CodeWriter();
             code.AppendLine("using System;");
             code.AppendLine();
             code.AppendLine($"namespace {space}");
             code.AppendLine("{");
-            code.AppendLine($"[AttributeUsage(AttributeTargets.{dst}, Inherited = false, AllowMultiple = false)]");
+            code.AppendLine($"[AttributeUsage({dst}, Inherited = {inh}, AllowMultiple = {mul})]");
             code.AppendLine($"public sealed class {name} : Attribute");
             code.AppendLine("{");
             if (body != null) code.AppendLines(body);
