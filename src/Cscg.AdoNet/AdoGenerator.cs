@@ -89,6 +89,7 @@ namespace Cscg.AdoNet
             body.AppendLine($"@\"CREATE TABLE \"{table}\" (\",");
 
             var after = new List<string>();
+            var inner = new List<string>();
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
                 {
@@ -110,10 +111,15 @@ namespace Cscg.AdoNet
                         ppa.TryGetValue($"{ForeignAn}_Table", out var ft);
                         ppa.TryGetValue($"{ForeignAn}_Column", out var fc);
                         var (fi, fo) = SqliteSource.GetForeign(tableName, ppName, ft, fc);
-                        body.AppendLines(fi, trim: false);
+                        inner.AddRange(fi);
                         after.AddRange(fo);
                     }
                 }
+
+            foreach (var item in inner)
+            {
+                body.AppendLine(item);
+            }
 
             body.ModifyLast(l => l.Replace(",\",", "\","));
             body.AppendLine("\");\"");

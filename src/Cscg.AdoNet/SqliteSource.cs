@@ -18,14 +18,27 @@ namespace Cscg.AdoNet
             var canNull = true;
             switch (text)
             {
+                case "long":
                 case "int":
                     res = "INTEGER";
                     canNull = false;
                     if (tblKey != null)
                         cond += $"CONSTRAINT \"{tblKey}\" PRIMARY KEY AUTOINCREMENT";
                     break;
+                case "System.DateTime":
+                    res = "TEXT";
+                    canNull = false;
+                    break;
                 case "string":
                     res = "TEXT";
+                    if (tblKey != null)
+                    {
+                        cond += $"CONSTRAINT \"{tblKey}\" PRIMARY KEY";
+                        canNull = false;
+                    }
+                    break;
+                case "byte[]":
+                    res = "BLOB";
                     break;
                 default:
                     res = "!TODO!";

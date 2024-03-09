@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Cscg.AdoNet.Lib;
 
@@ -12,6 +13,21 @@ namespace SourceGenerated.Sql
 
         [Column] 
         public string Name { get; set; }
+
+        public List<House> Houses { get; set; }
+    }
+
+    [Table(Name = "House")]
+    public partial class House
+    {
+        [Key]
+        [Column]
+        public int MyId { get; set; }
+
+        [Column]
+        public string Street { get; set; }
+
+        public List<Person> Owners { get; set; }
     }
 
     [Table]
@@ -19,7 +35,7 @@ namespace SourceGenerated.Sql
     {
         [Key]
         [Column]
-        public int BlogId { get; set; }
+        public int MyBlogId { get; set; }
 
         [Column]
         public string Url { get; set; }
@@ -43,10 +59,49 @@ namespace SourceGenerated.Sql
         [Column]
         public string Content { get; set; }
 
-        [Foreign(Table = "Blogs", Column = "BlogId")]
+        [Foreign(Table = "Blogs", Column = nameof(Blog.MyBlogId))]
         [Column]
         public int BlogId { get; set; }
 
         public Blog Blog { get; set; }
+    }
+
+    [Table]
+    public partial class User
+    {
+        [Key]
+        [Column]
+        public string UserId { get; set; }
+
+        [Foreign(Table = "Profile", Column = nameof(Profile.ProfileId))]
+        [Column]
+        public long ProfileId { get; set; }
+
+        [Column]
+        public string UserName { get; set; }
+
+        [Column]
+        public string Email { get; set; }
+
+        public Profile Profile { get; set; }
+    }
+
+    [Table(Name = "Profile")]
+    public partial class Profile
+    {
+        [Key]
+        [Column]
+        public long ProfileId { get; set; }
+
+        [Column]
+        public DateTime Birthdate { get; set; }
+
+        [Column]
+        public byte[] Image { get; set; }
+
+        [Column]
+        public string Bio { get; set; }
+
+        public User User { get; set; }
     }
 }
