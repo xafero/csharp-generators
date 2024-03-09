@@ -34,5 +34,19 @@ namespace Cscg.AdoNet
             cond = $"{(canNull ? "NULL" : "NOT NULL")} {cond}";
             return (res, cond.Trim());
         }
+
+        public static (string[] i, string[] o) GetForeign(
+            string table, string prop, string ds, string dp)
+        {
+            ds = ds.Trim('"');
+            var cstr = $"CONSTRAINT \"\"FK_{table}_{ds}_{prop}\"\" " +
+                       $"FOREIGN KEY (\"\"{prop}\"\") REFERENCES" +
+                       $" \"\"{ds}\"\" (\"{dp}\") ON DELETE CASCADE";
+            cstr = "@\"    " + cstr + ",\",";
+            var index = $"IX_{table}_{prop}";
+            var ix = $"CREATE INDEX \"\"{index}\"\" ON \"\"{table}\"\" (\"\"{prop}\"\");";
+            ix = "@\"" + ix + "\"";
+            return ([cstr], [ix]);
+        }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
@@ -14,6 +16,7 @@ namespace Cscg.AdoNet
         private static readonly string TableAn = GetAttributeName(TableAttrName);
         private static readonly string ColAn = GetAttributeName(ColAttrName);
         private static readonly string KeyAn = GetAttributeName(KeyAttrName);
+        private static readonly string ForeignAn = GetAttributeName(ForeignAttrName);
 
         public void Initialize(IncrementalGeneratorInitializationContext igi)
         {
@@ -43,6 +46,12 @@ namespace Cscg.AdoNet
                 Lines = { }
             }, default, default, AttributeTargets.Property, AttributeTargets.Field);
             ctx.AddSource($"{KeyAn}.cs", keyAc);
+
+            var forAc = CreateAttribute(ForeignAn, LibSpace, new CodeWriter
+            {
+                Lines = { "public string Table { get; set; }", "public string Column { get; set; }" }
+            }, default, default, AttributeTargets.Property, AttributeTargets.Field);
+            ctx.AddSource($"{ForeignAn}.cs", forAc);
 
             // var dbsBody = new CodeWriter();
             // var dbsCode = CodeTool.CreateClass($"{DbsName}<T>", LibSpace, dbsBody);
@@ -79,6 +88,7 @@ namespace Cscg.AdoNet
             body.AppendLine("var sql = string.Join(Environment.NewLine, [");
             body.AppendLine($"@\"CREATE TABLE \"{table}\" (\",");
 
+            var after = new List<string>();
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
                 {
@@ -94,10 +104,25 @@ namespace Cscg.AdoNet
                         : SqliteSource.Quote($"PK_{tableName.Trim('"')}");
                     var (pType, pCond) = SqliteSource.GetType(pp.ReturnType, pk);
                     body.AppendLine($"@\"    \"{pName}\" {pType} {pCond},\",");
+
+                    if (ppa.TryGetValue(ForeignAn, out _))
+                    {
+                        ppa.TryGetValue($"{ForeignAn}_Table", out var ft);
+                        ppa.TryGetValue($"{ForeignAn}_Column", out var fc);
+                        var (fi, fo) = SqliteSource.GetForeign(tableName, ppName, ft, fc);
+                        body.AppendLines(fi, trim: false);
+                        after.AddRange(fo);
+                    }
                 }
 
             body.ModifyLast(l => l.Replace(",\",", "\","));
             body.AppendLine("\");\"");
+            if (after.Any())
+            {
+                body.ModifyLast(l => l + ",");
+                body.AppendLines(["\"\",", "\"\","]);
+                body.AppendLines(after);
+            }
             body.AppendLine("]);");
             body.AppendLine("return sql;");
 

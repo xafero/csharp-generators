@@ -29,9 +29,10 @@ namespace Cscg.Core
 
         public void AppendLines(CodeWriter writer) => AppendLines(writer.Lines);
 
-        public void AppendLines(IEnumerable<string> lines)
+        public void AppendLines(IEnumerable<string> lines, bool trim = true)
         {
-            foreach (var line in lines) AppendLine(line.Trim());
+            foreach (var line in lines)
+                AppendLine(trim ? line.Trim() : line);
         }
 
         public override string ToString()

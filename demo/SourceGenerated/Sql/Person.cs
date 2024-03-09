@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Cscg.AdoNet.Lib;
-using SourceGenerated.Sql;
 
 namespace SourceGenerated.Sql
 {
@@ -28,7 +27,6 @@ namespace SourceGenerated.Sql
         [Column]
         public int Rating { get; set; }
 
-        [Column]
         public List<Post> Posts { get; set; }
     }
 
@@ -45,10 +43,10 @@ namespace SourceGenerated.Sql
         [Column]
         public string Content { get; set; }
 
+        [Foreign(Table = "Blogs", Column = "BlogId")]
         [Column]
         public int BlogId { get; set; }
 
-        [Column]
         public Blog Blog { get; set; }
     }
 }
