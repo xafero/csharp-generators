@@ -3,28 +3,36 @@ using Cscg.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Cscg.AdoNet.AdoSource;
+using static Cscg.Core.CodeTool;
 
 namespace Cscg.AdoNet
 {
     [Generator(LanguageNames.CSharp)]
     public sealed class AdoGenerator : IIncrementalGenerator
     {
-        private const string ItfName = $"{BinObjName}Attribute";
-        private const string ItfFqn = $"{LibSpace}.{ItfName}";
-        private const string DbsName = "DbSet";
+        private static readonly string TableAn = GetAttributeName(TableAttrName);
+        private static readonly string ColAn = GetAttributeName(ColAttrName);
+        private static readonly string KeyAn = GetAttributeName(KeyAttrName);
 
         public void Initialize(IncrementalGeneratorInitializationContext igi)
         {
             igi.RegisterPostInitializationOutput(PostInitial);
 
             var sp = igi.SyntaxProvider;
-            igi.RegisterSourceOutput(sp.ForAttributeWithMetadataName(ItfFqn, Check, Wrap), Exec);
+            var tableAf = GetFullName(LibSpace, TableAn);
+            igi.RegisterSourceOutput(sp.ForAttributeWithMetadataName(tableAf, Check, Wrap), Exec);
         }
 
         private static void PostInitial(IncrementalGeneratorPostInitializationContext ctx)
         {
-            // var itfCode = CodeTool.CreateAttribute(ItfName, LibSpace);
-            // ctx.AddSource($"{ItfName}.cs", itfCode);
+            var tableAc = CreateAttribute(TableAn, LibSpace);
+            ctx.AddSource($"{TableAn}.cs", tableAc);
+
+            var colAc = CreateAttribute(ColAn, LibSpace);
+            ctx.AddSource($"{ColAn}.cs", colAc);
+
+            var keyAc = CreateAttribute(KeyAn, LibSpace);
+            ctx.AddSource($"{KeyAn}.cs", keyAc);
 
             // var dbsBody = new CodeWriter();
             // var dbsCode = CodeTool.CreateClass($"{DbsName}<T>", LibSpace, dbsBody);

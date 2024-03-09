@@ -3,6 +3,9 @@
     internal static class AdoSource
     {
         internal const string LibSpace = "Cscg.AdoNet.Lib";
-        internal const string BinObjName = "DbContext";
+
+        internal const string TableAttrName = "Table";
+        internal const string ColAttrName = "Column";
+        internal const string KeyAttrName = "Key";
     }
 }

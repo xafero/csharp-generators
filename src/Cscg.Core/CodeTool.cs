@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace Cscg.Core
 {
@@ -19,25 +20,32 @@ namespace Cscg.Core
             code.AppendLine($"partial {type} {name}{interfaceStr}");
         }
 
-        public static string CreateAttribute(string name, string space)
+        public static string GetAttributeName(string name)
+        {
+            const string tmp = "Attribute";
+            if (!name.EndsWith(tmp))
+                name += tmp;
+            return name;
+        }
+
+        public static string CreateAttribute(string name, string space, CodeWriter body = null,
+            AttributeTargets dst = AttributeTargets.Class)
         {
             var code = new CodeWriter();
             code.AppendLine("using System;");
             code.AppendLine();
             code.AppendLine($"namespace {space}");
             code.AppendLine("{");
-            code.AppendLine("[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]");
+            code.AppendLine($"[AttributeUsage(AttributeTargets.{dst}, Inherited = false, AllowMultiple = false)]");
             code.AppendLine($"public sealed class {name} : Attribute");
             code.AppendLine("{");
-            code.AppendLine($"public {name}()");
-            code.AppendLine("{");
-            code.AppendLine("}");
+            if (body != null) code.AppendLines(body);
             code.AppendLine("}");
             code.AppendLine("}");
             return code.ToString();
         }
 
-        public static string CreateClass(string name, string space, CodeWriter body)
+        public static string CreateClass(string name, string space, CodeWriter body = null)
         {
             var code = new CodeWriter();
             code.AppendLine("using System;");
@@ -46,10 +54,16 @@ namespace Cscg.Core
             code.AppendLine("{");
             code.AppendLine($"public sealed class {name}");
             code.AppendLine("{");
-            code.AppendLines(body);
+            if (body != null) code.AppendLines(body);
             code.AppendLine("}");
             code.AppendLine("}");
             return code.ToString();
+        }
+
+        public static string GetFullName(string space, string name)
+        {
+            var fqn = $"{space}.{name}";
+            return fqn;
         }
     }
 }
