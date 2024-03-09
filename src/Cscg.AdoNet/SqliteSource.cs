@@ -20,14 +20,33 @@ namespace Cscg.AdoNet
             var canNull = true;
             switch (text)
             {
+                case "double":
+                case "float":
+                    res = "REAL";
+                    canNull = false;
+                    break;
+                case "ulong":
                 case "long":
+                case "uint":
                 case "int":
+                case "ushort":
+                case "short":
+                case "sbyte":
+                case "byte":
+                case "bool":
                     res = "INTEGER";
                     canNull = false;
                     if (tblKey != null)
                         cond += $"CONSTRAINT \"{tblKey}\" PRIMARY KEY AUTOINCREMENT";
                     break;
+                case "System.DateTimeOffset":
                 case "System.DateTime":
+                case "System.DateOnly":
+                case "System.TimeSpan":
+                case "System.TimeOnly":
+                case "System.Guid":
+                case "decimal":
+                case "char":
                     res = "TEXT";
                     canNull = false;
                     break;
@@ -43,7 +62,7 @@ namespace Cscg.AdoNet
                     res = "BLOB";
                     break;
                 default:
-                    res = "!TODO!";
+                    res = $"!?{text}?!";
                     break;
             }
             cond = $"{(canNull ? "NULL" : "NOT NULL")} {cond}";

@@ -12,6 +12,9 @@
 
         public static string BuildPlural(string name)
         {
+            if (name.EndsWith("y"))
+                return $"{name.Substring(0, name.Length - 1)}ies";
+
             return $"{name}s";
         }
     }

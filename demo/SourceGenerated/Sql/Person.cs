@@ -116,4 +116,31 @@ namespace SourceGenerated.Sql
 
         public User User { get; set; }
     }
+
+    [Table]
+    public partial class Funny
+    {
+        [Key] [Column] public int Id { get; set; }
+        [Column] public bool A { get; set; }
+        [Column] public byte B { get; set; }
+        [Column] public byte[] C { get; set; }
+        [Column] public char D { get; set; }
+        [Column] public DateOnly E { get; set; }
+        [Column] public DateTime F { get; set; }
+        [Column] public DateTimeOffset G { get; set; }
+        [Column] public decimal H { get; set; }
+        [Column] public double I { get; set; }
+        [Column] public Guid J { get; set; }
+        [Column] public short K { get; set; }
+        [Column] public int L { get; set; }
+        [Column] public long M { get; set; }
+        [Column] public sbyte N { get; set; }
+        [Column] public float O { get; set; }
+        [Column] public string P { get; set; }
+        [Column] public TimeOnly Q { get; set; }
+        [Column] public TimeSpan R { get; set; }
+        [Column] public ushort S { get; set; }
+        [Column] public uint T { get; set; }
+        [Column] public ulong U { get; set; }
+    }
 }

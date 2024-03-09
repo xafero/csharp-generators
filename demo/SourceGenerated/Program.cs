@@ -16,6 +16,9 @@ namespace SourceGenerated
             fw.WriteLine(Blog.CreateTable());
             fw.WriteLine();
             fw.WriteLine();
+            fw.WriteLine(Funny.CreateTable());
+            fw.WriteLine();
+            fw.WriteLine();
             fw.WriteLine(House.CreateTable());
             fw.WriteLine();
             fw.WriteLine();
