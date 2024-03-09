@@ -11,6 +11,7 @@ namespace Cscg.AdoNet
     {
         private const string ItfName = $"{BinObjName}Attribute";
         private const string ItfFqn = $"{LibSpace}.{ItfName}";
+        private const string DbsName = "DbSet";
 
         public void Initialize(IncrementalGeneratorInitializationContext igi)
         {
@@ -22,8 +23,12 @@ namespace Cscg.AdoNet
 
         private static void PostInitial(IncrementalGeneratorPostInitializationContext ctx)
         {
-            var itfCode = CodeTool.CreateAttribute(ItfName);
-            ctx.AddSource($"{ItfName}.cs", itfCode);
+            // var itfCode = CodeTool.CreateAttribute(ItfName, LibSpace);
+            // ctx.AddSource($"{ItfName}.cs", itfCode);
+
+            // var dbsBody = new CodeWriter();
+            // var dbsCode = CodeTool.CreateClass($"{DbsName}<T>", LibSpace, dbsBody);
+            // ctx.AddSource($"{DbsName}.cs", dbsCode);
         }
 
         private static bool Check(SyntaxNode node, CancellationToken _)
@@ -45,10 +50,17 @@ namespace Cscg.AdoNet
             code.AppendLine("{");
             code.WriteClassLine(name, interfaces: "IDisposable");
             code.AppendLine("{");
-            // ExecBody(code, cds, syntax, fmt);
+            ExecBody(code, cds, syntax);
             code.AppendLine("}");
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
+        }
+
+        private static void ExecBody(CodeWriter code, ClassDeclarationSyntax cds, SyntaxWrap syn)
+        {
+            code.AppendLine("public void Dispose()");
+            code.AppendLine("{");
+            code.AppendLine("}");
         }
     }
 }
