@@ -4,58 +4,51 @@ using SourceGenerated.Sql;
 
 namespace SourceGenerated.Sql
 {
-    [Table(Name = "FuckYou")]
+    [Table]
     public partial class Person
     {
         [Key] 
-        [Column(Name = "ShitId")] 
+        [Column] 
         public int Id { get; set; }
 
         [Column] 
         public string Name { get; set; }
     }
 
-    [Table(Name = "FuckYou2")]
+    [Table]
     public partial class Blog
     {
         [Key]
-        [Column(Name = "ShitId")]
+        [Column]
         public int BlogId { get; set; }
 
-        [Key]
-        [Column(Name = "ShitId")]
+        [Column]
         public string Url { get; set; }
 
-        [Key]
-        [Column(Name = "ShitId")]
+        [Column]
         public int Rating { get; set; }
 
-        [Key]
-        [Column(Name = "ShitId")]
+        [Column]
         public List<Post> Posts { get; set; }
     }
 
-    [Table(Name = "FuckYou3")]
+    [Table]
     public partial class Post
     {
         [Key]
-        [Column(Name = "ShitId")]
+        [Column]
         public int PostId { get; set; }
 
-        [Key]
-        [Column(Name = "ShitId")]
+        [Column]
         public string Title { get; set; }
 
-        [Key]
-        [Column(Name = "ShitId")]
+        [Column]
         public string Content { get; set; }
 
-        [Key]
-        [Column(Name = "ShitId")]
+        [Column]
         public int BlogId { get; set; }
 
-        [Key]
-        [Column(Name = "ShitId")]
+        [Column]
         public Blog Blog { get; set; }
     }
 }

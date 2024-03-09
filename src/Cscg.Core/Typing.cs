@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Cscg.Core
 {
@@ -91,5 +93,25 @@ namespace Cscg.Core
                 .Select((tc, id) => (k: id.ToString(), v: tc))
                 .Concat(ad.NamedArguments
                     .Select(n => (k: n.Key, v: n.Value)));
+
+        public static (string n, Dictionary<string, TypedConstant> c) GetArgDict(this AttributeData ad)
+        {
+            var name = ad.AttributeClass.ToTrimDisplay();
+            return (name, ad.FindArgs().ToDictionary(a => a.k, a => a.v));
+        }
+
+        public static Dictionary<string, string> FindArgs(this ISymbol symbol, bool simple)
+        {
+            var dict = new Dictionary<string, string>();
+            foreach (var data in symbol.GetAttributes())
+            {
+                var (name, constants) = data.GetArgDict();
+                if (simple) name = name.Split('.').Last();
+                dict[name] = default;
+                foreach (var item in constants)
+                    dict[$"{name}_{item.Key}"] = item.Value.ToCSharpString();
+            }
+            return dict;
+        }
     }
 }

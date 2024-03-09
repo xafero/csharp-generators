@@ -57,6 +57,7 @@ namespace Cscg.AdoNet
 
         private static void Exec(SourceProductionContext ctx, SyntaxWrap syntax)
         {
+            var ccs = syntax.Symbol.FindArgs(simple: true);
             var cds = syntax.Class;
             var space = cds.GetParentName() ?? Coding.AutoNamespace;
             var name = cds.GetClassName();
@@ -72,16 +73,26 @@ namespace Cscg.AdoNet
             var body = new CodeWriter();
             body.AppendLine("public static string CreateTable()");
             body.AppendLine("{");
-            var table = SqliteSource.Quote(BuildPlural(name));
+            var tableName = BuildPlural(name);
+            if (ccs.TryGetValue($"{TableAn}_Name", out var tbn)) tableName = tbn;
+            var table = SqliteSource.Quote(tableName);
             body.AppendLine("var sql = string.Join(Environment.NewLine, [");
             body.AppendLine($"@\"CREATE TABLE \"{table}\" (\",");
 
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
                 {
-                    var pp = syntax.GetInfo(syntax.GetSymbol(pds));
-                    var pName = SqliteSource.Quote(pp.Name);
-                    var (pType, pCond) = SqliteSource.GetType(pp.ReturnType);
+                    var pps = syntax.GetSymbol(pds);
+                    var ppa = pps.FindArgs(simple: true);
+                    if (!ppa.ContainsKey(ColAn))
+                        continue;
+                    var pp = syntax.GetInfo(pps);
+                    var ppName = ppa.TryGetValue($"{ColAn}_Name", out var tpn) ? tpn : pp.Name;
+                    var pName = SqliteSource.Quote(ppName);
+                    var pk = !ppa.TryGetValue(KeyAn, out _)
+                        ? null
+                        : SqliteSource.Quote($"PK_{tableName.Trim('"')}");
+                    var (pType, pCond) = SqliteSource.GetType(pp.ReturnType, pk);
                     body.AppendLine($"@\"    \"{pName}\" {pType} {pCond},\",");
                 }
 
