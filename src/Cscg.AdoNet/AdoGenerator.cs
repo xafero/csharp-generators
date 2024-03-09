@@ -138,8 +138,7 @@ namespace Cscg.AdoNet
                         inner.AddRange(fi);
                         if (isMap)
                             mapPk.Add(ppName);
-                        else
-                            after.AddRange(fo);
+                        after.AddRange(fo);
                     }
                 }
 
