@@ -7,5 +7,10 @@
         internal const string TableAttrName = "Table";
         internal const string ColAttrName = "Column";
         internal const string KeyAttrName = "Key";
+
+        public static string BuildPlural(string name)
+        {
+            return $"{name}s";
+        }
     }
 }

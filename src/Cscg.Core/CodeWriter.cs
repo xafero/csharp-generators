@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -39,6 +40,14 @@ namespace Cscg.Core
             foreach (var line in Lines)
                 code.AppendLine(line);
             return code.ToString();
+        }
+
+        public void ModifyLast(Func<string, string> func)
+        {
+            var idx = Lines.Count - 1;
+            var oldLine = Lines[idx];
+            var newLine = func(oldLine);
+            Lines[idx] = newLine;
         }
     }
 }

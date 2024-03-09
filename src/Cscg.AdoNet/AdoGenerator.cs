@@ -28,19 +28,19 @@ namespace Cscg.AdoNet
         {
             var tableAc = CreateAttribute(TableAn, LibSpace, new CodeWriter
             {
-                Lines = { "public string? Name { get; }" }
+                Lines = { "public string Name { get; set; }" }
             }, default, default, AttributeTargets.Class);
             ctx.AddSource($"{TableAn}.cs", tableAc);
 
             var colAc = CreateAttribute(ColAn, LibSpace, new CodeWriter
             {
-                Lines = { "public string? Name { get; }" }
+                Lines = { "public string Name { get; set; }" }
             }, default, default, AttributeTargets.Property, AttributeTargets.Field);
             ctx.AddSource($"{ColAn}.cs", colAc);
 
             var keyAc = CreateAttribute(KeyAn, LibSpace, new CodeWriter
             {
-                Lines = { "public string? Name { get; }" }
+                Lines = { }
             }, default, default, AttributeTargets.Property, AttributeTargets.Field);
             ctx.AddSource($"{KeyAn}.cs", keyAc);
 
@@ -66,19 +66,36 @@ namespace Cscg.AdoNet
             code.AppendLine();
             code.AppendLine($"namespace {space}");
             code.AppendLine("{");
-            code.WriteClassLine(name, interfaces: "IDisposable");
+            code.WriteClassLine(name);
             code.AppendLine("{");
-            ExecBody(code, cds, syntax);
+
+            var body = new CodeWriter();
+            body.AppendLine("public static string CreateTable()");
+            body.AppendLine("{");
+            var table = SqliteSource.Quote(BuildPlural(name));
+            body.AppendLine("var sql = string.Join(Environment.NewLine, [");
+            body.AppendLine($"@\"CREATE TABLE \"{table}\" (\",");
+
+            foreach (var member in cds.Members)
+                if (member is PropertyDeclarationSyntax pds)
+                {
+                    var pp = syntax.GetInfo(syntax.GetSymbol(pds));
+                    var pName = SqliteSource.Quote(pp.Name);
+                    var (pType, pCond) = SqliteSource.GetType(pp.ReturnType);
+                    body.AppendLine($"@\"    \"{pName}\" {pType} {pCond},\",");
+                }
+
+            body.ModifyLast(l => l.Replace(",\",", "\","));
+            body.AppendLine("\");\"");
+            body.AppendLine("]);");
+            body.AppendLine("return sql;");
+
+            body.AppendLine("}");
+            code.AppendLines(body);
+
             code.AppendLine("}");
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
-        }
-
-        private static void ExecBody(CodeWriter code, ClassDeclarationSyntax cds, SyntaxWrap syn)
-        {
-            code.AppendLine("public void Dispose()");
-            code.AppendLine("{");
-            code.AppendLine("}");
         }
     }
 }
