@@ -21,7 +21,7 @@ namespace Cscg.AdoNet
 
         public void Initialize(IncrementalGeneratorInitializationContext igi)
         {
-            igi.RegisterPostInitializationOutput(PostInitial);
+            // TODO igi.RegisterPostInitializationOutput(PostInitial);
 
             var sp = igi.SyntaxProvider;
 
@@ -32,53 +32,13 @@ namespace Cscg.AdoNet
             igi.RegisterSourceOutput(sp.ForAttributeWithMetadataName(mapAf, Check, Wrap), Exec);
         }
 
-        private static void PostInitial(IncrementalGeneratorPostInitializationContext ctx)
-        {
-            /*
-            var tableAc = CreateAttribute(TableAn, LibSpace, new CodeWriter
-            {
-                Lines = { "public string Name { get; set; }" }
-            }, default, default, AttributeTargets.Class);
-            ctx.AddSource($"{TableAn}.cs", tableAc);
-
-            var mapAc = CreateAttribute(MappingAn, LibSpace, new CodeWriter
-            {
-                Lines =
-                {
-                    "public string First { get; set; }",
-                    "public string Second { get; set; }"
-                }
-            }, default, default, AttributeTargets.Class);
-            ctx.AddSource($"{MappingAn}.cs", mapAc);
-
-            var colAc = CreateAttribute(ColAn, LibSpace, new CodeWriter
-            {
-                Lines = { "public string Name { get; set; }" }
-            }, default, default, AttributeTargets.Property, AttributeTargets.Field);
-            ctx.AddSource($"{ColAn}.cs", colAc);
-
-            var keyAc = CreateAttribute(KeyAn, LibSpace, new CodeWriter
-            {
-                Lines = { }
-            }, default, default, AttributeTargets.Property, AttributeTargets.Field);
-            ctx.AddSource($"{KeyAn}.cs", keyAc);
-
-            var forAc = CreateAttribute(ForeignAn, LibSpace, new CodeWriter
-            {
-                Lines =
-                {
-                    "public string Table { get; set; }",
-                    "public string Column { get; set; }",
-                    "public bool Unique { get; set; }"
-                }
-            }, default, default, AttributeTargets.Property, AttributeTargets.Field);
-            ctx.AddSource($"{ForeignAn}.cs", forAc);
-            */
-
+        // TODO
+        //private static void PostInitial(IncrementalGeneratorPostInitializationContext ctx)
+        //{
             // var dbsBody = new CodeWriter();
             // var dbsCode = CodeTool.CreateClass($"{DbsName}<T>", LibSpace, dbsBody);
             // ctx.AddSource($"{DbsName}.cs", dbsCode);
-        }
+        //}
 
         private static bool Check(SyntaxNode node, CancellationToken _)
             => node is ClassDeclarationSyntax;
@@ -96,26 +56,29 @@ namespace Cscg.AdoNet
             var name = cds.GetClassName();
             var fileName = $"{name}.g.cs";
             var code = new CodeWriter();
-            code.AddUsings(LibSpace, "System");
+            code.AddUsings(LibSpace, "System", "Microsoft.Data.Sqlite");
             code.AppendLine();
             code.AppendLine($"namespace {space}");
             code.AppendLine("{");
             code.WriteClassLine(name);
             code.AppendLine("{");
 
-            var body = new CodeWriter();
-            body.AppendLine("public static string CreateTable()");
-            body.AppendLine("{");
+            const string connType = "SqliteConnection";
+
+            var crea = new CodeWriter();
+            crea.AppendLine("public static string CreateTable()");
+            crea.AppendLine("{");
             var isMap = ccs.TryGetValue(MappingAn, out _);
             var tableName = isMap ? name : BuildPlural(name);
             if (ccs.TryGetValue($"{TableAn}_Name", out var tbn)) tableName = tbn;
             var table = SqliteSource.Quote(tableName);
-            body.AppendLine("var sql = string.Join(Environment.NewLine, [");
-            body.AppendLine($"@\"CREATE TABLE IF NOT EXISTS \"{table}\" (\",");
+            crea.AppendLine("var sql = string.Join(Environment.NewLine, [");
+            crea.AppendLine($"@\"CREATE TABLE IF NOT EXISTS \"{table}\" (\",");
 
             var after = new List<string>();
             var inner = new List<string>();
             var mapPk = new List<string>();
+            var lastPk = default(string);
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
                 {
@@ -129,8 +92,9 @@ namespace Cscg.AdoNet
                     var pk = !ppa.TryGetValue(KeyAn, out _)
                         ? null
                         : SqliteSource.Quote($"PK_{tableName.Trim('"')}");
+                    if (pk != null) lastPk = ppName;
                     var (pType, pCond) = SqliteSource.GetType(pp.ReturnType, pk);
-                    body.AppendLine($"@\"    \"{pName}\" {pType} {pCond},\",");
+                    crea.AppendLine($"@\"    \"{pName}\" {pType} {pCond},\",");
 
                     if (ppa.TryGetValue(ForeignAn, out _))
                     {
@@ -153,24 +117,41 @@ namespace Cscg.AdoNet
 
             foreach (var item in inner)
             {
-                body.AppendLine(item);
+                crea.AppendLine(item);
             }
 
-            body.ModifyLast(l => l.Replace(",\",", "\","));
-            body.AppendLine("\");\"");
+            crea.ModifyLast(l => l.Replace(",\",", "\","));
+            crea.AppendLine("\");\"");
             if (after.Any())
             {
-                body.ModifyLast(l => l + ",");
-                body.AppendLines(["\"\",", "\"\","]);
-                body.AppendLines(after);
-                body.ModifyLast(l => l.Replace(";\",", ";\""));
+                crea.ModifyLast(l => l + ",");
+                crea.AppendLines(["\"\",", "\"\","]);
+                crea.AppendLines(after);
+                crea.ModifyLast(l => l.Replace(";\",", ";\""));
             }
-            body.AppendLine("]);");
-            body.AppendLine("return sql;");
+            crea.AppendLine("]);");
+            crea.AppendLine("return sql;");
+            crea.AppendLine("}");
 
-            body.AppendLine("}");
+            var del = new CodeWriter();
+            if (!string.IsNullOrWhiteSpace(lastPk))
+            {
+                del.AppendLine($"public bool Delete({connType} conn)");
+                del.AppendLine("{");
+                del.AppendLine("using var cmd = conn.CreateCommand();");
+                del.AppendLine($@"cmd.CommandText = @""DELETE FROM ""{table}"" WHERE {lastPk} = @p0;"";");
+                del.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", this.{lastPk});");
+                del.AppendLine("var delCount = cmd.ExecuteNonQuery();");
+                del.AppendLine("return delCount == 1;");
+                del.AppendLine("}");
+            }
+
+            var body = new CodeWriter();
+            body.AppendLines(crea);
+            body.AppendLine();
+            body.AppendLines(del);
+
             code.AppendLines(body);
-
             code.AppendLine("}");
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
