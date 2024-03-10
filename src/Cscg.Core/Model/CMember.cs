@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 namespace Cscg.Core.Model
@@ -10,5 +11,7 @@ namespace Cscg.Core.Model
         [XmlAttribute] public string Name { get; set; }
 
         [XmlAttribute] public string Type { get; set; }
+
+        [XmlElement("Attribute")] public List<CAttribute> Attributes { get; set; }
     }
 }

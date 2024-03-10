@@ -1,10 +1,11 @@
 ﻿using System.Linq;
+using Cscg.Core.Model;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Cscg.Core
 {
-    public class SyntaxWrap(GeneratorAttributeSyntaxContext context)
+    public class SyntaxWrap(GeneratorAttributeSyntaxContext context) : ISymbolFetch
     {
         public ClassDeclarationSyntax Class => context.TargetNode as ClassDeclarationSyntax;
 
@@ -43,7 +44,8 @@ namespace Cscg.Core
         public ISymbol GetSymbol(SyntaxNode node)
         {
             var model = context.SemanticModel;
-            var symbol = model.GetDeclaredSymbol(node);
+            var symbol = model.GetDeclaredSymbol(node)
+                         ?? model.GetSymbolInfo(node).Symbol;
             return symbol;
         }
     }
