@@ -94,6 +94,13 @@ namespace SourceGenerated
                -- get table columns
                SELECT 'Blogs' AS tname, * FROM pragma_table_info('Blogs')
              */
+
+            /*
+               users = User.all
+               user = User.first
+               david = User.find_by(name: 'David')
+               users = User.where(name: 'David', occupation: 'Code Artist').order(created_at: :desc)               
+             */
         }
     }
 }
