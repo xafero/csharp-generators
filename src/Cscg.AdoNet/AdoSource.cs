@@ -21,6 +21,8 @@ namespace Cscg.AdoNet
             return $"{name}s";
         }
 
+        // SELECT, INSERT, UPDATE, DELETE
+
         public static string GetTransaction(IEnumerable<string> inner)
         {
             var lines = new List<string> { "BEGIN TRANSACTION;" };

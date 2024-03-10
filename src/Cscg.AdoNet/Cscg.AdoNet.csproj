@@ -16,4 +16,8 @@
     <ProjectReference Include="..\Cscg.Core\Cscg.Core.csproj" PrivateAssets="all" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\..\run\Cscg.AdoNet.Lib\SqlDialect.cs" Link="SqlDialect.cs" />
+  </ItemGroup>
+
 </Project>

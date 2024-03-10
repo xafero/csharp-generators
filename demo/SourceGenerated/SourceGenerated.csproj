@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\run\Cscg.Compactor.Lib\Cscg.Compactor.Lib.csproj" />
+    <ProjectReference Include="..\..\run\Cscg.AdoNet.Lib\Cscg.AdoNet.Lib.csproj" />
   </ItemGroup>
 
   <ItemGroup>
