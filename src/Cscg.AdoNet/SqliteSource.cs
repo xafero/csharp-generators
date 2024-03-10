@@ -95,5 +95,41 @@ namespace Cscg.AdoNet
             cstr = "@\"    " + cstr + ",\",";
             return cstr;
         }
+
+        public static string GetRead(ITypeSymbol type)
+        {
+            var text = type.ToTrimDisplay();
+            string res;
+            switch (text)
+            {
+                // Native functions
+                case "bool": res = "r.GetBoolean(i)"; break;
+                case "byte": res = "r.GetByte(i)"; break;
+                case "char": res = "r.GetChar(i)"; break;
+                case "short": res = "r.GetInt16(i)"; break;
+                case "int": res = "r.GetInt32(i)"; break;
+                case "long": res = "r.GetInt64(i)"; break;
+                case "float": res = "r.GetFloat(i)"; break;
+                case "double": res = "r.GetDouble(i)"; break;
+                case "string": res = "r.GetString(i)"; break;
+                case "decimal": res = "r.GetDecimal(i)"; break;
+                case "System.Guid": res = "r.GetGuid(i)"; break;
+                case "System.DateTime": res = "r.GetDateTime(i)"; break;
+                case "System.DateTimeOffset": res = "r.GetDateTimeOffset(i)"; break;
+                case "System.TimeSpan": res = "r.GetTimeSpan(i)"; break;
+                // Simple casts
+                case "sbyte": res = "(sbyte)r.GetByte(i)"; break;
+                case "ushort": res = "(ushort)r.GetInt16(i)"; break;
+                case "uint": res = "(uint)r.GetInt32(i)"; break;
+                case "ulong": res = "(ulong)r.GetInt64(i)"; break;
+                // Non-duplicated code
+                case "byte[]": res = "r.GetFieldValue<byte[]>(i)"; break;
+                case "System.TimeOnly": res = "r.GetFieldValue<TimeOnly>(i)"; break;
+                case "System.DateOnly": res = "r.GetFieldValue<DateOnly>(i)"; break;
+                // Nothing fits...
+                default: res = $"TODO({text})"; break;
+            }
+            return res;
+        }
     }
 }

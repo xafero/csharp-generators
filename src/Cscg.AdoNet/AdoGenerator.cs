@@ -64,6 +64,7 @@ namespace Cscg.AdoNet
             code.AppendLine("{");
 
             const string connType = "SqliteConnection";
+            const string readType = "SqliteDataReader";
 
             var crea = new CodeWriter();
             crea.AppendLine("public static string CreateTable()");
@@ -75,6 +76,7 @@ namespace Cscg.AdoNet
             crea.AppendLine("var sql = string.Join(Environment.NewLine, [");
             crea.AppendLine($"@\"CREATE TABLE IF NOT EXISTS \"{table}\" (\",");
 
+            var deser = new CodeWriter();
             var after = new List<string>();
             var inner = new List<string>();
             var mapPk = new List<string>();
@@ -108,6 +110,12 @@ namespace Cscg.AdoNet
                             mapPk.Add(ppName);
                         after.AddRange(fo);
                     }
+                    
+                    deser.AppendLine($"if (key == {pName})");
+                    deser.AppendLine("{");
+                    deser.AppendLine($"this.{pp.Name} = {SqliteSource.GetRead(pp.ReturnType)};");
+                    deser.AppendLine("return;");
+                    deser.AppendLine("}");
                 }
 
             if (isMap)
@@ -142,6 +150,11 @@ namespace Cscg.AdoNet
             sel.AppendLine($"public static void Find({connType} conn)");
             sel.AppendLine("{");
             sel.AppendLine(" // TODO ?!");
+            sel.AppendLine("}");
+            sel.AppendLine();
+            sel.AppendLine($"public void ReadSql({readType} r, string key, int i)");
+            sel.AppendLine("{");
+            sel.AppendLines(deser);
             sel.AppendLine("}");
 
             var del = new CodeWriter();

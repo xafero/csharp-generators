@@ -104,21 +104,7 @@ namespace SourceGenerated
 
             /*
             SqliteDataReader d = cmd1.ExecuteReader();
-            DbDataReader r = d;
-
-            r.GetBoolean(3);
-            r.GetByte(3);
-            r.GetChar(3);
-            r.GetDateTime(3);
-            r.GetDecimal(3);
-            r.GetDouble(3);
-            r.GetFloat(3);
-            r.GetGuid(3);
-            r.GetInt16(3);
-            r.GetInt32(3);
-            r.GetInt64(3);
-            r.GetString(3);
-         
+            DbDataReader r = d;                    
             */
         }
     }
