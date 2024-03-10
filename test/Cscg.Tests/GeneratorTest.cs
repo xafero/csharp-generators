@@ -1,4 +1,6 @@
+using System.Data.Common;
 using System.Formats.Cbor;
+using Cscg.AdoNet;
 using Cscg.Compactor;
 using Cscg.Constants;
 using Cscg.Tests.Tools;
@@ -20,6 +22,19 @@ namespace Cscg.Tests
 
             dia.CheckNoError(output, 3);
             run.CheckNoError(2);
+        }
+
+        [Fact]
+        public void TestAdo()
+        {
+            var gen = new AdoGenerator();
+            var (_, source) = GetLocalFile("Sql/Person.cs");
+
+            var input = source.CreateCompilation(addedRefs: [GetMetaRef<DbConnection>()]);
+            var (output, run) = input.RunGenerators(out var dia, [gen], []);
+
+            dia.CheckNoError(output, 17);
+            run.CheckNoError(16);
         }
 
         [Fact]

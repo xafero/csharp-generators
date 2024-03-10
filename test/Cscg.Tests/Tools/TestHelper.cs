@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Xml;
 using Cscg.Compactor.Lib;
+using Cscg.AdoNet.Lib;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
@@ -22,7 +23,8 @@ namespace Cscg.Tests.Tools
             {
                 GetMetaRef<CompactedAttribute>(), GetMetaRef<object>("System.Xml.ReaderWriter.dll"),
                 GetMetaRef<Utf8JsonWriter>(), GetMetaRef<XmlWriter>(), GetMetaRef<object>("System.Runtime.dll"),
-                GetMetaRef<Binder>(), GetMetaRef(typeof(Console)), GetMetaRef<object>("System.Collections.dll")
+                GetMetaRef<Binder>(), GetMetaRef(typeof(Console)), GetMetaRef<object>("System.Collections.dll"),
+                GetMetaRef<TableAttribute>()
             }
             .Concat(addedRefs ?? []).ToArray();
             var cpo = new CSharpParseOptions(LanguageVersion.Latest);
