@@ -15,5 +15,7 @@ namespace Cscg.Core.Model
         [XmlElement("Attribute")] public List<CAttribute> Attributes { get; set; }
 
         [XmlElement("Member")] public List<CMember> Members { get; set; }
+
+        public string FullName => $"{Parent}.{Name}";
     }
 }

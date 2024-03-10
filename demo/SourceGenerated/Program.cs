@@ -4,7 +4,6 @@ using System.Text;
 using Cscg.AdoNet.Lib;
 using SourceGenerated.Sql;
 ﻿using Microsoft.Data.Sqlite;
-using System.Data.Common;
 
 namespace SourceGenerated
 {

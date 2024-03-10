@@ -7,9 +7,9 @@ namespace Cscg.Core.Model
 {
     public static class XmlTool
     {
-        private static readonly XmlSerializer Serializer = new(typeof(CType));
+        private static readonly XmlSerializer Serializer = new(typeof(CTypes));
 
-        public static CType Read(TextReader input)
+        public static CTypes Read(TextReader input)
         {
             var reader = XmlReader.Create(input, new()
             {
@@ -17,10 +17,10 @@ namespace Cscg.Core.Model
                 DtdProcessing = DtdProcessing.Ignore
             });
             var value = Serializer.Deserialize(reader);
-            return (CType)value!;
+            return (CTypes)value!;
         }
 
-        public static void Write(CType value, TextWriter output)
+        public static void Write(CTypes value, TextWriter output)
         {
             var writer = XmlWriter.Create(output, new()
             {

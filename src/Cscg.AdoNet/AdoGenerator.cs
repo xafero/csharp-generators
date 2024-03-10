@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using Cscg.Core;
+using Cscg.Core.Model;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Cscg.AdoNet.AdoSource;
@@ -87,6 +88,8 @@ namespace Cscg.AdoNet
 
         private static void Exec(SourceProductionContext ctx, SyntaxWrap syntax)
         {
+            Memory.Store(syntax.Class);
+
             var ccs = syntax.Symbol.FindArgs(simple: true);
             var cds = syntax.Class;
             var space = cds.GetParentName() ?? Coding.AutoNamespace;
