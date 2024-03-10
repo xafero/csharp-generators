@@ -2,6 +2,8 @@
 {
     public static class Texts
     {
+        public const string NewLine = "\n";
+
         public static string TrimNull(this string text)
         {
             return string.IsNullOrWhiteSpace(text) ? null : text.Trim();

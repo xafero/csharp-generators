@@ -1,4 +1,7 @@
-﻿namespace Cscg.AdoNet
+﻿using System.Collections.Generic;
+using Cscg.Core;
+
+namespace Cscg.AdoNet
 {
     internal static class AdoSource
     {
@@ -16,6 +19,15 @@
                 return $"{name.Substring(0, name.Length - 1)}ies";
 
             return $"{name}s";
+        }
+
+        public static string GetTransaction(IEnumerable<string> inner)
+        {
+            var lines = new List<string> { "BEGIN TRANSACTION;" };
+            foreach (var item in inner)
+                lines.Add(item);
+            lines.Add("COMMIT;");
+            return string.Join(Texts.NewLine, lines);
         }
     }
 }
