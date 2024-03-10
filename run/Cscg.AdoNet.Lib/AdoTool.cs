@@ -47,5 +47,21 @@ namespace Cscg.AdoNet.Lib
             var rows = cmd.ExecuteNonQuery();
             return (sql, rows);
         }
+
+        public static IEnumerable<TData> ReadData<TData, TReader>(this TReader reader)
+            where TReader : DbDataReader
+            where TData : IActiveData<TReader>, new()
+        {
+            while (reader.Read())
+            {
+                var item = new TData();
+                for (var index = 0; index < reader.FieldCount; index++)
+                {
+                    var key = reader.GetName(index);
+                    item.ReadSql(reader, key, index);
+                }
+                yield return item;
+            }
+        }
     }
 }

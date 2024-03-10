@@ -60,11 +60,12 @@ namespace Cscg.AdoNet
             code.AppendLine();
             code.AppendLine($"namespace {space}");
             code.AppendLine("{");
-            code.WriteClassLine(name);
-            code.AppendLine("{");
 
             const string connType = "SqliteConnection";
             const string readType = "SqliteDataReader";
+            var adiType = $"IActiveData<{readType}>";
+            code.WriteClassLine(name, interfaces: [adiType]);
+            code.AppendLine("{");
 
             var crea = new CodeWriter();
             crea.AppendLine("public static string CreateTable()");
