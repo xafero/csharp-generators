@@ -78,10 +78,11 @@ namespace Cscg.AdoNet
                        $" \"\"{ds}\"\" (\"{dp}\") ON DELETE CASCADE";
             cstr = "@\"    " + cstr + ",\",";
             var index = $"IX_{table}_{prop}";
+            const string s = " IF NOT EXISTS";
             var mod = " ";
             if (unique)
                 mod += "UNIQUE ";
-            var ix = $"CREATE{mod}INDEX \"\"{index}\"\" ON \"\"{table}\"\" (\"\"{prop}\"\");";
+            var ix = $"CREATE{mod}INDEX{s} \"\"{index}\"\" ON \"\"{table}\"\" (\"\"{prop}\"\");";
             ix = "@\"" + ix + "\",";
             return ([cstr], [ix]);
         }

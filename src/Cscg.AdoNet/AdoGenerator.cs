@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cscg.Core;
@@ -34,6 +33,7 @@ namespace Cscg.AdoNet
 
         private static void PostInitial(IncrementalGeneratorPostInitializationContext ctx)
         {
+            /*
             var tableAc = CreateAttribute(TableAn, LibSpace, new CodeWriter
             {
                 Lines = { "public string Name { get; set; }" }
@@ -72,6 +72,7 @@ namespace Cscg.AdoNet
                 }
             }, default, default, AttributeTargets.Property, AttributeTargets.Field);
             ctx.AddSource($"{ForeignAn}.cs", forAc);
+            */
 
             // var dbsBody = new CodeWriter();
             // var dbsCode = CodeTool.CreateClass($"{DbsName}<T>", LibSpace, dbsBody);
@@ -107,7 +108,7 @@ namespace Cscg.AdoNet
             if (ccs.TryGetValue($"{TableAn}_Name", out var tbn)) tableName = tbn;
             var table = SqliteSource.Quote(tableName);
             body.AppendLine("var sql = string.Join(Environment.NewLine, [");
-            body.AppendLine($"@\"CREATE TABLE \"{table}\" (\",");
+            body.AppendLine($"@\"CREATE TABLE IF NOT EXISTS \"{table}\" (\",");
 
             var after = new List<string>();
             var inner = new List<string>();

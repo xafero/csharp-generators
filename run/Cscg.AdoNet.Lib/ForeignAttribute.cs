@@ -7,6 +7,6 @@ namespace Cscg.AdoNet.Lib
     {
         public string? Table { get; set; }
         public string? Column { get; set; }
-        public bool? Unique { get; set; }
+        public bool Unique { get; set; }
     }
 }

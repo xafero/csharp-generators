@@ -33,11 +33,11 @@ namespace SourceGenerated.Sql
     [Mapping]
     public partial class HousePerson
     {
-        [Foreign(Table = "House", Column = "MyId")]
+        [Foreign(Table = "House", Column = nameof(House.MyId))]
         [Column]
         public int HousesMyId { get; set; }
 
-        [Foreign(Table = "Persons", Column = "Id")]
+        [Foreign(Table = "Persons", Column = nameof(Person.Id))]
         [Column]
         public int OwnersId { get; set; }
     }

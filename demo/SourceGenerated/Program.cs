@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Text;
+using Cscg.AdoNet.Lib;
 using SourceGenerated.Sql;
 ﻿using Microsoft.Data.Sqlite;
 
@@ -11,38 +14,30 @@ namespace SourceGenerated
             // MainCg();
             // MainBg();
 
-            using var conn = new SqliteConnection("Data Source=example.db");
+            const string sqlFile = "example.db";
 
-            
-            /*
-            using var fw = File.CreateText("test.sql");
-            fw.WriteLine();
-            fw.WriteLine();
-            fw.WriteLine(Blog.CreateTable());
-            fw.WriteLine();
-            fw.WriteLine();
-            fw.WriteLine(Funny.CreateTable());
-            fw.WriteLine();
-            fw.WriteLine();
-            fw.WriteLine(House.CreateTable());
-            fw.WriteLine();
-            fw.WriteLine();
-            fw.WriteLine(Person.CreateTable());
-            fw.WriteLine();
-            fw.WriteLine();
-            fw.WriteLine(Profile.CreateTable());
-            fw.WriteLine();
-            fw.WriteLine();
-            fw.WriteLine(Post.CreateTable());
-            fw.WriteLine();
-            fw.WriteLine();
-            fw.WriteLine(HousePerson.CreateTable());
-            fw.WriteLine();
-            fw.WriteLine();
-            fw.WriteLine(User.CreateTable());
-            fw.WriteLine();
-            fw.WriteLine();
-            */
+            var connStr = AdoTool.CreateConnStr<SqliteConnectionStringBuilder>(
+                s => s.DataSource = sqlFile,
+                s => s.Mode = SqliteOpenMode.ReadWriteCreate,
+                s => s.Pooling = true,
+                s => s.ForeignKeys = true,
+                s => s.RecursiveTriggers = true
+            );
+            using var conn = AdoTool.OpenConn<SqliteConnection>(connStr);
+            Console.WriteLine(connStr + " / " + conn);
+
+            var (sql, rows) = conn.RunTransaction(
+                Blog.CreateTable(),
+                Post.CreateTable(),
+                Funny.CreateTable(),
+                House.CreateTable(),
+                Person.CreateTable(),
+                HousePerson.CreateTable(),
+                Profile.CreateTable(),
+                User.CreateTable()
+            );
+            File.WriteAllText("test.sql", sql, Encoding.UTF8);
+            Console.WriteLine(rows);
         }
     }
 }
