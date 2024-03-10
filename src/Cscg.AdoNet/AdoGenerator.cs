@@ -35,9 +35,9 @@ namespace Cscg.AdoNet
         // TODO
         //private static void PostInitial(IncrementalGeneratorPostInitializationContext ctx)
         //{
-            // var dbsBody = new CodeWriter();
-            // var dbsCode = CodeTool.CreateClass($"{DbsName}<T>", LibSpace, dbsBody);
-            // ctx.AddSource($"{DbsName}.cs", dbsCode);
+        // var dbsBody = new CodeWriter();
+        // var dbsCode = CodeTool.CreateClass($"{DbsName}<T>", LibSpace, dbsBody);
+        // ctx.AddSource($"{DbsName}.cs", dbsCode);
         //}
 
         private static bool Check(SyntaxNode node, CancellationToken _)
@@ -133,9 +133,32 @@ namespace Cscg.AdoNet
             crea.AppendLine("return sql;");
             crea.AppendLine("}");
 
+            var sel = new CodeWriter();
+            sel.AppendLine($"public static void List({connType} conn)");
+            sel.AppendLine("{");
+            sel.AppendLine(" // TODO ?!");
+            sel.AppendLine("}");
+            sel.AppendLine();
+            sel.AppendLine($"public static void Find({connType} conn)");
+            sel.AppendLine("{");
+            sel.AppendLine(" // TODO ?!");
+            sel.AppendLine("}");
+
             var del = new CodeWriter();
+            var upd = new CodeWriter();
+            var ins = new CodeWriter();
             if (!string.IsNullOrWhiteSpace(lastPk))
             {
+                ins.AppendLine($"public void Insert({connType} conn)");
+                ins.AppendLine("{");
+                ins.AppendLine(" // TODO ?!");
+                ins.AppendLine("}");
+
+                upd.AppendLine($"public void Update({connType} conn)");
+                upd.AppendLine("{");
+                upd.AppendLine(" // TODO ?!");
+                upd.AppendLine("}");
+
                 del.AppendLine($"public bool Delete({connType} conn)");
                 del.AppendLine("{");
                 del.AppendLine("using var cmd = conn.CreateCommand();");
@@ -148,6 +171,12 @@ namespace Cscg.AdoNet
 
             var body = new CodeWriter();
             body.AppendLines(crea);
+            body.AppendLine();
+            body.AppendLines(sel);
+            body.AppendLine();
+            body.AppendLines(ins);
+            body.AppendLine();
+            body.AppendLines(upd);
             body.AppendLine();
             body.AppendLines(del);
 
