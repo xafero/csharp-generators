@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using SourceGenerated.Sql;
+﻿using Microsoft.Data.Sqlite;
 
 namespace SourceGenerated
 {
@@ -10,6 +11,10 @@ namespace SourceGenerated
             // MainCg();
             // MainBg();
 
+            using var conn = new SqliteConnection("Data Source=example.db");
+
+            
+            /*
             using var fw = File.CreateText("test.sql");
             fw.WriteLine();
             fw.WriteLine();
@@ -37,6 +42,7 @@ namespace SourceGenerated
             fw.WriteLine(User.CreateTable());
             fw.WriteLine();
             fw.WriteLine();
+            */
         }
     }
 }
