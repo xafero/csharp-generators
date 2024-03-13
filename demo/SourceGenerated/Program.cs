@@ -44,8 +44,8 @@ namespace SourceGenerated
             var person = new Person { Name = "Willy Scott" };
 
             using var cmd1 = conn.CreateCommand();
-            cmd1.CommandText = "INSERT INTO Persons (Name) VALUES (@pName) RETURNING Id;";
             person.WriteSql(cmd1);
+            cmd1.CommandText = cmd1.GetColumns().CreateInsert("Persons", "Id");
             var newId = cmd1.ExecuteScalar();
             Console.WriteLine(newId);
 

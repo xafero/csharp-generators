@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Text;
 
 namespace Cscg.AdoNet.Lib
 {
@@ -62,6 +63,35 @@ namespace Cscg.AdoNet.Lib
                 }
                 yield return item;
             }
+        }
+
+        public static Dictionary<string, string> GetColumns<TCommand>(this TCommand cmd,
+            string prefix = "@p")
+            where TCommand : DbCommand
+        {
+            var dict = new Dictionary<string, string>();
+            foreach (DbParameter parameter in cmd.Parameters)
+            {
+                var key = parameter.ParameterName;
+                var val = key.Replace(prefix, string.Empty);
+                dict[val] = key;
+            }
+            return dict;
+        }
+
+        public static string CreateInsert(this IDictionary<string, string> cols, string tbl, string id)
+        {
+            var bld = new StringBuilder();
+            bld.Append("INSERT INTO ");
+            bld.Append('"');
+            bld.Append(tbl);
+            bld.Append('"');
+            bld.Append($" ({string.Join(", ", cols.Keys)})");
+            bld.Append(" VALUES");
+            bld.Append($" ({string.Join(", ", cols.Values)})");
+            bld.Append(" RETURNING");
+            bld.Append($" {id};");
+            return bld.ToString();
         }
     }
 }
