@@ -46,7 +46,7 @@ namespace Cscg.AdoNet
             var name = cds.GetClassName();
             var fileName = $"{name}.g.cs";
             var code = new CodeWriter();
-            code.AddUsings(LibSpace, "System", "Microsoft.Data.Sqlite");
+            code.AddUsings(LibSpace, "System", "System.Linq", "Microsoft.Data.Sqlite");
             code.AppendLine();
             code.AppendLine($"namespace {space}");
             code.AppendLine("{");
@@ -148,11 +148,6 @@ namespace Cscg.AdoNet
             sel.AppendLine(" // TODO ?!");
             sel.AppendLine("}");
             sel.AppendLine();
-            sel.AppendLine($"public static void Find({connType} conn)");
-            sel.AppendLine("{");
-            sel.AppendLine(" // TODO ?!");
-            sel.AppendLine("}");
-            sel.AppendLine();
             sel.AppendLine($"public void ReadSql({readType} r, string key, int i)");
             sel.AppendLine("{");
             sel.AppendLines(deser);
@@ -166,8 +161,18 @@ namespace Cscg.AdoNet
             var del = new CodeWriter();
             var upd = new CodeWriter();
             var ins = new CodeWriter();
+            var fin = new CodeWriter();
             if (!string.IsNullOrWhiteSpace(lastPk))
             {
+                fin.AppendLine($"public static {name} Find({connType} conn, object id)");
+                fin.AppendLine("{");
+                fin.AppendLine("using var cmd = conn.CreateCommand();");
+                fin.AppendLine($@"cmd.CommandText = @""SELECT * FROM ""{table}"" WHERE {lastPk} = @p0;"";");
+                fin.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", id);");
+                fin.AppendLine("using var reader = cmd.ExecuteReader();");
+                fin.AppendLine($"return reader.ReadData<{name}, {readType}>().FirstOrDefault();");
+                fin.AppendLine("}");
+                
                 ins.AppendLine($"public {lastPkT} Insert({connType} conn)");
                 ins.AppendLine("{");
                 ins.AppendLine("using var cmd = conn.CreateCommand();");
@@ -197,6 +202,8 @@ namespace Cscg.AdoNet
             body.AppendLines(crea);
             body.AppendLine();
             body.AppendLines(sel);
+            body.AppendLine();
+            body.AppendLines(fin);
             body.AppendLine();
             body.AppendLines(ins);
             body.AppendLine();

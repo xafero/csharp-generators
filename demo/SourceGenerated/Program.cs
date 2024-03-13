@@ -49,13 +49,7 @@ namespace SourceGenerated
             var wasUpdated = person.Update(conn);
             Console.WriteLine(wasUpdated);
 
-            using var cmd3 = conn.CreateCommand();
-            cmd3.CommandText = "SELECT p.* FROM Persons p WHERE p.Id = @p0;";
-            cmd3.Parameters.AddWithValue("@p0", person.Id);
-            using var read3 = cmd3.ExecuteReader();
-            Console.WriteLine(read3);
-
-            person = read3.ReadData<Person, SqliteDataReader>().Single();
+            person = Person.Find(conn, person.Id);
             var json = JsonConvert.SerializeObject(person, Formatting.None);
             Console.WriteLine(json);
 
