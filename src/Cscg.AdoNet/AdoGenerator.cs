@@ -143,11 +143,6 @@ namespace Cscg.AdoNet
             crea.AppendLine("}");
 
             var sel = new CodeWriter();
-            sel.AppendLine($"public static void List({connType} conn)");
-            sel.AppendLine("{");
-            sel.AppendLine(" // TODO ?!");
-            sel.AppendLine("}");
-            sel.AppendLine();
             sel.AppendLine($"public void ReadSql({readType} r, string key, int i)");
             sel.AppendLine("{");
             sel.AppendLines(deser);
@@ -162,13 +157,24 @@ namespace Cscg.AdoNet
             var upd = new CodeWriter();
             var ins = new CodeWriter();
             var fin = new CodeWriter();
+            var lst = new CodeWriter();
             if (!string.IsNullOrWhiteSpace(lastPk))
             {
-                fin.AppendLine($"public static {name} Find({connType} conn, object id)");
+                lst.AppendLine($"public static {name}[] List({connType} conn, int limit, int offset)");
+                lst.AppendLine("{");
+                lst.AppendLine("using var cmd = conn.CreateCommand();");
+                lst.AppendLine($@"cmd.CommandText = @""SELECT * FROM ""{table}"" ORDER BY {lastPk} LIMIT @p0 OFFSET @p1;"";");
+                lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", limit);");
+                lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p1"", offset);");
+                lst.AppendLine("using var reader = cmd.ExecuteReader();");
+                lst.AppendLine($"return reader.ReadData<{name}, {readType}>().ToArray();");
+                lst.AppendLine("}");
+
+                fin.AppendLine($"public static {name} Find({connType} conn, {lastPkT} id)");
                 fin.AppendLine("{");
                 fin.AppendLine("using var cmd = conn.CreateCommand();");
                 fin.AppendLine($@"cmd.CommandText = @""SELECT * FROM ""{table}"" WHERE {lastPk} = @p0;"";");
-                fin.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", id);");
+                fin.AppendLine(@"cmd.Parameters.AddWithValue(""@p0"", id);");
                 fin.AppendLine("using var reader = cmd.ExecuteReader();");
                 fin.AppendLine($"return reader.ReadData<{name}, {readType}>().FirstOrDefault();");
                 fin.AppendLine("}");
@@ -202,6 +208,8 @@ namespace Cscg.AdoNet
             body.AppendLines(crea);
             body.AppendLine();
             body.AppendLines(sel);
+            body.AppendLine();
+            body.AppendLines(lst);
             body.AppendLine();
             body.AppendLines(fin);
             body.AppendLine();

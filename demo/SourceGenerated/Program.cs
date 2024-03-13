@@ -53,14 +53,7 @@ namespace SourceGenerated
             var json = JsonConvert.SerializeObject(person, Formatting.None);
             Console.WriteLine(json);
 
-            var cmd4 = conn.CreateCommand();
-            cmd4.CommandText = "SELECT p.* FROM Persons p ORDER BY p.Id LIMIT @p0 OFFSET @p1;";
-            cmd4.Parameters.AddWithValue("@p0", 5);
-            cmd4.Parameters.AddWithValue("@p1", 0);
-            using var read4 = cmd4.ExecuteReader();
-            Console.WriteLine(read4);
-
-            var persons = read4.ReadData<Person, SqliteDataReader>().ToArray();
+            var persons = Person.List(conn, 5, 0);
             json = JsonConvert.SerializeObject(persons, Formatting.None);
             Console.WriteLine(json);
 
@@ -73,8 +66,6 @@ namespace SourceGenerated
             Console.WriteLine(json);
 
             /*
-               users = User.all
-               user = User.first
                david = User.find_by(name: 'David')
                users = User.where(name: 'David', occupation: 'Code Artist').order(created_at: :desc)
              */
