@@ -57,6 +57,23 @@ namespace SourceGenerated
             json = JsonConvert.SerializeObject(persons, Formatting.None);
             Console.WriteLine(json);
 
+            var house = new House { Street = "Main Street 123" };
+            house.MyId = house.Insert(conn);
+            Console.WriteLine(house.MyId);
+
+            var hp = new HousePerson { HousesMyId = house.MyId, OwnersId = person.Id };
+            var wasInserted = hp.Insert(conn);
+            Console.WriteLine(wasInserted);
+
+            var hPersons = HousePerson.List(conn, 5, 0);
+            json = JsonConvert.SerializeObject(hPersons, Formatting.None);
+            Console.WriteLine(json);
+
+            var cmd = conn.CreateCommand();
+            (new HousePerson { OwnersId = 88 }).WriteSql(cmd);
+            var hpSel = cmd.GetColumns().CreateSelect("HousePerson");
+            Console.WriteLine(hpSel);
+
             var wasDeleted = person.Delete(conn);
             Console.WriteLine($"Deleted? {wasDeleted}");
 

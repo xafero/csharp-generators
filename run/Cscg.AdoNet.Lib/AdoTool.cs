@@ -80,7 +80,8 @@ namespace Cscg.AdoNet.Lib
             return dict;
         }
 
-        public static string CreateInsert(this IDictionary<string, string> cols, string tbl, string id)
+        public static string CreateInsert(this IDictionary<string, string> cols, string tbl,
+            string? id = null)
         {
             var bld = new StringBuilder();
             bld.Append("INSERT INTO ");
@@ -90,8 +91,11 @@ namespace Cscg.AdoNet.Lib
             bld.Append($" ({string.Join(", ", cols.Keys)})");
             bld.Append(" VALUES");
             bld.Append($" ({string.Join(", ", cols.Values)})");
-            bld.Append(" RETURNING");
-            bld.Append($" {id};");
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                bld.Append(" RETURNING");
+                bld.Append($" {id};");
+            }
             return bld.ToString();
         }
 
@@ -108,6 +112,19 @@ namespace Cscg.AdoNet.Lib
             bld.Append($" {string.Join(", ", tmp)}");
             bld.Append(" WHERE");
             bld.Append($" {id} = {prefix}{id};");
+            return bld.ToString();
+        }
+
+        public static string CreateSelect(this IDictionary<string, string> cols, string tbl)
+        {
+            var bld = new StringBuilder();
+            bld.Append("SELECT * FROM ");
+            bld.Append('"');
+            bld.Append(tbl);
+            bld.Append('"');
+            bld.Append(" WHERE");
+            var tmp = cols.Select(c => $"{c.Key} = {c.Value}");
+            bld.Append($" {string.Join(" AND ", tmp)};");
             return bld.ToString();
         }
     }

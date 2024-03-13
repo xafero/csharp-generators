@@ -89,7 +89,11 @@ namespace Cscg.AdoNet
                     var pk = !ppa.TryGetValue(KeyAn, out _)
                         ? null
                         : SqliteSource.Quote($"PK_{tableName.Trim('"')}");
-                    if (pk != null) { lastPk = ppName; lastPkT = pp.ReturnType; }
+                    if (pk != null)
+                    {
+                        lastPk = ppName;
+                        lastPkT = pp.ReturnType;
+                    }
                     var (pType, pCond) = SqliteSource.GetType(pp.ReturnType, pk);
                     crea.AppendLine($"@\"    \"{pName}\" {pType} {pCond},\",");
 
@@ -178,7 +182,7 @@ namespace Cscg.AdoNet
                 fin.AppendLine("using var reader = cmd.ExecuteReader();");
                 fin.AppendLine($"return reader.ReadData<{name}, {readType}>().FirstOrDefault();");
                 fin.AppendLine("}");
-                
+
                 ins.AppendLine($"public {lastPkT} Insert({connType} conn)");
                 ins.AppendLine("{");
                 ins.AppendLine("using var cmd = conn.CreateCommand();");
@@ -202,6 +206,53 @@ namespace Cscg.AdoNet
                 del.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", this.{lastPk});");
                 del.AppendLine("return cmd.ExecuteNonQuery() == 1;");
                 del.AppendLine("}");
+            }
+
+            if (isMap && mapPk.Count >= 1)
+            {
+                var olK = string.Join(", ", mapPk);
+                lst.AppendLine($"public static {name}[] List({connType} conn, int limit, int offset)");
+                lst.AppendLine("{");
+                lst.AppendLine("using var cmd = conn.CreateCommand();");
+                lst.AppendLine($@"cmd.CommandText = @""SELECT * FROM ""{table}"" ORDER BY {olK} LIMIT @p0 OFFSET @p1;"";");
+                lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", limit);");
+                lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p1"", offset);");
+                lst.AppendLine("using var reader = cmd.ExecuteReader();");
+                lst.AppendLine($"return reader.ReadData<{name}, {readType}>().ToArray();");
+                lst.AppendLine("}");
+
+                /*fin.AppendLine($"public static {name} Find({connType} conn, {lastPkT} id)");
+                fin.AppendLine("{");
+                fin.AppendLine("using var cmd = conn.CreateCommand();");
+                fin.AppendLine($@"cmd.CommandText = @""SELECT * FROM ""{table}"" WHERE {lastPk} = @p0;"";");
+                fin.AppendLine(@"cmd.Parameters.AddWithValue(""@p0"", id);");
+                fin.AppendLine("using var reader = cmd.ExecuteReader();");
+                fin.AppendLine($"return reader.ReadData<{name}, {readType}>().FirstOrDefault();");
+                fin.AppendLine("}");*/
+
+                ins.AppendLine($"public bool Insert({connType} conn)");
+                ins.AppendLine("{");
+                ins.AppendLine("using var cmd = conn.CreateCommand();");
+                ins.AppendLine("this.WriteSql(cmd);");
+                ins.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateInsert({table});");
+                ins.AppendLine($"return cmd.ExecuteNonQuery() == 1;");
+                ins.AppendLine("}");
+
+                /*upd.AppendLine($"public bool Update({connType} conn)");
+                upd.AppendLine("{");
+                upd.AppendLine("using var cmd = conn.CreateCommand();");
+                upd.AppendLine("this.WriteSql(cmd);");
+                upd.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateUpdate({table}, ""{lastPk}"");");
+                upd.AppendLine("return cmd.ExecuteNonQuery() == 1;");
+                upd.AppendLine("}");*/
+
+                /*del.AppendLine($"public bool Delete({connType} conn)");
+                del.AppendLine("{");
+                del.AppendLine("using var cmd = conn.CreateCommand();");
+                del.AppendLine($@"cmd.CommandText = @""DELETE FROM ""{table}"" WHERE {lastPk} = @p0;"";");
+                del.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", this.{lastPk});");
+                del.AppendLine("return cmd.ExecuteNonQuery() == 1;");
+                del.AppendLine("}");*/
             }
 
             var body = new CodeWriter();
