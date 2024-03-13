@@ -21,8 +21,6 @@ namespace Cscg.AdoNet
 
         public void Initialize(IncrementalGeneratorInitializationContext igi)
         {
-            // TODO igi.RegisterPostInitializationOutput(PostInitial);
-
             var sp = igi.SyntaxProvider;
 
             var tableAf = GetFullName(LibSpace, TableAn);
@@ -31,14 +29,6 @@ namespace Cscg.AdoNet
             var mapAf = GetFullName(LibSpace, MappingAn);
             igi.RegisterSourceOutput(sp.ForAttributeWithMetadataName(mapAf, Check, Wrap), Exec);
         }
-
-        // TODO
-        //private static void PostInitial(IncrementalGeneratorPostInitializationContext ctx)
-        //{
-        // var dbsBody = new CodeWriter();
-        // var dbsCode = CodeTool.CreateClass($"{DbsName}<T>", LibSpace, dbsBody);
-        // ctx.AddSource($"{DbsName}.cs", dbsCode);
-        //}
 
         private static bool Check(SyntaxNode node, CancellationToken _)
             => node is ClassDeclarationSyntax;
@@ -114,12 +104,18 @@ namespace Cscg.AdoNet
                             mapPk.Add(ppName);
                         after.AddRange(fo);
                     }
-                    
+
                     deser.AppendLine($"if (key == {pName})");
                     deser.AppendLine("{");
                     deser.AppendLine($"this.{pp.Name} = {SqliteSource.GetRead(pp.ReturnType)};");
                     deser.AppendLine("return;");
                     deser.AppendLine("}");
+
+                    var pNamePm = $"\"@p{pName.TrimStart('"')}";
+                    sqser.AppendLine($"if (this.{pp.Name} != default)");
+                    sqser.AppendLine("{");
+                    sqser.AppendLine($"w.Parameters.AddWithValue({pNamePm}, this.{pp.Name});");
+                    sqser.AppendLine("}");
                 }
 
             if (isMap)
