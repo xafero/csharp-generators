@@ -8,16 +8,4 @@ namespace Cscg.AdoNet.Lib
         where TCommand : DbCommand
     {
     }
-
-    public interface IActiveRead<in TReader>
-        where TReader : DbDataReader
-    {
-        void ReadSql(TReader reader, string key, int index);
-    }
-
-    public interface IActiveWrite<in TCommand>
-        where TCommand : DbCommand
-    {
-        void WriteSql(TCommand command);
-    }
 }

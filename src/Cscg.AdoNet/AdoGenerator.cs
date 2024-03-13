@@ -75,6 +75,7 @@ namespace Cscg.AdoNet
             var inner = new List<string>();
             var mapPk = new List<string>();
             var lastPk = default(string);
+            var lastPkT = default(ITypeSymbol);
             foreach (var member in cds.Members)
                 if (member is PropertyDeclarationSyntax pds)
                 {
@@ -88,7 +89,7 @@ namespace Cscg.AdoNet
                     var pk = !ppa.TryGetValue(KeyAn, out _)
                         ? null
                         : SqliteSource.Quote($"PK_{tableName.Trim('"')}");
-                    if (pk != null) lastPk = ppName;
+                    if (pk != null) { lastPk = ppName; lastPkT = pp.ReturnType; }
                     var (pType, pCond) = SqliteSource.GetType(pp.ReturnType, pk);
                     crea.AppendLine($"@\"    \"{pName}\" {pType} {pCond},\",");
 
@@ -167,14 +168,20 @@ namespace Cscg.AdoNet
             var ins = new CodeWriter();
             if (!string.IsNullOrWhiteSpace(lastPk))
             {
-                ins.AppendLine($"public void Insert({connType} conn)");
+                ins.AppendLine($"public {lastPkT} Insert({connType} conn)");
                 ins.AppendLine("{");
-                ins.AppendLine(" // TODO ?!");
+                ins.AppendLine("using var cmd = conn.CreateCommand();");
+                ins.AppendLine("this.WriteSql(cmd);");
+                ins.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateInsert({table}, ""{lastPk}"");");
+                ins.AppendLine($"return cmd.ExecuteScalar().ConvertTo<{lastPkT}>();");
                 ins.AppendLine("}");
 
-                upd.AppendLine($"public void Update({connType} conn)");
+                upd.AppendLine($"public bool Update({connType} conn)");
                 upd.AppendLine("{");
-                upd.AppendLine(" // TODO ?!");
+                upd.AppendLine("using var cmd = conn.CreateCommand();");
+                upd.AppendLine("this.WriteSql(cmd);");
+                upd.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateUpdate({table}, ""{lastPk}"");");
+                upd.AppendLine("return cmd.ExecuteNonQuery() == 1;");
                 upd.AppendLine("}");
 
                 del.AppendLine($"public bool Delete({connType} conn)");
@@ -182,8 +189,7 @@ namespace Cscg.AdoNet
                 del.AppendLine("using var cmd = conn.CreateCommand();");
                 del.AppendLine($@"cmd.CommandText = @""DELETE FROM ""{table}"" WHERE {lastPk} = @p0;"";");
                 del.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", this.{lastPk});");
-                del.AppendLine("var delCount = cmd.ExecuteNonQuery();");
-                del.AppendLine("return delCount == 1;");
+                del.AppendLine("return cmd.ExecuteNonQuery() == 1;");
                 del.AppendLine("}");
             }
 

@@ -42,24 +42,16 @@ namespace SourceGenerated
             Console.WriteLine(rows);
 
             var person = new Person { Name = "Willy Scott" };
+            person.Id = person.Insert(conn);
+            Console.WriteLine(person.Id);
 
-            using var cmd1 = conn.CreateCommand();
-            person.WriteSql(cmd1);
-            cmd1.CommandText = cmd1.GetColumns().CreateInsert("Persons", "Id");
-            var newId = (int)(long)cmd1.ExecuteScalar()!;
-            Console.WriteLine(newId);
-
-            person = new Person { Name = "Timmy Scott", Id = newId };
-
-            using var cmd2 = conn.CreateCommand();
-            person.WriteSql(cmd2);
-            cmd2.CommandText = cmd2.GetColumns().CreateUpdate("Persons", "Id");
-            var updCount = cmd2.ExecuteNonQuery();
-            Console.WriteLine(updCount == 1);
+            person.Name = "Timmy Scott";
+            var wasUpdated = person.Update(conn);
+            Console.WriteLine(wasUpdated);
 
             using var cmd3 = conn.CreateCommand();
             cmd3.CommandText = "SELECT p.* FROM Persons p WHERE p.Id = @p0;";
-            cmd3.Parameters.AddWithValue("@p0", newId);
+            cmd3.Parameters.AddWithValue("@p0", person.Id);
             using var read3 = cmd3.ExecuteReader();
             Console.WriteLine(read3);
 
