@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq;
 using System.Text;
 
 namespace Cscg.AdoNet.Lib
@@ -91,6 +92,22 @@ namespace Cscg.AdoNet.Lib
             bld.Append($" ({string.Join(", ", cols.Values)})");
             bld.Append(" RETURNING");
             bld.Append($" {id};");
+            return bld.ToString();
+        }
+
+        public static string CreateUpdate(this IDictionary<string, string> cols, string tbl, string id,
+            string prefix = "@p", int skip = 1)
+        {
+            var bld = new StringBuilder();
+            bld.Append("UPDATE ");
+            bld.Append('"');
+            bld.Append(tbl);
+            bld.Append('"');
+            bld.Append(" SET");
+            var tmp = cols.Skip(skip).Select(c => $"{c.Key} = {c.Value}");
+            bld.Append($" {string.Join(", ", tmp)}");
+            bld.Append(" WHERE");
+            bld.Append($" {id} = {prefix}{id};");
             return bld.ToString();
         }
     }

@@ -46,15 +46,14 @@ namespace SourceGenerated
             using var cmd1 = conn.CreateCommand();
             person.WriteSql(cmd1);
             cmd1.CommandText = cmd1.GetColumns().CreateInsert("Persons", "Id");
-            var newId = cmd1.ExecuteScalar();
+            var newId = (int)(long)cmd1.ExecuteScalar()!;
             Console.WriteLine(newId);
 
-            person = new Person { Name = "Timmy Scott" };
+            person = new Person { Name = "Timmy Scott", Id = newId };
 
             using var cmd2 = conn.CreateCommand();
-            cmd2.CommandText = "UPDATE Persons SET Name = @pName WHERE Id = @p0;";
-            cmd2.Parameters.AddWithValue("@p0", newId);
             person.WriteSql(cmd2);
+            cmd2.CommandText = cmd2.GetColumns().CreateUpdate("Persons", "Id");
             var updCount = cmd2.ExecuteNonQuery();
             Console.WriteLine(updCount == 1);
 
