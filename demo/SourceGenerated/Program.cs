@@ -41,20 +41,20 @@ namespace SourceGenerated
             File.WriteAllText("test.sql", sql, Encoding.UTF8);
             Console.WriteLine(rows);
 
-            var person = new Person { Name = "Hans Scott" };
+            var person = new Person { Name = "Willy Scott" };
 
             using var cmd1 = conn.CreateCommand();
-            cmd1.CommandText = "INSERT INTO Persons (Name) VALUES (@p0) RETURNING Id;";
-            cmd1.Parameters.AddWithValue("@p0", person.Name);
+            cmd1.CommandText = "INSERT INTO Persons (Name) VALUES (@pName) RETURNING Id;";
+            person.WriteSql(cmd1);
             var newId = cmd1.ExecuteScalar();
             Console.WriteLine(newId);
 
             person = new Person { Name = "Timmy Scott" };
 
             using var cmd2 = conn.CreateCommand();
-            cmd2.CommandText = "UPDATE Persons SET Name = @p1 WHERE Id = @p0;";
+            cmd2.CommandText = "UPDATE Persons SET Name = @pName WHERE Id = @p0;";
             cmd2.Parameters.AddWithValue("@p0", newId);
-            cmd2.Parameters.AddWithValue("@p1", person.Name);
+            person.WriteSql(cmd2);
             var updCount = cmd2.ExecuteNonQuery();
             Console.WriteLine(updCount == 1);
 
