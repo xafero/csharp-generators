@@ -62,8 +62,9 @@ namespace Cscg.AdoNet
             code.AppendLine("{");
 
             const string connType = "SqliteConnection";
+            const string writType = "SqliteCommand";
             const string readType = "SqliteDataReader";
-            var adiType = $"IActiveData<{readType}>";
+            var adiType = $"IActiveData<{readType}, {writType}>";
             code.WriteClassLine(name, interfaces: [adiType]);
             code.AppendLine("{");
 
@@ -78,6 +79,8 @@ namespace Cscg.AdoNet
             crea.AppendLine($"@\"CREATE TABLE IF NOT EXISTS \"{table}\" (\",");
 
             var deser = new CodeWriter();
+            var sqser = new CodeWriter();
+
             var after = new List<string>();
             var inner = new List<string>();
             var mapPk = new List<string>();
@@ -156,6 +159,11 @@ namespace Cscg.AdoNet
             sel.AppendLine($"public void ReadSql({readType} r, string key, int i)");
             sel.AppendLine("{");
             sel.AppendLines(deser);
+            sel.AppendLine("}");
+            sel.AppendLine();
+            sel.AppendLine($"public void WriteSql({writType} w)");
+            sel.AppendLine("{");
+            sel.AppendLines(sqser);
             sel.AppendLine("}");
 
             var del = new CodeWriter();

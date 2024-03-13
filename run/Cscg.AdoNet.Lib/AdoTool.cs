@@ -50,7 +50,7 @@ namespace Cscg.AdoNet.Lib
 
         public static IEnumerable<TData> ReadData<TData, TReader>(this TReader reader)
             where TReader : DbDataReader
-            where TData : IActiveData<TReader>, new()
+            where TData : IActiveRead<TReader>, new()
         {
             while (reader.Read())
             {
