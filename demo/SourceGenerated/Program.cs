@@ -64,44 +64,35 @@ namespace SourceGenerated
             using var read3 = cmd3.ExecuteReader();
             Console.WriteLine(read3);
 
+            person = read3.ReadData<Person, SqliteDataReader>().Single();
+            var json = JsonConvert.SerializeObject(person, Formatting.None);
+            Console.WriteLine(json);
+
             var cmd4 = conn.CreateCommand();
             cmd4.CommandText = "SELECT p.* FROM Persons p ORDER BY p.Id LIMIT @p0 OFFSET @p1;";
-            // cmd4.CommandText = "SELECT p.Id as p_Id, q.Id as q_Id FROM Persons p, Persons q";
             cmd4.Parameters.AddWithValue("@p0", 5);
             cmd4.Parameters.AddWithValue("@p1", 0);
             using var read4 = cmd4.ExecuteReader();
             Console.WriteLine(read4);
 
-            var persons = AdoTool.ReadData<Person, SqliteDataReader>(read4).ToArray();
-            var json = JsonConvert.SerializeObject(persons, Formatting.Indented);
+            var persons = read4.ReadData<Person, SqliteDataReader>().ToArray();
+            json = JsonConvert.SerializeObject(persons, Formatting.None);
             Console.WriteLine(json);
 
-            using var cmd5 = conn.CreateCommand();
-            cmd5.CommandText = "DELETE FROM Persons WHERE Id = @p0;";
-            cmd5.Parameters.AddWithValue("@p0", newId);
-            var delCount = cmd5.ExecuteNonQuery();
-            Console.WriteLine(delCount == 1);
+            var wasDeleted = person.Delete(conn);
+            Console.WriteLine($"Deleted? {wasDeleted}");
 
-
-            /*
-               -- get all table names
-               SELECT name FROM sqlite_master WHERE type=='table' ORDER BY name;
-
-               -- get table columns
-               SELECT 'Blogs' AS tname, * FROM pragma_table_info('Blogs')
-             */
+            var tableNames = conn.GetAllTableNames().Take(1).ToArray();
+            var tblInfo = tableNames.Select(conn.GetTableColumns).ToArray();
+            json = JsonConvert.SerializeObject(tblInfo, Formatting.None);
+            Console.WriteLine(json);
 
             /*
                users = User.all
                user = User.first
                david = User.find_by(name: 'David')
-               users = User.where(name: 'David', occupation: 'Code Artist').order(created_at: :desc)               
+               users = User.where(name: 'David', occupation: 'Code Artist').order(created_at: :desc)
              */
-
-            /*
-            SqliteDataReader d = cmd1.ExecuteReader();
-            DbDataReader r = d;                    
-            */
         }
     }
 }
