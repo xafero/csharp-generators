@@ -24,8 +24,6 @@ namespace SourceGenerated.Sql
 
         [Column]
         public string Street { get; set; }
-
-        public List<Person> Owners { get; set; }
     }
 
     [Mapping]
@@ -52,8 +50,6 @@ namespace SourceGenerated.Sql
 
         [Column]
         public int Rating { get; set; }
-
-        public List<Post> Posts { get; set; }
     }
 
     [Table]
@@ -72,8 +68,6 @@ namespace SourceGenerated.Sql
         [Foreign(Table = "Blogs", Column = nameof(Blog.MyBlogId))]
         [Column]
         public int BlogId { get; set; }
-
-        public Blog Blog { get; set; }
     }
 
     [Table]

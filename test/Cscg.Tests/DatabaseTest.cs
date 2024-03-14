@@ -21,16 +21,48 @@ namespace Cscg.Tests
         }
 
         [Theory]
+        [InlineData("b", "1")]
         [InlineData("p", "1")]
         [InlineData("u", "1")]
         [InlineData("f", "1")]
         public void TestSqlite(string cla, string mode)
         {
             using var sc = CreateConn(cla, mode);
+            if (cla == "b")
+            {
+                var blogId = default(int);
+                DoDatabase(sc, () => new Blog { Rating = 4, Url = "www.tom.tk" },
+                    (x, conn) => x.MyBlogId = blogId = x.Insert(conn),
+                    (x, conn) =>
+                    {
+                        x.Url = "www.harry.po";
+                        return x.Update(conn);
+                    },
+                    (conn, id) => Blog.Find(conn, (int)id),
+                    conn => Blog.List(conn, 10, 0).Single(),
+                    (conn, y) => Blog.FindSame(conn, x => x.Url = y.Url).Single(),
+                    (_, _) => true
+                );
+                DoDatabase(sc, () => new Post { Title = "Super Tom", Content = "Nothing.", BlogId = blogId },
+                    (x, conn) => x.PostId = x.Insert(conn),
+                    (x, conn) =>
+                    {
+                        x.Title = "Harry Wonder";
+                        return x.Update(conn);
+                    },
+                    (conn, id) => Post.Find(conn, (int)id),
+                    conn => Post.List(conn, 10, 0).Single(),
+                    (conn, y) => Post.FindSame(conn, x => x.Title = y.Title).Single(),
+                    (conn, y) => y.Delete(conn)
+                );
+                Blog.Find(sc, blogId).Delete(sc);
+                return;
+            }
             if (cla == "p")
             {
+                var personId = default(int);
                 DoDatabase(sc, () => new Person { Name = "Tom" },
-                    (x, conn) => x.Id = x.Insert(conn),
+                    (x, conn) => x.Id = personId = x.Insert(conn),
                     (x, conn) =>
                     {
                         x.Name = "Harry Potter";
@@ -39,8 +71,32 @@ namespace Cscg.Tests
                     (conn, id) => Person.Find(conn, (int)id),
                     conn => Person.List(conn, 10, 0).Single(),
                     (conn, y) => Person.FindSame(conn, x => x.Name = y.Name).Single(),
+                    (_, _) => true
+                );
+                var houseId = default(int);
+                DoDatabase(sc, () => new House { Street = "Main Street 129" },
+                    (x, conn) => x.MyId = houseId = x.Insert(conn),
+                    (x, conn) =>
+                    {
+                        x.Street = "Scotsman Way 4";
+                        return x.Update(conn);
+                    },
+                    (conn, id) => House.Find(conn, (int)id),
+                    conn => House.List(conn, 10, 0).Single(),
+                    (conn, y) => House.FindSame(conn, x => x.Street = y.Street).Single(),
+                    (_, _) => true
+                );
+                var hp = default(HousePerson);
+                DoDatabase(sc, () => hp = new HousePerson { HousesMyId = houseId, OwnersId = personId },
+                    (x, conn) => x.Insert(conn) ? 1 : 0,
+                    (_, _) => true,
+                    (_, _) => hp,
+                    _ => hp,
+                    (conn, y) => HousePerson.FindSame(conn, x => x.OwnersId = y.OwnersId).Single(),
                     (conn, y) => y.Delete(conn)
                 );
+                Person.Find(sc, personId).Delete(sc);
+                House.Find(sc, houseId).Delete(sc);
                 return;
             }
             if (cla == "u")
@@ -148,7 +204,9 @@ namespace Cscg.Tests
             Assert.Equal(ConnectionState.Open, conn.State);
 
             var (sql, rows) = conn.RunTransaction(Person.CreateTable(),
-                Funny.CreateTable(), User.CreateTable(), Profile.CreateTable());
+                House.CreateTable(), HousePerson.CreateTable(), Funny.CreateTable(),
+                User.CreateTable(), Profile.CreateTable(),
+                Blog.CreateTable(), Post.CreateTable());
             // TODO ? Assert.Equal(816, sql.Length);
             Assert.Equal(0, rows);
 
