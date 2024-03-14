@@ -5,6 +5,14 @@ namespace Cscg.AdoNet.Lib
 {
     public static class SqliteTool
     {
+        public static string? GetDatabaseVersion(this DbConnection conn)
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT SQLITE_VERSION()";
+            var version = cmd.ExecuteScalar()?.ToString();
+            return version;
+        }
+
         public static IEnumerable<string> GetAllTableNames(this DbConnection conn)
         {
             using var cmd = conn.CreateCommand();

@@ -65,15 +65,18 @@ namespace SourceGenerated
             var wasInserted = hp.Insert(conn);
             Console.WriteLine(wasInserted);
 
-            var hPerson = HousePerson.FindSame(conn, p => p.OwnersId = 88).Single();
+            var hPerson = HousePerson.FindSame(conn, p => p.OwnersId = 88).SingleOrDefault();
             json = JsonConvert.SerializeObject(hPerson, Formatting.None);
             Console.WriteLine(json);
 
-            var wasDeleted = hPerson.Delete(conn);
+            var wasDeleted = hPerson?.Delete(conn);
             Console.WriteLine($"Deleted? {wasDeleted}");
 
             wasDeleted = person.Delete(conn);
             Console.WriteLine($"Deleted? {wasDeleted}");
+
+            var dbVersion = conn.GetDatabaseVersion();
+            Console.WriteLine(dbVersion);
 
             var tableNames = conn.GetAllTableNames().Take(1).ToArray();
             var tblInfo = tableNames.Select(conn.GetTableColumns).ToArray();
