@@ -156,6 +156,18 @@ namespace Cscg.AdoNet
             sel.AppendLine("{");
             sel.AppendLines(sqser);
             sel.AppendLine("}");
+            sel.AppendLine();
+
+            sel.AppendLine($"public static {name}[] FindSame({connType} conn, params Action<{name}>[] func)");
+            sel.AppendLine("{");
+            sel.AppendLine("using var cmd = conn.CreateCommand();");
+            sel.AppendLine($"var sample = new {name}();");
+            sel.AppendLine("Array.ForEach(func, f => f(sample));");
+            sel.AppendLine("sample.WriteSql(cmd);");
+            sel.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateSelect({table});");
+            sel.AppendLine("using var reader = cmd.ExecuteReader();");
+            sel.AppendLine($"return reader.ReadData<{name}, {readType}>().ToArray();");
+            sel.AppendLine("}");
 
             var del = new CodeWriter();
             var upd = new CodeWriter();
@@ -210,26 +222,6 @@ namespace Cscg.AdoNet
 
             if (isMap && mapPk.Count >= 1)
             {
-                var olK = string.Join(", ", mapPk);
-                lst.AppendLine($"public static {name}[] List({connType} conn, int limit, int offset)");
-                lst.AppendLine("{");
-                lst.AppendLine("using var cmd = conn.CreateCommand();");
-                lst.AppendLine($@"cmd.CommandText = @""SELECT * FROM ""{table}"" ORDER BY {olK} LIMIT @p0 OFFSET @p1;"";");
-                lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", limit);");
-                lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p1"", offset);");
-                lst.AppendLine("using var reader = cmd.ExecuteReader();");
-                lst.AppendLine($"return reader.ReadData<{name}, {readType}>().ToArray();");
-                lst.AppendLine("}");
-
-                /*fin.AppendLine($"public static {name} Find({connType} conn, {lastPkT} id)");
-                fin.AppendLine("{");
-                fin.AppendLine("using var cmd = conn.CreateCommand();");
-                fin.AppendLine($@"cmd.CommandText = @""SELECT * FROM ""{table}"" WHERE {lastPk} = @p0;"";");
-                fin.AppendLine(@"cmd.Parameters.AddWithValue(""@p0"", id);");
-                fin.AppendLine("using var reader = cmd.ExecuteReader();");
-                fin.AppendLine($"return reader.ReadData<{name}, {readType}>().FirstOrDefault();");
-                fin.AppendLine("}");*/
-
                 ins.AppendLine($"public bool Insert({connType} conn)");
                 ins.AppendLine("{");
                 ins.AppendLine("using var cmd = conn.CreateCommand();");
@@ -238,21 +230,13 @@ namespace Cscg.AdoNet
                 ins.AppendLine($"return cmd.ExecuteNonQuery() == 1;");
                 ins.AppendLine("}");
 
-                /*upd.AppendLine($"public bool Update({connType} conn)");
-                upd.AppendLine("{");
-                upd.AppendLine("using var cmd = conn.CreateCommand();");
-                upd.AppendLine("this.WriteSql(cmd);");
-                upd.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateUpdate({table}, ""{lastPk}"");");
-                upd.AppendLine("return cmd.ExecuteNonQuery() == 1;");
-                upd.AppendLine("}");*/
-
-                /*del.AppendLine($"public bool Delete({connType} conn)");
+                del.AppendLine($"public bool Delete({connType} conn)");
                 del.AppendLine("{");
                 del.AppendLine("using var cmd = conn.CreateCommand();");
-                del.AppendLine($@"cmd.CommandText = @""DELETE FROM ""{table}"" WHERE {lastPk} = @p0;"";");
-                del.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", this.{lastPk});");
+                del.AppendLine("this.WriteSql(cmd);");
+                del.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateDelete({table});");
                 del.AppendLine("return cmd.ExecuteNonQuery() == 1;");
-                del.AppendLine("}");*/
+                del.AppendLine("}");
             }
 
             var body = new CodeWriter();
@@ -260,14 +244,23 @@ namespace Cscg.AdoNet
             body.AppendLine();
             body.AppendLines(sel);
             body.AppendLine();
-            body.AppendLines(lst);
-            body.AppendLine();
-            body.AppendLines(fin);
-            body.AppendLine();
+            if (lst.Lines.Count >= 1)
+            {
+                body.AppendLines(lst);
+                body.AppendLine();
+            }
+            if (fin.Lines.Count >= 1)
+            {
+                body.AppendLines(fin);
+                body.AppendLine();
+            }
             body.AppendLines(ins);
             body.AppendLine();
-            body.AppendLines(upd);
-            body.AppendLine();
+            if (upd.Lines.Count >= 1)
+            {
+                body.AppendLines(upd);
+                body.AppendLine();
+            }
             body.AppendLines(del);
 
             code.AppendLines(body);

@@ -65,27 +65,20 @@ namespace SourceGenerated
             var wasInserted = hp.Insert(conn);
             Console.WriteLine(wasInserted);
 
-            var hPersons = HousePerson.List(conn, 5, 0);
-            json = JsonConvert.SerializeObject(hPersons, Formatting.None);
+            var hPerson = HousePerson.FindSame(conn, p => p.OwnersId = 88).Single();
+            json = JsonConvert.SerializeObject(hPerson, Formatting.None);
             Console.WriteLine(json);
 
-            var cmd = conn.CreateCommand();
-            (new HousePerson { OwnersId = 88 }).WriteSql(cmd);
-            var hpSel = cmd.GetColumns().CreateSelect("HousePerson");
-            Console.WriteLine(hpSel);
+            var wasDeleted = hPerson.Delete(conn);
+            Console.WriteLine($"Deleted? {wasDeleted}");
 
-            var wasDeleted = person.Delete(conn);
+            wasDeleted = person.Delete(conn);
             Console.WriteLine($"Deleted? {wasDeleted}");
 
             var tableNames = conn.GetAllTableNames().Take(1).ToArray();
             var tblInfo = tableNames.Select(conn.GetTableColumns).ToArray();
             json = JsonConvert.SerializeObject(tblInfo, Formatting.None);
             Console.WriteLine(json);
-
-            /*
-               david = User.find_by(name: 'David')
-               users = User.where(name: 'David', occupation: 'Code Artist').order(created_at: :desc)
-             */
         }
     }
 }

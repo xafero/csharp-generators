@@ -127,5 +127,18 @@ namespace Cscg.AdoNet.Lib
             bld.Append($" {string.Join(" AND ", tmp)};");
             return bld.ToString();
         }
+
+        public static string CreateDelete(this IDictionary<string, string> cols, string tbl)
+        {
+            var bld = new StringBuilder();
+            bld.Append("DELETE FROM ");
+            bld.Append('"');
+            bld.Append(tbl);
+            bld.Append('"');
+            bld.Append(" WHERE");
+            var tmp = cols.Select(c => $"{c.Key} = {c.Value}");
+            bld.Append($" {string.Join(" AND ", tmp)};");
+            return bld.ToString();
+        }
     }
 }
