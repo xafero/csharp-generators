@@ -1,4 +1,5 @@
 using System.Data;
+using System.Linq;
 using Cscg.AdoNet.Lib;
 using Microsoft.Data.Sqlite;
 using SourceGenerated.Sql;
@@ -24,12 +25,22 @@ namespace Cscg.Tests
             var fileName = IoTool.DeleteIfExists($"blog_{cla}_{mode}.db");
             using var conn = CreateConnection(fileName);
 
-            var input = new Person { Name = "Harry Potter" };
+            var input = new Person { Name = "Tom" };
 
             var id = input.Id = input.Insert(conn);
             Assert.Equal(1, id);
 
+            input.Name = "Harry Potter";
+            Assert.True(input.Update(conn));
+
             var output = Person.Find(conn, id);
+            Assert.NotNull(output);
+
+            output = Person.List(conn, 10, 0).Single();
+            Assert.NotNull(output);
+
+            output = Person.FindSame(conn, x => x.Name = input.Name).Single();
+            Assert.True(output.Delete(conn));
 
             var expected = ToJson(input);
             var actual = ToJson(output);
