@@ -13,8 +13,7 @@ namespace SourceGenerated
     {
         public static void MainAd()
         {
-            const string sqlFile = "example.db";
-            if (File.Exists(sqlFile)) File.Delete(sqlFile);
+            var sqlFile = IoTool.DeleteIfExists("example.db");
 
             var connStr = AdoTool.CreateConnStr<SqliteConnectionStringBuilder>(
                 s => s.DataSource = sqlFile,
