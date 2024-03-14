@@ -1,3 +1,4 @@
+using System.Data;
 using Cscg.AdoNet.Lib;
 using Microsoft.Data.Sqlite;
 using SourceGenerated.Sql;
@@ -25,7 +26,7 @@ namespace Cscg.Tests
 
             var input = new Person { Name = "Harry Potter" };
 
-            var id = input.Insert(conn);
+            var id = input.Id = input.Insert(conn);
             Assert.Equal(1, id);
 
             var output = Person.Find(conn, id);
@@ -38,11 +39,18 @@ namespace Cscg.Tests
 
         private static SqliteConnection CreateConnection(string fileName)
         {
-            var conn = AdoTool.OpenConn<SqliteConnection>(
-                AdoTool.CreateConnStr<SqliteConnectionStringBuilder>(
-                    s => s.DataSource = fileName
-                )
+            var connStr = AdoTool.CreateConnStr<SqliteConnectionStringBuilder>(
+                s => s.DataSource = fileName
             );
+            Assert.Equal(23, connStr.Length);
+
+            var conn = AdoTool.OpenConn<SqliteConnection>(connStr);
+            Assert.Equal(ConnectionState.Open, conn.State);
+
+            var (sql, rows) = conn.RunTransaction(Person.CreateTable());
+            Assert.Equal(172, sql.Length);
+            Assert.Equal(0, rows);
+
             return conn;
         }
     }
