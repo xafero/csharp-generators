@@ -92,8 +92,6 @@ namespace SourceGenerated.Sql
 
         [Column]
         public string Email { get; set; }
-
-        public Profile Profile { get; set; }
     }
 
     [Table(Name = "Profile")]
@@ -111,8 +109,6 @@ namespace SourceGenerated.Sql
 
         [Column]
         public string Bio { get; set; }
-
-        public User User { get; set; }
     }
 
     [Table]
