@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.IO;
 using Cscg.Core.Model;
 using Cscg.Tests.Tools;
