@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 namespace Cscg.Core
 {
@@ -26,43 +25,6 @@ namespace Cscg.Core
             if (!name.EndsWith(tmp))
                 name += tmp;
             return name;
-        }
-
-        public static string CreateAttribute(string name, string space, CodeWriter body = null,
-            bool inherit = false, bool multi = false, params AttributeTargets[] targets)
-        {
-            if (targets == null || targets.Length == 0) targets = [AttributeTargets.All];
-            var dst = string.Join(" | ", targets.Select(t => $"AttributeTargets.{t}"));
-            var inh = Texts.ToString(inherit);
-            var mul = Texts.ToString(multi);
-
-            var code = new CodeWriter();
-            code.AppendLine("using System;");
-            code.AppendLine();
-            code.AppendLine($"namespace {space}");
-            code.AppendLine("{");
-            code.AppendLine($"[AttributeUsage({dst}, Inherited = {inh}, AllowMultiple = {mul})]");
-            code.AppendLine($"public sealed class {name} : Attribute");
-            code.AppendLine("{");
-            if (body != null) code.AppendLines(body);
-            code.AppendLine("}");
-            code.AppendLine("}");
-            return code.ToString();
-        }
-
-        public static string CreateClass(string name, string space, CodeWriter body = null)
-        {
-            var code = new CodeWriter();
-            code.AppendLine("using System;");
-            code.AppendLine();
-            code.AppendLine($"namespace {space}");
-            code.AppendLine("{");
-            code.AppendLine($"public sealed class {name}");
-            code.AppendLine("{");
-            if (body != null) code.AppendLines(body);
-            code.AppendLine("}");
-            code.AppendLine("}");
-            return code.ToString();
         }
 
         public static string GetFullName(string space, string name)
