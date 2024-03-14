@@ -117,12 +117,11 @@ namespace Cscg.AdoNet
                 case "System.DateTime": res = "r.GetDateTime(i)"; break;
                 case "System.DateTimeOffset": res = "r.GetDateTimeOffset(i)"; break;
                 case "System.TimeSpan": res = "r.GetTimeSpan(i)"; break;
-                // Simple casts
-                case "sbyte": res = "(sbyte)r.GetByte(i)"; break;
-                case "ushort": res = "(ushort)r.GetInt16(i)"; break;
-                case "uint": res = "(uint)r.GetInt32(i)"; break;
-                case "ulong": res = "(ulong)r.GetInt64(i)"; break;
                 // Non-duplicated code
+                case "sbyte": res = "r.GetFieldValue<sbyte>(i)"; break;
+                case "ushort": res = "r.GetFieldValue<ushort>(i)"; break;
+                case "uint": res = "r.GetFieldValue<uint>(i)"; break;
+                case "ulong": res = "r.GetFieldValue<ulong>(i)"; break;
                 case "byte[]": res = "r.GetFieldValue<byte[]>(i)"; break;
                 case "System.TimeOnly": res = "r.GetFieldValue<TimeOnly>(i)"; break;
                 case "System.DateOnly": res = "r.GetFieldValue<DateOnly>(i)"; break;
