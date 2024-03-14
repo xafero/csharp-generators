@@ -4,6 +4,7 @@ using Cscg.AdoNet;
 using Cscg.Compactor;
 using Cscg.Constants;
 using Cscg.Tests.Tools;
+using Microsoft.Data.Sqlite;
 using Xunit;
 using static Cscg.Tests.Tools.TestHelper;
 
@@ -30,11 +31,11 @@ namespace Cscg.Tests
             var gen = new AdoGenerator();
             var (_, source) = GetLocalFile("Sql/Person.cs");
 
-            var input = source.CreateCompilation(addedRefs: [GetMetaRef<DbConnection>()]);
+            var input = source.CreateCompilation(addedRefs: [GetMetaRef<DbConnection>(), GetMetaRef<SqliteBlob>()]);
             var (output, run) = input.RunGenerators(out var dia, [gen], []);
 
-            dia.CheckNoError(output, 17);
-            run.CheckNoError(16);
+            dia.CheckNoError(output, 9);
+            run.CheckNoError(8);
         }
 
         [Fact]

@@ -11,6 +11,7 @@ using Cscg.AdoNet.Lib;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
+using System.ComponentModel;
 
 namespace Cscg.Tests.Tools
 {
@@ -24,7 +25,7 @@ namespace Cscg.Tests.Tools
                 GetMetaRef<CompactedAttribute>(), GetMetaRef<object>("System.Xml.ReaderWriter.dll"),
                 GetMetaRef<Utf8JsonWriter>(), GetMetaRef<XmlWriter>(), GetMetaRef<object>("System.Runtime.dll"),
                 GetMetaRef<Binder>(), GetMetaRef(typeof(Console)), GetMetaRef<object>("System.Collections.dll"),
-                GetMetaRef<TableAttribute>()
+                GetMetaRef<TableAttribute>(), GetMetaRef<IQueryable>(), GetMetaRef<IComponent>(), GetMetaRef(typeof(Enumerable))
             }
             .Concat(addedRefs ?? []).ToArray();
             var cpo = new CSharpParseOptions(LanguageVersion.Latest);
