@@ -3,6 +3,7 @@
     <PropertyGroup>
         <Authors>xafero</Authors>
         <PackageProjectUrl>https://github.com/xafero/csharp-generators</PackageProjectUrl>
+        <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/xafero/csharp-generators</RepositoryUrl>
         <Copyright>AGPL License 2024, $(Authors)</Copyright>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
