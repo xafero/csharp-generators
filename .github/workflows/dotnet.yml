@@ -29,8 +29,13 @@ jobs:
     - name: Pack
       run: dotnet pack --configuration Release --no-build -o nupkg
 
-    - name: Upload artifact
+    - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: NuGet Package
+        name: All NuGet packages
         path: nupkg
+
+    - name: Publish
+      run: dotnet nuget push nupkg/*.nupkg --source https://nuget.pkg.github.com/xafero/index.json --api-key ${GITHUB_TOKEN}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
