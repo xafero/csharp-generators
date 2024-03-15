@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
     - name: Checkout code
@@ -19,7 +20,13 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
-    - name: Build and Pack with dotnet
+    - name: Build
+      run: dotnet build --configuration Release
+
+    - name: Test
+      run: dotnet test --configuration Release --no-build
+  
+    - name: Pack
       run: dotnet pack --configuration Release -o nupkg
 
     - name: Upload artifact
