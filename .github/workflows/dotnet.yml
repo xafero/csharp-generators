@@ -36,6 +36,6 @@ jobs:
         path: nupkg
 
     - name: Publish
-      run: dotnet nuget push nupkg/*.nupkg --source https://nuget.pkg.github.com/xafero/index.json --api-key ${GITHUB_TOKEN}
+      run: dotnet nuget push nupkg/*.nupkg --source https://nuget.pkg.github.com/xafero/index.json --api-key ${GITHUB_TOKEN} --skip-duplicate
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
