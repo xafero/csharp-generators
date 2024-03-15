@@ -5,6 +5,10 @@ using System.Linq;
 using R = System.Formats.Cbor.CborReader;
 using W = System.Formats.Cbor.CborWriter;
 
+#if NETFRAMEWORK
+using Drexel;
+#endif
+
 // ReSharper disable UnusedMember.Global
 
 namespace Cscg.Compactor.Lib.Cbor
@@ -95,7 +99,11 @@ namespace Cscg.Compactor.Lib.Cbor
 
         public static Half ReadHalf(this ICborCompacted _, ref R r)
         {
+#if NETFRAMEWORK
+            return (Half)r.ReadSingle();
+#else
             return r.ReadHalf();
+#endif
         }
 
         public static T ReadIntEnum<T>(this ICborCompacted _, ref R r)
@@ -309,7 +317,11 @@ namespace Cscg.Compactor.Lib.Cbor
 
         public static void WriteHalf(this ICborCompacted _, ref W w, Half v)
         {
+#if NETFRAMEWORK
+            w.WriteSingle((float)v);
+#else
             w.WriteHalf(v);
+#endif
         }
 
         public static void WriteInt(this ICborCompacted _, ref W w, int v)

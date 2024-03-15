@@ -1,4 +1,5 @@
 <Project>
+    <Import Project="..\Directory.Build.props" />
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -9,17 +10,6 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <NoPackageAnalysis>true</NoPackageAnalysis>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <Authors>xafero</Authors>
-        <PackageProjectUrl>https://github.com/xafero/csharp-generators</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/xafero/csharp-generators</RepositoryUrl>
-        <Copyright>AGPL License 2024, $(Authors)</Copyright>
-        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-        <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
-        <PackageTags>csharp;csharp-sourcegenerators;source-generator;sourcegenerator;csharp-sourcegenerator</PackageTags>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>

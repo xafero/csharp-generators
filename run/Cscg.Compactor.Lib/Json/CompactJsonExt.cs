@@ -5,6 +5,10 @@ using System.Text.Json;
 using R = System.Text.Json.Utf8JsonReader;
 using W = System.Text.Json.Utf8JsonWriter;
 
+#if NETFRAMEWORK
+using Drexel;
+#endif
+
 // ReSharper disable UnusedMember.Global
 
 namespace Cscg.Compactor.Lib.Json

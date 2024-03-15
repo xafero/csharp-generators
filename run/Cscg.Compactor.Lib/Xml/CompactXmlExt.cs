@@ -5,6 +5,10 @@ using System.Xml;
 using R = System.Xml.XmlReader;
 using W = System.Xml.XmlWriter;
 
+#if NETFRAMEWORK
+using Drexel;
+#endif
+
 // ReSharper disable UnusedMember.Global
 
 namespace Cscg.Compactor.Lib.Xml

@@ -5,12 +5,21 @@ using Cscg.Compactor.Lib.Tools;
 using R = System.IO.BinaryReader;
 using W = System.IO.BinaryWriter;
 
+#if NETFRAMEWORK
+using Drexel;
+#endif
+
 // ReSharper disable UnusedMember.Global
 
 namespace Cscg.Compactor.Lib.Binary
 {
     public static class CompactBinExt
     {
+        #if NETFRAMEWORK
+        public static int Read7BitEncodedInt(this R r) => r.ReadInt32();
+        public static void Write7BitEncodedInt(this W w, int value) => w.Write(value);
+        #endif
+
         public static bool ReadBool(this IBinCompacted _, ref R r)
         {
             return r.ReadBoolean();
@@ -99,7 +108,11 @@ namespace Cscg.Compactor.Lib.Binary
 
         public static Half ReadHalf(this IBinCompacted _, ref R r)
         {
+#if NETFRAMEWORK
+            return (Half)r.ReadSingle();
+#else
             return r.ReadHalf();
+#endif
         }
 
         public static T ReadIntEnum<T>(this IBinCompacted _, ref R r)
@@ -320,7 +333,11 @@ namespace Cscg.Compactor.Lib.Binary
 
         public static void WriteHalf(this IBinCompacted _, ref W w, Half v)
         {
+#if NETFRAMEWORK
+            w.Write((float)v);
+#else
             w.Write(v);
+#endif
         }
 
         public static void WriteInt(this IBinCompacted _, ref W w, int v)
