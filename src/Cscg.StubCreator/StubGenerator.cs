@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using Cscg.Core;
 using Cscg.StubCreator.Model;
@@ -55,12 +54,14 @@ namespace Cscg.StubCreator
                             if (!subName.StartsWith("."))
                                 continue;
                             subName = subName.Trim('.');
+                            var retType = GuessType(item.Returns);
                             switch (subType)
                             {
                                 case "P":
                                     code.AppendLine();
                                     code.AppendLines(ToElements(item));
-                                    code.AppendLine($"public object {subName} {{ get; set; }}");
+                                    var propType = retType ?? "object";
+                                    code.AppendLine($"public {propType} {subName} {{ get; set; }}");
                                     break;
                                 case "M":
                                     code.AppendLine();
@@ -78,7 +79,8 @@ namespace Cscg.StubCreator
                                         continue;
                                     }
                                     code.AppendLines(ToElements(item));
-                                    code.AppendLine($"public void {subName}");
+                                    var metType = retType ?? "void";
+                                    code.AppendLine($"public {metType} {subName}");
                                     code.AppendLine("{");
                                     code.AppendLine(ThrowError());
                                     code.AppendLine("}");
@@ -92,6 +94,23 @@ namespace Cscg.StubCreator
             }
 
             spc.AddSource(className, code.ToString());
+        }
+
+        private static string GuessType(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return null;
+
+            text = PatchBack(text);
+
+            var tmp = text.Split(["<see cref=\"T:"], StringSplitOptions.None);
+            if (tmp.Length >= 2)
+                return tmp[1].Split('"')[0].Trim('1', '`');
+
+            if (text.Contains("<c>true</c>"))
+                return "bool";
+
+            return "object";
         }
 
         private static string ThrowError(string type = "NotImplementedException")
@@ -149,15 +168,20 @@ namespace Cscg.StubCreator
                 var item = line.Trim();
                 if (item.Length == 0)
                     continue;
-                item = item.Replace("|see_cref=(", "<see cref=\"")
-                    .Replace(")__|", "\" />")
-                    .Replace(")_|", "\"/>")
-                    .Replace("|c(", "<c>")
-                    .Replace(")_c|", "</c>");
+                item = PatchBack(item);
                 lines.Add($"/// {item}");
             }
             lines.Add($"/// </{end ?? tag}>");
             return lines;
+        }
+
+        private static string PatchBack(string item)
+        {
+            return item.Replace("|see_cref=(", "<see cref=\"")
+                .Replace(")__|", "\" />")
+                .Replace(")_|", "\"/>")
+                .Replace("|c(", "<c>")
+                .Replace(")_c|", "</c>");
         }
 
         private static (string type, string name) SplitName(string text)
