@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using XmlTool = Cscg.Core.XmlTool<Cscg.Core.Model.CTypes>;
 
 namespace Cscg.Core.Model
 {

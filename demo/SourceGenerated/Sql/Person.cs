@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Cscg.AdoNet.Lib;
 
 namespace SourceGenerated.Sql

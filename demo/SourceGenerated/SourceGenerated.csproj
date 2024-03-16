@@ -12,12 +12,14 @@
 
   <ItemGroup>
     <AdditionalFiles Include="res\sample.txt" />
+    <AdditionalFiles Include="res\Newtonsoft.Json.Bson.xml" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Cscg.AdoNet\Cscg.AdoNet.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\src\Cscg.Compactor\Cscg.Compactor.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\src\Cscg.Constants\Cscg.Constants.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\src\Cscg.StubCreator\Cscg.StubCreator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\src\Cscg.Core\Cscg.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 

@@ -16,58 +16,61 @@ namespace Cscg.Constants
 
             var contents = files.Select(ToNamed);
 
-            ctx.RegisterSourceOutput(contents, (spc, nac) =>
+            ctx.RegisterSourceOutput(contents, Generate);
+        }
+
+        private static void Generate(SourceProductionContext spc, (string name, string content) nac)
+        {
+            const string space = Coding.AutoNamespace;
+            var className = $"ConstStrings.{nac.name}";
+            var code = new CodeWriter();
+            code.AppendLine("using System;");
+            code.AppendLine();
+            code.AppendLine($"namespace {space}");
+            code.AppendLine("{");
+            code.AppendLine("public static partial class ConstStrings");
+            code.AppendLine("{");
+            var lines = nac.content.Split('\n');
+            var isFirst = true;
+            foreach (var rawLine in lines)
             {
-                const string space = Coding.AutoNamespace;
-                var className = $"ConstStrings.{nac.name}";
-                var code = new CodeWriter();
-                code.AppendLine("using System;");
-                code.AppendLine();
-                code.AppendLine($"namespace {space}");
-                code.AppendLine("{");
-                code.AppendLine("public static partial class ConstStrings");
-                code.AppendLine("{");
-                var lines = nac.content.Split('\n');
-                var isFirst = true;
-                foreach (var rawLine in lines)
+                var line = rawLine.Trim();
+                var parts = line.Split(['='], 2);
+                if (parts.Length != 2) continue;
+                var key = parts[0].Trim();
+                var raw = parts[1].Trim();
+                bool isConst;
+                string type;
+                object val;
+                if (raw.StartsWith("["))
                 {
-                    var line = rawLine.Trim();
-                    var parts = line.Split(['='], 2);
-                    if (parts.Length != 2)
-                        continue;
-                    var key = parts[0].Trim();
-                    var raw = parts[1].Trim();
-                    bool isConst;
-                    string type;
-                    object val;
-                    if (raw.StartsWith("["))
-                    {
-                        var inner = raw.TrimStart('[').TrimEnd(']')
-                            .Split([", "], StringSplitOptions.RemoveEmptyEntries);
-                        var parsed = inner.Select(i =>
+                    var inner = raw.TrimStart('[')
+                        .TrimEnd(']')
+                        .Split([", "], StringSplitOptions.RemoveEmptyEntries);
+                    var parsed = inner.Select(i =>
                         {
                             ParseValue(i, out var ic, out var it, out var iv);
                             return (ic, it, iv);
-                        }).ToArray();
-                        isConst = false;
-                        type = $"{parsed.Select(p => p.it).First()}[]";
-                        val = $"[ {string.Join(", ", parsed.Select(p => p.iv))} ]";
-                    }
-                    else
-                    {
-                        ParseValue(raw, out isConst, out type, out val);
-                    }
-                    var mode = isConst ? "const" : "static readonly";
-                    if (isFirst)
-                        isFirst = false;
-                    else
-                        code.AppendLine();
-                    code.AppendLine($"public {mode} {type} {key} = {val};");
+                        })
+                        .ToArray();
+                    isConst = false;
+                    type = $"{parsed.Select(p => p.it).First()}[]";
+                    val = $"[ {string.Join(", ", parsed.Select(p => p.iv))} ]";
                 }
-                code.AppendLine("}");
-                code.AppendLine("}");
-                spc.AddSource(className, code.ToString());
-            });
+                else
+                {
+                    ParseValue(raw, out isConst, out type, out val);
+                }
+                var mode = isConst ? "const" : "static readonly";
+                if (isFirst)
+                    isFirst = false;
+                else
+                    code.AppendLine();
+                code.AppendLine($"public {mode} {type} {key} = {val};");
+            }
+            code.AppendLine("}");
+            code.AppendLine("}");
+            spc.AddSource(className, code.ToString());
         }
 
         private static void ParseValue(string raw, out bool isConst, out string type, out object val)

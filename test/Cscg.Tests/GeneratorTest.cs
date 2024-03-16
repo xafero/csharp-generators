@@ -3,6 +3,7 @@ using System.Formats.Cbor;
 using Cscg.AdoNet;
 using Cscg.Compactor;
 using Cscg.Constants;
+using Cscg.StubCreator;
 using Cscg.Tests.Tools;
 using Microsoft.Data.Sqlite;
 using Xunit;
@@ -49,6 +50,20 @@ namespace Cscg.Tests
 
             dia.CheckNoError(output, 9);
             run.CheckNoError(8);
+        }
+
+        [Fact]
+        public void TestStub()
+        {
+            var gen = new StubGenerator();
+            var (_, source) = GetLocalFile("Program.cg.cs");
+            AddedMemoryText at = GetLocalFile("res/Newtonsoft.Json.Bson.xml");
+
+            var input = source.CreateCompilation();
+            var (output, run) = input.RunGenerators(out var dia, [gen], [at]);
+
+            dia.CheckNoError(output, 2);
+            run.CheckNoError(1);
         }
 
         [Fact]

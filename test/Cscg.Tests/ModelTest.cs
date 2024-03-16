@@ -2,6 +2,7 @@ using System.IO;
 using Cscg.Core.Model;
 using Cscg.Tests.Tools;
 using Xunit;
+using XmlTool = Cscg.Core.XmlTool<Cscg.Core.Model.CTypes>;
 
 namespace Cscg.Tests
 {
