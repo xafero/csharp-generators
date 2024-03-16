@@ -54,13 +54,13 @@ namespace Cscg.StubCreator
                             if (!subName.StartsWith("."))
                                 continue;
                             subName = subName.Trim('.');
-                            var retType = GuessType(item.Returns);
                             switch (subType)
                             {
                                 case "P":
                                     code.AppendLine();
                                     code.AppendLines(ToElements(item));
-                                    var propType = retType ?? "object";
+                                    var rpvType = GuessType(item.Value);
+                                    var propType = rpvType ?? "object";
                                     code.AppendLine($"public {propType} {subName} {{ get; set; }}");
                                     break;
                                 case "M":
@@ -79,6 +79,7 @@ namespace Cscg.StubCreator
                                         continue;
                                     }
                                     code.AppendLines(ToElements(item));
+                                    var retType = GuessType(item.Returns);
                                     var metType = retType ?? "void";
                                     code.AppendLine($"public {metType} {subName}");
                                     code.AppendLine("{");
