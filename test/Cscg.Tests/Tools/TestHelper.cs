@@ -25,7 +25,8 @@ namespace Cscg.Tests.Tools
                 GetMetaRef<CompactedAttribute>(), GetMetaRef<object>("System.Xml.ReaderWriter.dll"),
                 GetMetaRef<Utf8JsonWriter>(), GetMetaRef<XmlWriter>(), GetMetaRef<object>("System.Runtime.dll"),
                 GetMetaRef<Binder>(), GetMetaRef(typeof(Console)), GetMetaRef<object>("System.Collections.dll"),
-                GetMetaRef<TableAttribute>(), GetMetaRef<IQueryable>(), GetMetaRef<IComponent>(), GetMetaRef(typeof(Enumerable))
+                GetMetaRef<TableAttribute>(), GetMetaRef<IQueryable>(), GetMetaRef<IComponent>(), 
+                GetMetaRef(typeof(Enumerable)), GetMetaRef<object>("System.Private.Uri.dll")
             }
             .Concat(addedRefs ?? []).ToArray();
             var cpo = new CSharpParseOptions(LanguageVersion.Latest);

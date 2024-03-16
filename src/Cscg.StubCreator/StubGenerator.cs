@@ -28,9 +28,10 @@ namespace Cscg.StubCreator
             using var patch = new XmlDocReader(input);
             var model = XmlTool.Read(patch);
 
-            var className = $"ConstStrings.{nac.name}";
+            var className = $"Stub.{nac.name}";
             var code = new CodeWriter();
             code.AppendLine("using System;");
+            code.AppendLines(CreateUsings(model.Assembly));
 
             foreach (var member in model.Members)
             {
@@ -95,6 +96,17 @@ namespace Cscg.StubCreator
             }
 
             spc.AddSource(className, code.ToString());
+        }
+
+        private static IEnumerable<string> CreateUsings(XmlAssembly ass)
+        {
+            var text = ass.Name;
+            var last = string.Empty;
+            foreach (var part in text.Split('.'))
+            {
+                last += $".{part}";
+                yield return $"using {last.Trim('.')};";
+            }
         }
 
         private static string GuessType(string text)

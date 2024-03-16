@@ -7,6 +7,7 @@
             MainCg();
             MainBg();
             MainAd();
+            MainSt();
         }
     }
 }

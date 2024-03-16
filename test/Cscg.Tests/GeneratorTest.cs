@@ -6,6 +6,7 @@ using Cscg.Constants;
 using Cscg.StubCreator;
 using Cscg.Tests.Tools;
 using Microsoft.Data.Sqlite;
+using Newtonsoft.Json.Linq;
 using Xunit;
 using static Cscg.Tests.Tools.TestHelper;
 
@@ -56,10 +57,10 @@ namespace Cscg.Tests
         public void TestStub()
         {
             var gen = new StubGenerator();
-            var (_, source) = GetLocalFile("Program.cg.cs");
+            var (_, source) = GetLocalFile("Program.st.cs");
             AddedMemoryText at = GetLocalFile("res/Newtonsoft.Json.Bson.xml");
 
-            var input = source.CreateCompilation();
+            var input = source.CreateCompilation(addedRefs: [GetMetaRef<JsonCloneSettings>()]);
             var (output, run) = input.RunGenerators(out var dia, [gen], [at]);
 
             dia.CheckNoError(output, 2);
