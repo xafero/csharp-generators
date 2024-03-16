@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Cscg.Core;
 using Cscg.StubCreator.Model;
 using Microsoft.CodeAnalysis;
@@ -62,15 +64,24 @@ namespace Cscg.StubCreator
                                     break;
                                 case "M":
                                     code.AppendLine();
+                                    if (!subName.EndsWith(")")) subName += "()";
+                                    subName = InsertArgs(item.Params, subName);
                                     const string cSt = "#ctor";
                                     if (subName.StartsWith(cSt))
                                     {
                                         subName = subName.Replace(cSt, tP.name);
-                                        code.AppendLine($"public {subName} {{ }}");
+                                        code.AppendLines(ToElements(item));
+                                        code.AppendLine($"public {subName}");
+                                        code.AppendLine("{");
+                                        code.AppendLine(ThrowError());
+                                        code.AppendLine("}");
                                         continue;
                                     }
                                     code.AppendLines(ToElements(item));
-                                    code.AppendLine($"public void {subName} {{ }}");
+                                    code.AppendLine($"public void {subName}");
+                                    code.AppendLine("{");
+                                    code.AppendLine(ThrowError());
+                                    code.AppendLine("}");
                                     break;
                             }
                         }
@@ -81,6 +92,36 @@ namespace Cscg.StubCreator
             }
 
             spc.AddSource(className, code.ToString());
+        }
+
+        private static string ThrowError(string type = "NotImplementedException")
+        {
+            return $"throw new {type}();";
+        }
+
+        private static string InsertArgs(List<XmlParam> @params, string text)
+        {
+            var parts = text.Split(['('], 2);
+            var first = parts[0];
+            var second = parts[1];
+            var bld = new StringBuilder();
+            bld.Append(first);
+            bld.Append('(');
+            var paramIdx = 0;
+            foreach (var c in second)
+            {
+                if (char.IsLetterOrDigit(c) || c == '.')
+                {
+                    bld.Append(c);
+                    continue;
+                }
+                if (c == ',' || c == ')')
+                {
+                    if (paramIdx < @params.Count)
+                        bld.Append($" {@params[paramIdx++].Name}, ");
+                }
+            }
+            return bld.ToString().Trim(' ', ',') + ')';
         }
 
         private static IEnumerable<string> ToElements(XmlMember item)
@@ -115,7 +156,7 @@ namespace Cscg.StubCreator
                     .Replace(")_c|", "</c>");
                 lines.Add($"/// {item}");
             }
-            lines.Add($"/// </{tag}>");
+            lines.Add($"/// </{end ?? tag}>");
             return lines;
         }
 
