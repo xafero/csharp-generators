@@ -110,7 +110,7 @@ namespace Cscg.StubCreator
             var paramIdx = 0;
             foreach (var c in second)
             {
-                if (char.IsLetterOrDigit(c) || c == '.')
+                if (char.IsLetterOrDigit(c) || c == '.' || c == '[' || c == ']')
                 {
                     bld.Append(c);
                     continue;
