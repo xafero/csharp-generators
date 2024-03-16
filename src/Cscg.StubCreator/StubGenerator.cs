@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Cscg.Core;
 using Cscg.StubCreator.Model;
 using Microsoft.CodeAnalysis;
@@ -40,7 +41,7 @@ namespace Cscg.StubCreator
                         var tP = FindParent(name);
                         code.AppendLine($"namespace {tP.parent}");
                         code.AppendLine("{");
-                        code.AppendLines(ToElement(member.Summary));
+                        code.AppendLines(ToElements(member));
                         code.AppendLine($"public partial class {tP.name}");
                         code.AppendLine("{");
                         foreach (var item in model.Members)
@@ -56,7 +57,7 @@ namespace Cscg.StubCreator
                             {
                                 case "P":
                                     code.AppendLine();
-                                    code.AppendLines(ToElement(item.Summary));
+                                    code.AppendLines(ToElements(item));
                                     code.AppendLine($"public object {subName} {{ get; set; }}");
                                     break;
                                 case "M":
@@ -68,7 +69,7 @@ namespace Cscg.StubCreator
                                         code.AppendLine($"public {subName} {{ }}");
                                         continue;
                                     }
-                                    code.AppendLines(ToElement(item.Summary));
+                                    code.AppendLines(ToElements(item));
                                     code.AppendLine($"public void {subName} {{ }}");
                                     break;
                             }
@@ -82,22 +83,32 @@ namespace Cscg.StubCreator
             spc.AddSource(className, code.ToString());
         }
 
-        private static List<string> ToElement(string text)
+        private static IEnumerable<string> ToElements(XmlMember item)
+        {
+            return ToElement(item.Summary, "summary")
+                .Concat(ToElement(item.Returns, "returns"))
+                .Concat(ToElement(item.Remarks, "remarks"))
+                .Concat(ToElement(item.Value, "value"));
+        }
+
+        private static List<string> ToElement(string text, string tag)
         {
             var lines = new List<string>();
             if (string.IsNullOrWhiteSpace(text)) return lines;
-            lines.Add("/// <summary>");
+            lines.Add($"/// <{tag}>");
             foreach (var line in text.Split('\n'))
             {
                 var item = line.Trim();
                 if (item.Length == 0)
                     continue;
-                item = item.Replace("@see_cref=_(", "<see cref=\"")
-                    .Replace(")__", "\" />")
-                    .Replace(")_", "\"/>");
+                item = item.Replace("|see_cref=(", "<see cref=\"")
+                    .Replace(")__|", "\" />")
+                    .Replace(")_|", "\"/>")
+                    .Replace("|c(", "<c>")
+                    .Replace(")_c|", "</c>");
                 lines.Add($"/// {item}");
             }
-            lines.Add("/// </summary>");
+            lines.Add($"/// </{tag}>");
             return lines;
         }
 

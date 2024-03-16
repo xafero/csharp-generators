@@ -23,11 +23,11 @@ namespace Cscg.StubCreator.Model
         {
             var text = new string(buffer);
             var pattern = "<see\\scref=\\\"(.*?)\\\" />";
-            text = Regex.Replace(text, pattern, "@see_cref=_($1)__");
+            text = Regex.Replace(text, pattern, "|see_cref=($1)__|");
             pattern = "<see\\scref=\\\"(.*?)\\\"/>";
-            text = Regex.Replace(text, pattern, "@see_cref=_($1)_");
+            text = Regex.Replace(text, pattern, "|see_cref=($1)_|");
             pattern = "<c>(.*?)</c>";
-            text = Regex.Replace(text, pattern, "@c_($1)__");
+            text = Regex.Replace(text, pattern, "|c($1)_c|");
             text.ToCharArray().CopyTo(buffer, 0);
         }
     }
