@@ -85,13 +85,20 @@ namespace Cscg.StubCreator
 
         private static IEnumerable<string> ToElements(XmlMember item)
         {
-            return ToElement(item.Summary, "summary")
-                .Concat(ToElement(item.Returns, "returns"))
-                .Concat(ToElement(item.Remarks, "remarks"))
-                .Concat(ToElement(item.Value, "value"));
+            var lines = new List<string>();
+            lines.AddRange(ToElement(item.Summary, "summary"));
+            foreach (var ip in item.Params)
+            {
+                var ipTag = $"param name=\"{ip.Name}\"";
+                lines.AddRange(ToElement(ip.Description, ipTag, "param"));
+            }
+            lines.AddRange(ToElement(item.Returns, "returns"));
+            lines.AddRange(ToElement(item.Remarks, "remarks"));
+            lines.AddRange(ToElement(item.Value, "value"));
+            return lines;
         }
 
-        private static List<string> ToElement(string text, string tag)
+        private static List<string> ToElement(string text, string tag, string end = null)
         {
             var lines = new List<string>();
             if (string.IsNullOrWhiteSpace(text)) return lines;
