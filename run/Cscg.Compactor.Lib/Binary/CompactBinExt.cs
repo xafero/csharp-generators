@@ -49,7 +49,8 @@ namespace Cscg.Compactor.Lib.Binary
 
         public static DateTime ReadDateTime(this IBinCompacted _, ref R r)
         {
-            return DateTime.FromBinary(r.ReadInt64());
+            var number = r.ReadInt64();
+            return DateTime.FromBinary(number);
         }
 
         public static DateTimeOffset ReadDateTimeOffset(this IBinCompacted _, ref R r)
@@ -189,6 +190,11 @@ namespace Cscg.Compactor.Lib.Binary
         public static short[] ReadShortArray(this IBinCompacted c, ref R r)
         {
             return c.ReadArray(ref r, c.ReadShort);
+        }
+
+        public static string[] ReadStringArray(this IBinCompacted c, ref R r)
+        {
+            return c.ReadArray(ref r, c.ReadString);
         }
 
         private delegate T Reader<out T>(ref R r);
@@ -445,16 +451,28 @@ namespace Cscg.Compactor.Lib.Binary
             w.Write(v);
         }
 
-        public static void WriteShortArray(this IBinCompacted c, ref W w, short[] v)
+        private delegate void Writer<in T>(ref W w, T v);
+
+        private static void WriteArray<T>(this IBinCompacted _, ref W w, IReadOnlyCollection<T> v, Writer<T> writer)
         {
             if (v == null)
             {
                 w.Write7BitEncodedInt(-1);
                 return;
             }
-            w.Write7BitEncodedInt(v.Length);
-            foreach (var item in v) 
-                c.WriteShort(ref w, item);
+            w.Write7BitEncodedInt(v.Count);
+            foreach (var item in v)
+                writer(ref w, item);
+        }
+
+        public static void WriteShortArray(this IBinCompacted c, ref W w, short[] v)
+        {
+            c.WriteArray(ref w, v, c.WriteShort);
+        }
+
+        public static void WriteStringArray(this IBinCompacted c, ref W w, string[] v)
+        {
+            c.WriteArray(ref w, v, c.WriteString);
         }
 
         public static void WriteString(this IBinCompacted _, ref W w, string v)

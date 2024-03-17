@@ -185,6 +185,11 @@ namespace Cscg.Compactor.Lib.Cbor
             return c.ReadArray(ref r, c.ReadShort);
         }
 
+        public static string[] ReadStringArray(this ICborCompacted c, ref R r)
+        {
+            return c.ReadArray(ref r, c.ReadString);
+        }
+
         private delegate T Reader<out T>(ref R r);
 
         private static T[] ReadArray<T>(this ICborCompacted _, ref R r, Reader<T> reader)
@@ -426,7 +431,9 @@ namespace Cscg.Compactor.Lib.Cbor
             w.WriteInt32(v);
         }
 
-        public static void WriteShortArray(this ICborCompacted c, ref W w, short[] v)
+        private delegate void Writer<in T>(ref W w, T v);
+
+        private static void WriteArray<T>(this ICborCompacted c, ref W w, IEnumerable<T> v, Writer<T> writer)
         {
             if (v == null)
             {
@@ -435,8 +442,18 @@ namespace Cscg.Compactor.Lib.Cbor
             }
             w.WriteStartArray(null);
             foreach (var item in v)
-                c.WriteShort(ref w, item);
+                writer(ref w, item);
             w.WriteEndArray();
+        }
+
+        public static void WriteShortArray(this ICborCompacted c, ref W w, short[] v)
+        {
+            c.WriteArray(ref w, v, c.WriteShort);
+        }
+
+        public static void WriteStringArray(this ICborCompacted c, ref W w, string[] v)
+        {
+            c.WriteArray(ref w, v, c.WriteString);
         }
 
         public static void WriteTimeSpan(this ICborCompacted _, ref W w, TimeSpan v)

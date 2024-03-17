@@ -225,6 +225,11 @@ namespace Cscg.Compactor.Lib.Xml
             return c.ReadArray(ref r, c.ReadShort);
         }
 
+        public static string[] ReadStringArray(this IXmlCompacted c, ref R r)
+        {
+            return c.ReadArray(ref r, c.ReadString);
+        }
+
         private static T[] ReadArray<T>(this IXmlCompacted _, ref R r, Reader<T> f)
         {
             if (IsNull(ref r, false))
@@ -481,6 +486,11 @@ namespace Cscg.Compactor.Lib.Xml
         public static void WriteShortArray(this IXmlCompacted c, ref W w, short[] v)
         {
             c.WriteArray(ref w, v, (short i, ref W x) => c.WriteShort(ref x, i));
+        }
+
+        public static void WriteStringArray(this IXmlCompacted c, ref W w, string[] v)
+        {
+            c.WriteArray(ref w, v, (string i, ref W x) => c.WriteString(ref x, i));
         }
 
         public static void WriteString(this IXmlCompacted _, ref W w, string v)

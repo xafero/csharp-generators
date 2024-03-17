@@ -171,6 +171,12 @@ namespace Cscg.Compactor.Lib.Json
             return list?.ToArray();
         }
 
+        public static string[] ReadStringArray(this IJsonCompacted c, ref R r)
+        {
+            var list = c.ReadList(ref r, c.ReadString);
+            return list?.ToArray();
+        }
+
         private delegate T Reader<out T>(ref R r);
 
         private static List<T> ReadList<T>(this IJsonCompacted _, ref R r, Reader<T> reader)
@@ -402,6 +408,11 @@ namespace Cscg.Compactor.Lib.Json
         public static void WriteShortArray(this IJsonCompacted c, ref W w, short[] v)
         {
             c.WriteArray(ref w, v, (short i, ref W x) => c.WriteShort(ref x, i));
+        }
+
+        public static void WriteStringArray(this IJsonCompacted c, ref W w, string[] v)
+        {
+            c.WriteArray(ref w, v, (string i, ref W x) => c.WriteString(ref x, i));
         }
 
         private static void WriteArray<T>(this IJsonCompacted _, ref W w, IReadOnlyCollection<T> v, Writer<T> f)
