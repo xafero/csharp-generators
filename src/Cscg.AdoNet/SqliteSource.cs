@@ -80,12 +80,14 @@ namespace Cscg.AdoNet
         }
 
         public static (string[] i, string[] o) GetForeign(string table, string prop,
-            string ds, string dp, bool unique)
+            string ds, string dp, bool unique, bool noCascade)
         {
             ds = ds.Trim('"');
             var cstr = $"CONSTRAINT \"\"FK_{table}_{ds}_{prop}\"\" " +
                        $"FOREIGN KEY (\"\"{prop}\"\") REFERENCES" +
-                       $" \"\"{ds}\"\" (\"{dp}\") ON DELETE CASCADE";
+                       $" \"\"{ds}\"\" (\"{dp}\")";
+            if (!noCascade)
+                cstr += " ON DELETE CASCADE";
             cstr = "@\"    " + cstr + ",\",";
             var index = $"IX_{table}_{prop}";
             const string s = " IF NOT EXISTS";

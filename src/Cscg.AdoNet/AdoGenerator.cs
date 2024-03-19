@@ -99,17 +99,20 @@ namespace Cscg.AdoNet
                         ppa.TryGetValue($"{ForeignAn}_Table", out var ft);
                         ppa.TryGetValue($"{ForeignAn}_Column", out var fc);
                         ppa.TryGetValue($"{ForeignAn}_Unique", out var fu);
+                        ppa.TryGetValue($"{ForeignAn}_NoCascade", out var fd);
                         var u = fu == "true";
-                        var (fi, fo) = SqliteSource.GetForeign(tableName, ppName, ft, fc, u);
+                        var d = fd == "true";
+                        var (fi, fo) = SqliteSource.GetForeign(tableName, ppName, ft, fc, u, d);
                         inner.AddRange(fi);
                         if (isMap)
                             mapPk.Add(ppName);
                         after.AddRange(fo);
                     }
 
+                    var ppReading = $"r.IsDBNull(i) ? default : {SqliteSource.GetRead(pp)}";
                     deser.AppendLine($"if (key == {pName})");
                     deser.AppendLine("{");
-                    deser.AppendLine($"this.{pp.Name} = {SqliteSource.GetRead(pp)};");
+                    deser.AppendLine($"this.{pp.Name} = {ppReading};");
                     deser.AppendLine("return;");
                     deser.AppendLine("}");
 
