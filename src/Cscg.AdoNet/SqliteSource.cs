@@ -12,7 +12,7 @@ namespace Cscg.AdoNet
             return text.StartsWith("\"") ? text : $"\"{text}\"";
         }
 
-        public static (string t, string c) GetType(ITypeSymbol type, string tblKey)
+        public static (string t, string c) GetType(ITypeSymbol type, string tblKey, bool? overNull)
         {
             var text = type.ToTrimDisplay();
             string res;
@@ -67,14 +67,15 @@ namespace Cscg.AdoNet
             }
             if (type.IsEnum(out var eut))
             {
-                var inner = GetType(eut, tblKey);
+                var inner = GetType(eut, tblKey, overNull);
                 return (inner.t, inner.c);
             }
             if (type.IsNull(out var nut))
             {
-                var inner = GetType(nut, tblKey);
+                var inner = GetType(nut, tblKey, overNull);
                 res = inner.t;
             }
+            if (overNull != null) canNull = overNull.Value;
             cond = $"{(canNull ? "NULL" : "NOT NULL")} {cond}";
             return (res, cond.Trim());
         }

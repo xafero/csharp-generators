@@ -91,8 +91,6 @@ namespace Cscg.AdoNet
                         lastPk = ppName;
                         lastPkT = pp.ReturnType;
                     }
-                    var (pType, pCond) = SqliteSource.GetType(pp.ReturnType, pk);
-                    crea.AppendLine($"@\"    \"{pName}\" {pType} {pCond},\",");
 
                     if (ppa.TryGetValue(ForeignAn, out _))
                     {
@@ -108,6 +106,10 @@ namespace Cscg.AdoNet
                             mapPk.Add(ppName);
                         after.AddRange(fo);
                     }
+
+                    var forceNull = mapPk.Contains(ppName) ? false : default(bool?);
+                    var (pType, pCond) = SqliteSource.GetType(pp.ReturnType, pk, forceNull);
+                    crea.AppendLine($"@\"    \"{pName}\" {pType} {pCond},\",");
 
                     var ppReading = $"r.IsDBNull(i) ? default : {SqliteSource.GetRead(pp)}";
                     deser.AppendLine($"if (key == {pName})");
