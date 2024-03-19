@@ -70,6 +70,11 @@ namespace Cscg.AdoNet
                 var inner = GetType(eut, tblKey);
                 return (inner.t, inner.c);
             }
+            if (type.IsNull(out var nut))
+            {
+                var inner = GetType(nut, tblKey);
+                res = inner.t;
+            }
             cond = $"{(canNull ? "NULL" : "NOT NULL")} {cond}";
             return (res, cond.Trim());
         }
