@@ -83,6 +83,7 @@ namespace Cscg.AdoNet
         public static (string[] i, string[] o) GetForeign(string table, string prop,
             string ds, string dp, bool unique, bool noCascade)
         {
+            table = table.Trim('"');
             ds = ds.Trim('"');
             var cstr = $"CONSTRAINT \"\"FK_{table}_{ds}_{prop}\"\" " +
                        $"FOREIGN KEY (\"\"{prop}\"\") REFERENCES" +
@@ -109,21 +110,21 @@ namespace Cscg.AdoNet
             return cstr;
         }
 
-        public static string GetWrite(Particle pp)
+        public static string GetWrite(Particle pp, string prefix)
         {
-            return GetWrite(pp.ReturnType, pp.Name);
+            return GetWrite(pp.ReturnType, pp.Name, prefix);
         }
 
-        public static string GetWrite(ITypeSymbol type, string name)
+        public static string GetWrite(ITypeSymbol type, string name, string prefix)
         {
-            var res = $"this.{name}";
+            var res = $"{prefix}.{name}";
             if (type.IsEnum(out var eut))
             {
                 return $"({eut}) {res}";
             }
             if (type.IsNull(out var nut))
             {
-                return $"{GetWrite(nut, name)}.Value";
+                return $"{GetWrite(nut, name, prefix)}.Value";
             }
             return res;
         }

@@ -73,7 +73,16 @@ namespace Cscg.AdoNet
             var mapPk = new List<string>();
             var lastPk = default(string);
             var lastPkT = default(ITypeSymbol);
-            foreach (var member in cds.Members)
+
+            var members = new List<MemberDeclarationSyntax>(cds.Members);
+            var innerMembers = members.OfType<ClassDeclarationSyntax>().ToArray();
+            var isTree = innerMembers.Length >= 1;
+            foreach (var innerClass in innerMembers)
+            {
+                members.AddRange(innerClass.Members);
+            }
+
+            foreach (var member in members)
                 if (member is PropertyDeclarationSyntax pds)
                 {
                     var pps = syntax.GetSymbol(pds);
@@ -111,17 +120,28 @@ namespace Cscg.AdoNet
                     var (pType, pCond) = SqliteSource.GetType(pp.ReturnType, pk, forceNull);
                     crea.AppendLine($"@\"    \"{pName}\" {pType} {pCond},\",");
 
+                    var pno = "this";
+                    var pNameSuf = string.Empty;
+                    var pNamePre = string.Empty;
                     var ppReading = $"r.IsDBNull(i) ? default : {SqliteSource.GetRead(pp)}";
-                    deser.AppendLine($"if (key == {pName})");
+                    if (isTree && syntax.GetSymbol(pds.Parent) is var tpp && tpp.Name != name)
+                    {
+                        pno = tpp.Name.ToSnake();
+                        var pNameTmp = $"this is {tpp.Name} {pno}";
+                        pNameSuf = $" && {pNameTmp}";
+                        pNamePre = $"{pNameTmp} && ";
+                    }
+
+                    deser.AppendLine($"if (key == {pName}{pNameSuf})");
                     deser.AppendLine("{");
-                    deser.AppendLine($"this.{pp.Name} = {ppReading};");
+                    deser.AppendLine($"{pno}.{pp.Name} = {ppReading};");
                     deser.AppendLine("return;");
                     deser.AppendLine("}");
 
                     var pNamePm = $"\"@p{pName.TrimStart('"')}";
-                    sqser.AppendLine($"if (this.{pp.Name} != default)");
+                    sqser.AppendLine($"if ({pNamePre}{pno}.{pp.Name} != default)");
                     sqser.AppendLine("{");
-                    sqser.AppendLine($"w.Parameters.AddWithValue({pNamePm}, {SqliteSource.GetWrite(pp)});");
+                    sqser.AppendLine($"w.Parameters.AddWithValue({pNamePm}, {SqliteSource.GetWrite(pp, pno)});");
                     sqser.AppendLine("}");
                 }
 
