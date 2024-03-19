@@ -103,19 +103,26 @@ namespace Cscg.AdoNet
 
         public static string GetWrite(Particle pp)
         {
-            var type = pp.ReturnType;
-            var res = $"this.{pp.Name}";
+            return GetWrite(pp.ReturnType, pp.Name);
+        }
+
+        public static string GetWrite(ITypeSymbol type, string name)
+        {
+            var res = $"this.{name}";
             if (type.IsEnum(out var eut))
             {
                 return $"({eut}) {res}";
+            }
+            if (type.IsNull(out var nut))
+            {
+                return $"{GetWrite(nut, name)}.Value";
             }
             return res;
         }
 
         public static string GetRead(Particle pp)
         {
-            var type = pp.ReturnType;
-            return GetRead(type);
+            return GetRead(pp.ReturnType);
         }
 
         public static string GetRead(ITypeSymbol type)
@@ -153,6 +160,10 @@ namespace Cscg.AdoNet
             if (type.IsEnum(out var eut))
             {
                 return $"({text}) {GetRead(eut)}";
+            }
+            if (type.IsNull(out var nut))
+            {
+                return GetRead(nut);
             }
             return res;
         }

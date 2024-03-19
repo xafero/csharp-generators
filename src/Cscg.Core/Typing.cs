@@ -36,6 +36,18 @@ namespace Cscg.Core
             return false;
         }
 
+        public static bool IsNull(this ITypeSymbol type, out INamedTypeSymbol underlying)
+        {
+            if (Is(type, TypeKind.Struct) && type.Name == "Nullable" &&
+                type is INamedTypeSymbol { TypeArguments.Length: 1 } nts)
+            {
+                underlying = (INamedTypeSymbol)nts.TypeArguments[0];
+                return true;
+            }
+            underlying = null;
+            return false;
+        }
+
         public static bool IsEnum(this ITypeSymbol type, out INamedTypeSymbol underlying)
         {
             if (Is(type, TypeKind.Enum))
