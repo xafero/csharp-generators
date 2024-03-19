@@ -109,14 +109,14 @@ namespace Cscg.AdoNet
 
                     deser.AppendLine($"if (key == {pName})");
                     deser.AppendLine("{");
-                    deser.AppendLine($"this.{pp.Name} = {SqliteSource.GetRead(pp.ReturnType)};");
+                    deser.AppendLine($"this.{pp.Name} = {SqliteSource.GetRead(pp)};");
                     deser.AppendLine("return;");
                     deser.AppendLine("}");
 
                     var pNamePm = $"\"@p{pName.TrimStart('"')}";
                     sqser.AppendLine($"if (this.{pp.Name} != default)");
                     sqser.AppendLine("{");
-                    sqser.AppendLine($"w.Parameters.AddWithValue({pNamePm}, this.{pp.Name});");
+                    sqser.AppendLine($"w.Parameters.AddWithValue({pNamePm}, {SqliteSource.GetWrite(pp)});");
                     sqser.AppendLine("}");
                 }
 

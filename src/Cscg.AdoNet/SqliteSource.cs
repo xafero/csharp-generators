@@ -65,6 +65,11 @@ namespace Cscg.AdoNet
                     res = $"!?{text}?!";
                     break;
             }
+            if (type.IsEnum(out var eut))
+            {
+                var inner = GetType(eut, tblKey);
+                return (inner.t, inner.c);
+            }
             cond = $"{(canNull ? "NULL" : "NOT NULL")} {cond}";
             return (res, cond.Trim());
         }
@@ -94,6 +99,23 @@ namespace Cscg.AdoNet
                        $"PRIMARY KEY ({props})";
             cstr = "@\"    " + cstr + ",\",";
             return cstr;
+        }
+
+        public static string GetWrite(Particle pp)
+        {
+            var type = pp.ReturnType;
+            var res = $"this.{pp.Name}";
+            if (type.IsEnum(out var eut))
+            {
+                return $"({eut}) {res}";
+            }
+            return res;
+        }
+
+        public static string GetRead(Particle pp)
+        {
+            var type = pp.ReturnType;
+            return GetRead(type);
         }
 
         public static string GetRead(ITypeSymbol type)
@@ -127,6 +149,10 @@ namespace Cscg.AdoNet
                 case "System.DateOnly": res = "r.GetFieldValue<DateOnly>(i)"; break;
                 // Nothing fits...
                 default: res = $"TODO({text})"; break;
+            }
+            if (type.IsEnum(out var eut))
+            {
+                return $"({text}) {GetRead(eut)}";
             }
             return res;
         }
