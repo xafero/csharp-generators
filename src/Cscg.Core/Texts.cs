@@ -13,5 +13,10 @@
         {
             return text.Substring(0, 1).ToUpper() + text.Substring(1);
         }
+
+        public static string ToSnake(this string text)
+        {
+            return text.Substring(0, 1).ToLower() + text.Substring(1);
+        }
     }
 }
