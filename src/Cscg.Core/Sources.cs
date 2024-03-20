@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -66,6 +67,16 @@ namespace Cscg.Core
                 return true;
             }
             return false;
+        }
+
+        public static IEnumerable<(string t, string n)> GetFields(this FieldDeclarationSyntax field)
+        {
+            foreach (var fv in field.Declaration.Variables)
+            {
+                var fType = field.Declaration.Type.ToString();
+                var fName = fv.Identifier.ToString();
+                yield return (fType, fName);
+            }
         }
     }
 }

@@ -52,12 +52,24 @@ namespace Cscg.AdoNet
             var objects = cds.Members.OfType<FieldDeclarationSyntax>().Select(p =>
             {
                 if (p.Declaration.Type.GetGeneric(out var fh, out var fa) && fh == "DbSet")
-                    return new { o = fa[0] };
+                    return new { o = fa[0], n = p.GetFields().Single() };
                 return null;
             }).Where(x => x != null).ToArray();
 
-            var creators = $"   {string.Join(", ", objects.Select(p => $"{p.o}.CreateTable()"))
-                .Replace(", ", $",{Texts.NewLine}               ")}";
+            var dbSets = new List<string>();
+            var creators = new List<string>();
+            foreach (var p in objects)
+            {
+                creators.Add($"    {p.o}.CreateTable(),");
+                var dbSetName = $"{p.o}DbSet";
+                var dbSetProp = p.n.n.Trim('_').ToTitle();
+                dbSets.Add("");
+                dbSets.Add($"public {dbSetName} {dbSetProp}");
+                dbSets.Add("{");
+                dbSets.Add($"get => {p.n.n} as {dbSetName} ?? ({dbSetName})({p.n.n} = new {dbSetName}());");
+                dbSets.Add("}");
+            }
+            creators.ModifyLast(f => f.TrimEnd(','));
 
             var body = new List<string>
             {
@@ -86,11 +98,11 @@ namespace Cscg.AdoNet
                 "",
                 $"protected override void CreateTables({connType} conn)",
                 "{",
-                "_ = conn.RunTransaction([",
-                creators,
-                "]);",
-                "}"
+                "_ = conn.RunTransaction(["
             };
+            body.AddRange(creators);
+            body.AddRange(["]);", "}"]);
+            body.AddRange(dbSets);
 
             code.AppendLines(body, trim: false);
             code.AppendLine("}");

@@ -45,10 +45,7 @@ namespace Cscg.Core
 
         public void ModifyLast(Func<string, string> func)
         {
-            var idx = Lines.Count - 1;
-            var oldLine = Lines[idx];
-            var newLine = func(oldLine);
-            Lines[idx] = newLine;
+            Lines.ModifyLast(func);
         }
     }
 }
