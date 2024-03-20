@@ -17,6 +17,8 @@ namespace SourceGenerated.Sql
         private DbSet<HousePerson> _housePersons;
         private DbSet<Profile> _profiles;
         private DbSet<User> _users;
+
+        public AdContext(string file) => DataSource = file;
     }
 }
 
@@ -27,7 +29,7 @@ namespace SourceGenerated
         public static void MainAd()
         {
             var sqlFile = IoTool.DeleteIfExists("example.db");
-            using var ctx = new AdContext();
+            using var ctx = new AdContext(sqlFile);
 
             var person = new Person { Name = "Willy Scott" };
             Console.WriteLine(person.Id);

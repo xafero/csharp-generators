@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Linq;
 using Cscg.AdoNet.Lib;
 using Microsoft.Data.Sqlite;
 using SourceGenerated.Sql;
@@ -31,71 +32,71 @@ namespace Cscg.Tests
             {
                 var blogId = default(int);
                 DoDatabase(sc, () => new Blog { Rating = 4, Url = "www.tom.tk" },
-                    (x, conn) => x.MyBlogId = blogId = x.Insert(conn),
+                    (x, conn) => x.MyBlogId = blogId = conn.Blogs.Insert(x),
                     (x, conn) =>
                     {
                         x.Url = "www.harry.po";
-                        return x.Update(conn);
+                        return conn.Blogs.Update(x);
                     },
-                    (conn, id) => Blog.Find(conn, (int)id),
-                    conn => Blog.List(conn, 10, 0).Single(),
-                    (conn, y) => Blog.FindSame(conn, x => x.Url = y.Url).Single(),
+                    (conn, id) => conn.Blogs.Find((int)id),
+                    conn => conn.Blogs.List().Single(),
+                    (conn, y) => conn.Blogs.FindSame(x => x.Url = y.Url).Single(),
                     (_, _) => true
                 );
                 DoDatabase(sc, () => new Post { Title = "Super Tom", Content = "Nothing.", BlogId = blogId },
-                    (x, conn) => x.PostId = x.Insert(conn),
+                    (x, conn) => x.PostId = conn.Posts.Insert(x),
                     (x, conn) =>
                     {
                         x.Title = "Harry Wonder";
-                        return x.Update(conn);
+                        return conn.Posts.Update(x);
                     },
-                    (conn, id) => Post.Find(conn, (int)id),
-                    conn => Post.List(conn, 10, 0).Single(),
-                    (conn, y) => Post.FindSame(conn, x => x.Title = y.Title).Single(),
-                    (conn, y) => y.Delete(conn)
+                    (conn, id) => conn.Posts.Find((int)id),
+                    conn => conn.Posts.List().Single(),
+                    (conn, y) => conn.Posts.FindSame(x => x.Title = y.Title).Single(),
+                    (conn, y) => conn.Posts.Delete(y)
                 );
-                Blog.Find(sc, blogId).Delete(sc);
+                sc.Blogs.Delete(sc.Blogs.Find(blogId));
                 return;
             }
             if (cla == "p")
             {
                 var personId = default(int);
                 DoDatabase(sc, () => new Person { Name = "Tom" },
-                    (x, conn) => x.Id = personId = x.Insert(conn),
+                    (x, conn) => x.Id = personId = conn.Persons.Insert(x),
                     (x, conn) =>
                     {
                         x.Name = "Harry Potter";
-                        return x.Update(conn);
+                        return conn.Persons.Update(x);
                     },
-                    (conn, id) => Person.Find(conn, (int)id),
-                    conn => Person.List(conn, 10, 0).Single(),
-                    (conn, y) => Person.FindSame(conn, x => x.Name = y.Name).Single(),
+                    (conn, id) => conn.Persons.Find((int)id),
+                    conn => conn.Persons.List().Single(),
+                    (conn, y) => conn.Persons.FindSame(x => x.Name = y.Name).Single(),
                     (_, _) => true
                 );
                 var houseId = default(int);
                 DoDatabase(sc, () => new House { Street = "Main Street 129" },
-                    (x, conn) => x.MyId = houseId = x.Insert(conn),
+                    (x, conn) => x.MyId = houseId = conn.Houses.Insert(x),
                     (x, conn) =>
                     {
                         x.Street = "Scotsman Way 4";
-                        return x.Update(conn);
+                        return conn.Houses.Update(x);
                     },
-                    (conn, id) => House.Find(conn, (int)id),
-                    conn => House.List(conn, 10, 0).Single(),
-                    (conn, y) => House.FindSame(conn, x => x.Street = y.Street).Single(),
+                    (conn, id) => conn.Houses.Find((int)id),
+                    conn => conn.Houses.List().Single(),
+                    (conn, y) => conn.Houses.FindSame(x => x.Street = y.Street).Single(),
                     (_, _) => true
                 );
                 var hp = default(HousePerson);
                 DoDatabase(sc, () => hp = new HousePerson { HousesMyId = houseId, OwnersId = personId },
-                    (x, conn) => x.Insert(conn) ? 1 : 0,
+                    (x, conn) => conn.HousePersons.Insert(x) ? 1 : 0,
                     (_, _) => true,
                     (_, _) => hp,
                     _ => hp,
-                    (conn, y) => HousePerson.FindSame(conn, x => x.OwnersId = y.OwnersId).Single(),
-                    (conn, y) => y.Delete(conn)
+                    (conn, y) => conn.HousePersons.FindSame(x => x.OwnersId = y.OwnersId).Single(),
+                    (conn, y) => conn.HousePersons.Delete(y)
                 );
-                Person.Find(sc, personId).Delete(sc);
-                House.Find(sc, houseId).Delete(sc);
+                sc.Persons.Delete(sc.Persons.Find(personId));
+                sc.Houses.Delete(sc.Houses.Find(houseId));
                 return;
             }
             if (cla == "u")
@@ -105,31 +106,31 @@ namespace Cscg.Tests
                     {
                         Bio = "Some text.", Birthdate = new DateTime(1987, 2, 9), Image = [9, 3, 2]
                     },
-                    (x, conn) => x.ProfileId = profId = x.Insert(conn),
+                    (x, conn) => x.ProfileId = profId = conn.Profiles.Insert(x),
                     (x, conn) =>
                     {
                         x.Bio = "Harry's text.";
-                        return x.Update(conn);
+                        return conn.Profiles.Update(x);
                     },
-                    (conn, id) => Profile.Find(conn, (long)id),
-                    conn => Profile.List(conn, 10, 0).Single(),
-                    (conn, y) => Profile.FindSame(conn, x => x.Bio = y.Bio).Single(),
+                    (conn, id) => conn.Profiles.Find((long)id),
+                    conn => conn.Profiles.List().Single(),
+                    (conn, y) => conn.Profiles.FindSame(x => x.Bio = y.Bio).Single(),
                     (_, _) => true
                 );
                 DoDatabase(sc,
                     () => new User { Email = "tom@mail.com", UserName = "Tom", UserId = "1", ProfileId = profId },
-                    (x, conn) => x.UserId = x.Insert(conn),
+                    (x, conn) => x.UserId = conn.Users.Insert(x),
                     (x, conn) =>
                     {
                         x.UserName = "Harry";
-                        return x.Update(conn);
+                        return conn.Users.Update(x);
                     },
-                    (conn, id) => User.Find(conn, (string)id),
-                    conn => User.List(conn, 10, 0).Single(),
-                    (conn, y) => User.FindSame(conn, x => x.UserName = y.UserName).Single(),
-                    (conn, y) => y.Delete(conn)
+                    (conn, id) => conn.Users.Find((string)id),
+                    conn => conn.Users.List().Single(),
+                    (conn, y) => conn.Users.FindSame(x => x.UserName = y.UserName).Single(),
+                    (conn, y) => conn.Users.Delete(y)
                 );
-                Profile.Find(sc, profId).Delete(sc);
+                sc.Profiles.Delete(sc.Profiles.Find(profId));
                 return;
             }
             if (cla == "f")
@@ -142,31 +143,31 @@ namespace Cscg.Tests
                         L = 292, N = -13, M = 39383, O = 99.99223f, U = 39399, S = 2911,
                         Q = TimeOnly.FromDateTime(DateTime.UtcNow), R = TimeSpan.FromMinutes(29)
                     },
-                    (x, conn) => x.Id = x.Insert(conn),
+                    (x, conn) => x.Id = conn.Funnies.Insert(x),
                     (x, conn) =>
                     {
                         x.P = "Harry";
-                        return x.Update(conn);
+                        return conn.Funnies.Update(x);
                     },
-                    (conn, id) => Funny.Find(conn, (int)id),
-                    conn => Funny.List(conn, 10, 0).Single(),
-                    (conn, y) => Funny.FindSame(conn, x => x.P = y.P).Single(),
-                    (conn, y) => y.Delete(conn)
+                    (conn, id) => conn.Funnies.Find((int)id),
+                    conn => conn.Funnies.List().Single(),
+                    (conn, y) => conn.Funnies.FindSame(x => x.P = y.P).Single(),
+                    (conn, y) => conn.Funnies.Delete(y)
                 );
             }
         }
 
-        private static SqliteConnection CreateConn(string cla, string mode)
+        private static AdContext CreateConn(string cla, string mode)
         {
             var fileName = IoTool.DeleteIfExists($"blog_{cla}_{mode}.db");
-            var conn = CreateConnection(fileName);
+            var conn = new AdContext(fileName);
             return conn;
         }
 
-        private void DoDatabase<T>(SqliteConnection conn, Func<T> create,
-            Func<T, SqliteConnection, object> getId, Func<T, SqliteConnection, bool> getUpdate,
-            Func<SqliteConnection, object, T> find, Func<SqliteConnection, T> list,
-            Func<SqliteConnection, T, T> same, Func<SqliteConnection, T, bool> delete)
+        private void DoDatabase<T>(AdContext conn, Func<T> create,
+            Func<T, AdContext, object> getId, Func<T, AdContext, bool> getUpdate,
+            Func<AdContext, object, T> find, Func<AdContext, T> list,
+            Func<AdContext, T, T> same, Func<AdContext, T, bool> delete)
             where T : IAD
         {
             var input = create();
