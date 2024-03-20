@@ -207,7 +207,7 @@ namespace Cscg.Tests
                 House.CreateTable(), HousePerson.CreateTable(), Funny.CreateTable(),
                 User.CreateTable(), Profile.CreateTable(),
                 Blog.CreateTable(), Post.CreateTable());
-            // TODO ? Assert.Equal(816, sql.Length);
+            Assert.Equal(816, sql.Length);
             Assert.Equal(0, rows);
 
             return conn;
