@@ -212,8 +212,9 @@ namespace Cscg.AdoNet
             sel.AppendLine();
 
             var sam = new CodeWriter();
-            sam.AppendLine($"public static {name}[] FindSame({connType} conn, params Action<{name}>[] func)");
+            sam.AppendLine($"public {name}[] FindSame(params Action<{name}>[] func)");
             sam.AppendLine("{");
+            sam.AppendLine($"var conn = ({connType})Context.GetDbConn();");
             sam.AppendLine("using var cmd = conn.CreateCommand();");
             sam.AppendLine($"var sample = new {name}();");
             sam.AppendLine("Array.ForEach(func, f => f(sample));");

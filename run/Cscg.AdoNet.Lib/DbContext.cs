@@ -10,6 +10,8 @@ namespace Cscg.AdoNet.Lib
 
         protected abstract string GetConnStr();
 
+        public abstract DbConnection GetDbConn();
+
         protected abstract void DisposeOld();
 
         public void Dispose()
@@ -35,6 +37,8 @@ namespace Cscg.AdoNet.Lib
         protected abstract bool IsDatabaseEmpty(TConn conn);
 
         protected abstract void CreateTables(TConn conn);
+
+        public override DbConnection GetDbConn() => GetOpenConn();
 
         public virtual TConn GetOpenConn()
         {
