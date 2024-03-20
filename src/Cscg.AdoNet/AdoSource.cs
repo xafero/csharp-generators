@@ -66,7 +66,7 @@ namespace Cscg.AdoNet
                 dbSets.Add("");
                 dbSets.Add($"public {dbSetName} {dbSetProp}");
                 dbSets.Add("{");
-                dbSets.Add($"get => {p.n.n} as {dbSetName} ?? ({dbSetName})({p.n.n} = new {dbSetName}());");
+                dbSets.Add($"get => {p.n.n} as {dbSetName} ?? ({dbSetName})({p.n.n} = new {dbSetName}(this));");
                 dbSets.Add("}");
             }
             creators.ModifyLast(f => f.TrimEnd(','));
@@ -109,15 +109,16 @@ namespace Cscg.AdoNet
             code.AppendLine("}");
         }
 
-        internal static List<string> NewSet(string name)
+        internal static List<string> NewSet(string name, string connType)
         {
             var code = new List<string>();
             var setName = $"{name}DbSet";
             code.Add($"public partial class {setName} : DbSet<{name}>");
             code.Add("{");
-
-            // TODO
-
+            code.Add($"public {setName}(DbContext<{connType}> ctx)");
+            code.Add("{");
+            code.Add("Context = ctx;");
+            code.Add("}");
             code.Add("}");
             return code;
         }

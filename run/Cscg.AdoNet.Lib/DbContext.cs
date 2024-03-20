@@ -4,11 +4,24 @@ using System.Data.Common;
 
 namespace Cscg.AdoNet.Lib
 {
-    public abstract class DbContext<TConn> : IDisposable
-        where TConn : DbConnection, new()
+    public abstract class DbContext : IDisposable
     {
         protected string DataSource { get; set; }
 
+        protected abstract string GetConnStr();
+
+        protected abstract void DisposeOld();
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+            DisposeOld();
+        }
+    }
+
+    public abstract class DbContext<TConn> : DbContext
+        where TConn : DbConnection, new()
+    {
         private Lazy<TConn>? _conn;
 
         public virtual TConn CreateConn()
@@ -18,8 +31,6 @@ namespace Cscg.AdoNet.Lib
                 CreateTables(conn);
             return conn;
         }
-
-        protected abstract string GetConnStr();
 
         protected abstract bool IsDatabaseEmpty(TConn conn);
 
@@ -35,17 +46,11 @@ namespace Cscg.AdoNet.Lib
             return _conn.Value;
         }
 
-        private void DisposeOld()
+        protected override void DisposeOld()
         {
             if (_conn is not { IsValueCreated: true })
                 return;
             _conn.Value.Dispose();
-        }
-
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-            DisposeOld();
         }
     }
 }

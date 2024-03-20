@@ -319,7 +319,7 @@ namespace Cscg.AdoNet
             code.AppendLines(body);
             code.AppendLine("}");
             code.AppendLine();
-            code.AppendLines(NewSet(name));
+            code.AppendLines(NewSet(name, connType));
             code.AppendLine("}");
         }
     }
