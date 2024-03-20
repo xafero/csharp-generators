@@ -6,12 +6,14 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Cscg.AdoNet.AdoSource;
 using static Cscg.Core.CodeTool;
+using F = Cscg.AdoNet.AdoSource;
 
 namespace Cscg.AdoNet
 {
     [Generator(LanguageNames.CSharp)]
     public sealed class AdoGenerator : IIncrementalGenerator
     {
+        private static readonly string ContextAn = GetAttributeName(ContextAttrName);
         private static readonly string TableAn = GetAttributeName(TableAttrName);
         private static readonly string MappingAn = GetAttributeName(MappingAttrName);
         private static readonly string ColAn = GetAttributeName(ColAttrName);
@@ -27,6 +29,9 @@ namespace Cscg.AdoNet
 
             var mapAf = GetFullName(LibSpace, MappingAn);
             igi.RegisterSourceOutput(sp.ForAttributeWithMetadataName(mapAf, Check, Wrap), Exec);
+
+            var ctxAf = GetFullName(LibSpace, ContextAn);
+            igi.RegisterSourceOutput(sp.ForAttributeWithMetadataName(ctxAf, Check, Wrap), F.Exec);
         }
 
         private static bool Check(SyntaxNode node, CancellationToken _)
