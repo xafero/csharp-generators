@@ -99,5 +99,18 @@ namespace Cscg.AdoNet
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
         }
+
+        internal static List<string> NewSet(string name)
+        {
+            var code = new List<string>();
+            var setName = $"{name}DbSet";
+            code.Add($"public partial class {setName} : DbSet<{name}>");
+            code.Add("{");
+
+            // TODO
+
+            code.Add("}");
+            return code;
+        }
     }
 }

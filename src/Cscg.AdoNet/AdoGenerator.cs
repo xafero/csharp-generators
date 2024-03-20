@@ -319,6 +319,8 @@ namespace Cscg.AdoNet
 
             code.AppendLines(body);
             code.AppendLine("}");
+            code.AppendLine();
+            code.AppendLines(NewSet(name));
             code.AppendLine("}");
             ctx.AddSource(fileName, code.ToString());
         }
