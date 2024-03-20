@@ -49,17 +49,14 @@ namespace Cscg.AdoNet
             code.WriteClassLine(name, interfaces: adiTypes.ToArray());
             code.AppendLine("{");
 
-            var props = cds.Members.OfType<FieldDeclarationSyntax>().Select(p =>
+            var objects = cds.Members.OfType<FieldDeclarationSyntax>().Select(p =>
             {
                 if (p.Declaration.Type.GetGeneric(out var fh, out var fa) && fh == "DbSet")
-                {
-                    var sp = fa[0];
-                    return new { sp };
-                }
+                    return new { o = fa[0] };
                 return null;
             }).Where(x => x != null).ToArray();
 
-            var creators = $"   {string.Join(", ", props.Select(p => $"{p.sp}.CreateTable()"))
+            var creators = $"   {string.Join(", ", objects.Select(p => $"{p.o}.CreateTable()"))
                 .Replace(", ", $",{Texts.NewLine}               ")}";
 
             var body = new List<string>
