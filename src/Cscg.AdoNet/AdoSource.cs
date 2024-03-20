@@ -109,7 +109,7 @@ namespace Cscg.AdoNet
             code.AppendLine("}");
         }
 
-        internal static List<string> NewSet(string name, string connType)
+        internal static List<string> NewSet(string name, string connType, CodeWriter sam)
         {
             var code = new List<string>();
             var setName = $"{name}DbSet";
@@ -119,6 +119,8 @@ namespace Cscg.AdoNet
             code.Add("{");
             code.Add("Context = ctx;");
             code.Add("}");
+            code.Add("");
+            code.AddRange(sam.Lines);
             code.Add("}");
             return code;
         }

@@ -211,16 +211,17 @@ namespace Cscg.AdoNet
             sel.AppendLine("}");
             sel.AppendLine();
 
-            sel.AppendLine($"public static {name}[] FindSame({connType} conn, params Action<{name}>[] func)");
-            sel.AppendLine("{");
-            sel.AppendLine("using var cmd = conn.CreateCommand();");
-            sel.AppendLine($"var sample = new {name}();");
-            sel.AppendLine("Array.ForEach(func, f => f(sample));");
-            sel.AppendLine("sample.WriteSql(cmd);");
-            sel.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateSelect({table});");
-            sel.AppendLine("using var reader = cmd.ExecuteReader();");
-            sel.AppendLine($"return reader.ReadData<{name}, {readType}>().ToArray();");
-            sel.AppendLine("}");
+            var sam = new CodeWriter();
+            sam.AppendLine($"public static {name}[] FindSame({connType} conn, params Action<{name}>[] func)");
+            sam.AppendLine("{");
+            sam.AppendLine("using var cmd = conn.CreateCommand();");
+            sam.AppendLine($"var sample = new {name}();");
+            sam.AppendLine("Array.ForEach(func, f => f(sample));");
+            sam.AppendLine("sample.WriteSql(cmd);");
+            sam.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateSelect({table});");
+            sam.AppendLine("using var reader = cmd.ExecuteReader();");
+            sam.AppendLine($"return reader.ReadData<{name}, {readType}>().ToArray();");
+            sam.AppendLine("}");
 
             var del = new CodeWriter();
             var upd = new CodeWriter();
@@ -319,7 +320,7 @@ namespace Cscg.AdoNet
             code.AppendLines(body);
             code.AppendLine("}");
             code.AppendLine();
-            code.AppendLines(NewSet(name, connType));
+            code.AppendLines(NewSet(name, connType, sam));
             code.AppendLine("}");
         }
     }
