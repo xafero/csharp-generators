@@ -209,7 +209,6 @@ namespace Cscg.AdoNet
             sel.AppendLine("{");
             sel.AppendLines(sqser);
             sel.AppendLine("}");
-            sel.AppendLine();
 
             var sam = new CodeWriter();
             sam.AppendLine($"public {name}[] FindSame(params Action<{name}>[] func)");
@@ -249,45 +248,45 @@ namespace Cscg.AdoNet
                 fin.AppendLine($"return reader.ReadData<{name}, {readType}>().FirstOrDefault();");
                 fin.AppendLine("}");
 
-                ins.AppendLine($"public {lastPkT} Insert({connType} conn)");
+                ins.AppendLine($"public {lastPkT} Insert({name} entity)");
                 ins.AppendLine("{");
-                ins.AppendLine("using var cmd = conn.CreateCommand();");
-                ins.AppendLine("this.WriteSql(cmd);");
+                ins.AppendLine("using var cmd = Conn.CreateCommand();");
+                ins.AppendLine("entity.WriteSql(cmd);");
                 ins.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateInsert({table}, ""{lastPk}"");");
                 ins.AppendLine($"return cmd.ExecuteScalar().ConvertTo<{lastPkT}>();");
                 ins.AppendLine("}");
-
-                upd.AppendLine($"public bool Update({connType} conn)");
+                
+                upd.AppendLine($"public bool Update({name} entity)");
                 upd.AppendLine("{");
-                upd.AppendLine("using var cmd = conn.CreateCommand();");
-                upd.AppendLine("this.WriteSql(cmd);");
+                upd.AppendLine("using var cmd = Conn.CreateCommand();");
+                upd.AppendLine("entity.WriteSql(cmd);");
                 upd.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateUpdate({table}, ""{lastPk}"");");
                 upd.AppendLine("return cmd.ExecuteNonQuery() == 1;");
                 upd.AppendLine("}");
 
-                del.AppendLine($"public bool Delete({connType} conn)");
+                del.AppendLine($"public bool Delete({name} entity)");
                 del.AppendLine("{");
-                del.AppendLine("using var cmd = conn.CreateCommand();");
+                del.AppendLine("using var cmd = Conn.CreateCommand();");
                 del.AppendLine($@"cmd.CommandText = @""DELETE FROM ""{table}"" WHERE {lastPk} = @p0;"";");
-                del.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", this.{lastPk});");
+                del.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", entity.{lastPk});");
                 del.AppendLine("return cmd.ExecuteNonQuery() == 1;");
                 del.AppendLine("}");
             }
 
             if (isMap && mapPk.Count >= 1)
             {
-                ins.AppendLine($"public bool Insert({connType} conn)");
+                ins.AppendLine($"public bool Insert({name} entity)");
                 ins.AppendLine("{");
-                ins.AppendLine("using var cmd = conn.CreateCommand();");
-                ins.AppendLine("this.WriteSql(cmd);");
+                ins.AppendLine("using var cmd = Conn.CreateCommand();");
+                ins.AppendLine("entity.WriteSql(cmd);");
                 ins.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateInsert({table});");
                 ins.AppendLine($"return cmd.ExecuteNonQuery() == 1;");
                 ins.AppendLine("}");
 
-                del.AppendLine($"public bool Delete({connType} conn)");
+                del.AppendLine($"public bool Delete({name} entity)");
                 del.AppendLine("{");
-                del.AppendLine("using var cmd = conn.CreateCommand();");
-                del.AppendLine("this.WriteSql(cmd);");
+                del.AppendLine("using var cmd = Conn.CreateCommand();");
+                del.AppendLine("entity.WriteSql(cmd);");
                 del.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateDelete({table});");
                 del.AppendLine("return cmd.ExecuteNonQuery() == 1;");
                 del.AppendLine("}");
@@ -297,20 +296,11 @@ namespace Cscg.AdoNet
             body.AppendLines(crea);
             body.AppendLine();
             body.AppendLines(sel);
-            body.AppendLine();
-            body.AppendLines(ins);
-            body.AppendLine();
-            if (upd.Lines.Count >= 1)
-            {
-                body.AppendLines(upd);
-                body.AppendLine();
-            }
-            body.AppendLines(del);
 
             code.AppendLines(body);
             code.AppendLine("}");
             code.AppendLine();
-            code.AppendLines(NewSet(name, connType, sam, fin, lst));
+            code.AppendLines(NewSet(name, connType, sam, fin, lst, upd, ins, del));
             code.AppendLine("}");
         }
     }

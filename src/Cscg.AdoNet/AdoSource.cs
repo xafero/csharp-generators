@@ -110,7 +110,7 @@ namespace Cscg.AdoNet
         }
 
         internal static List<string> NewSet(string name, string connType, CodeWriter sam, CodeWriter fin,
-            CodeWriter lst)
+            CodeWriter lst, CodeWriter upd, CodeWriter ins, CodeWriter del)
         {
             var code = new List<string>();
             var setName = $"{name}DbSet";
@@ -133,6 +133,21 @@ namespace Cscg.AdoNet
             {
                 code.Add("");
                 code.AddRange(fin.Lines);
+            }
+            if (ins.Lines.Count >= 1)
+            {
+                code.Add("");
+                code.AddRange(ins.Lines);
+            }
+            if (upd.Lines.Count >= 1)
+            {
+                code.Add("");
+                code.AddRange(upd.Lines);
+            }
+            if (del.Lines.Count >= 1)
+            {
+                code.Add("");
+                code.AddRange(del.Lines);
             }
             code.Add("}");
             return code;
