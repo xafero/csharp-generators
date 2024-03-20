@@ -214,8 +214,7 @@ namespace Cscg.AdoNet
             var sam = new CodeWriter();
             sam.AppendLine($"public {name}[] FindSame(params Action<{name}>[] func)");
             sam.AppendLine("{");
-            sam.AppendLine($"var conn = ({connType})Context.GetDbConn();");
-            sam.AppendLine("using var cmd = conn.CreateCommand();");
+            sam.AppendLine("using var cmd = Conn.CreateCommand();");
             sam.AppendLine($"var sample = new {name}();");
             sam.AppendLine("Array.ForEach(func, f => f(sample));");
             sam.AppendLine("sample.WriteSql(cmd);");
@@ -231,9 +230,9 @@ namespace Cscg.AdoNet
             var lst = new CodeWriter();
             if (!string.IsNullOrWhiteSpace(lastPk))
             {
-                lst.AppendLine($"public static {name}[] List({connType} conn, int limit, int offset)");
+                lst.AppendLine($"public {name}[] List(int limit = 100, int offset = 0)");
                 lst.AppendLine("{");
-                lst.AppendLine("using var cmd = conn.CreateCommand();");
+                lst.AppendLine("using var cmd = Conn.CreateCommand();");
                 lst.AppendLine($@"cmd.CommandText = @""SELECT * FROM ""{table}"" ORDER BY {lastPk} LIMIT @p0 OFFSET @p1;"";");
                 lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", limit);");
                 lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p1"", offset);");
@@ -241,9 +240,9 @@ namespace Cscg.AdoNet
                 lst.AppendLine($"return reader.ReadData<{name}, {readType}>().ToArray();");
                 lst.AppendLine("}");
 
-                fin.AppendLine($"public static {name} Find({connType} conn, {lastPkT} id)");
+                fin.AppendLine($"public {name} Find({lastPkT} id)");
                 fin.AppendLine("{");
-                fin.AppendLine("using var cmd = conn.CreateCommand();");
+                fin.AppendLine("using var cmd = Conn.CreateCommand();");
                 fin.AppendLine($@"cmd.CommandText = @""SELECT * FROM ""{table}"" WHERE {lastPk} = @p0;"";");
                 fin.AppendLine(@"cmd.Parameters.AddWithValue(""@p0"", id);");
                 fin.AppendLine("using var reader = cmd.ExecuteReader();");
@@ -299,16 +298,6 @@ namespace Cscg.AdoNet
             body.AppendLine();
             body.AppendLines(sel);
             body.AppendLine();
-            if (lst.Lines.Count >= 1)
-            {
-                body.AppendLines(lst);
-                body.AppendLine();
-            }
-            if (fin.Lines.Count >= 1)
-            {
-                body.AppendLines(fin);
-                body.AppendLine();
-            }
             body.AppendLines(ins);
             body.AppendLine();
             if (upd.Lines.Count >= 1)
@@ -321,7 +310,7 @@ namespace Cscg.AdoNet
             code.AppendLines(body);
             code.AppendLine("}");
             code.AppendLine();
-            code.AppendLines(NewSet(name, connType, sam));
+            code.AppendLines(NewSet(name, connType, sam, fin, lst));
             code.AppendLine("}");
         }
     }
