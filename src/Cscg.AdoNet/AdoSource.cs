@@ -10,6 +10,8 @@
         internal const string KeyAttrName = "Key";
         internal const string ForeignAttrName = "Foreign";
 
+        internal const string DiscriminatorFld = "Discriminator";
+
         public static string BuildPlural(string name)
         {
             if (name.EndsWith("y"))

@@ -4,6 +4,8 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 
+// ReSharper disable SuspiciousTypeConversion.Global
+
 namespace Cscg.AdoNet.Lib
 {
     public static class AdoTool
@@ -62,6 +64,8 @@ namespace Cscg.AdoNet.Lib
                     var key = reader.GetName(index);
                     item.ReadSql(reader, key, index);
                 }
+                if (item is IActiveNested<TData> an)
+                    item = an.Inner;
                 yield return item;
             }
         }

@@ -48,11 +48,18 @@ namespace Cscg.AdoNet
             code.AppendLine($"namespace {space}");
             code.AppendLine("{");
 
+            var members = new List<MemberDeclarationSyntax>(cds.Members);
+            var innerClasses = new List<string>();
+            var innerMembers = members.OfType<ClassDeclarationSyntax>().ToArray();
+            var isTree = innerMembers.Length >= 1;
+
             const string connType = "SqliteConnection";
             const string writType = "SqliteCommand";
             const string readType = "SqliteDataReader";
             var adiType = $"IActiveData<{readType}, {writType}>";
-            code.WriteClassLine(name, interfaces: [adiType]);
+            var adiTypes = new List<string> { adiType };
+            if (isTree) adiTypes.Add($"IActiveNested<{name}>");
+            code.WriteClassLine(name, interfaces: adiTypes.ToArray());
             code.AppendLine("{");
 
             var crea = new CodeWriter();
@@ -74,13 +81,14 @@ namespace Cscg.AdoNet
             var lastPk = default(string);
             var lastPkT = default(ITypeSymbol);
 
-            var members = new List<MemberDeclarationSyntax>(cds.Members);
-            var innerMembers = members.OfType<ClassDeclarationSyntax>().ToArray();
-            var isTree = innerMembers.Length >= 1;
             foreach (var innerClass in innerMembers)
+            foreach (var member in innerClass.Members)
             {
-                members.AddRange(innerClass.Members);
+                if (syntax.GetSymbol(member.Parent) is var icp && !icp.IsAbstract)
+                    innerClasses.Add(icp.Name);
+                members.Add(member);
             }
+            if (isTree) innerClasses.Add(name);
 
             foreach (var member in members)
                 if (member is PropertyDeclarationSyntax pds)
@@ -123,11 +131,12 @@ namespace Cscg.AdoNet
                     var pno = "this";
                     var pNameSuf = string.Empty;
                     var pNamePre = string.Empty;
-                    var ppReading = $"r.IsDBNull(i) ? default : {SqliteSource.GetRead(pp)}";
+                    var pDef = pp.ReturnType;
+                    var ppReading = $"r.IsDBNull(i) ? default({pDef}) : {SqliteSource.GetRead(pp)}";
                     if (isTree && syntax.GetSymbol(pds.Parent) is var tpp && tpp.Name != name)
                     {
                         pno = tpp.Name.ToSnake();
-                        var pNameTmp = $"this is {tpp.Name} {pno}";
+                        var pNameTmp = $"(Tmp ?? this) is {tpp.Name} {pno}";
                         pNameSuf = $" && {pNameTmp}";
                         pNamePre = $"{pNameTmp} && ";
                     }
@@ -135,9 +144,21 @@ namespace Cscg.AdoNet
                     deser.AppendLine($"if (key == {pName}{pNameSuf})");
                     deser.AppendLine("{");
                     deser.AppendLine($"{pno}.{pp.Name} = {ppReading};");
+                    if (isTree && pp.Name == DiscriminatorFld)
+                    {
+                        var y = string.Join(", ", innerClasses.Select(icc => $"\"{icc}\" => new {icc}()"));
+                        deser.AppendLine($"this.Tmp = {pno}.{pp.Name} switch {{ {y} }};");
+                        deser.AppendLine($"this.Tmp.{lastPk} = this.{lastPk};");
+                        deser.AppendLine($"this.Tmp.{DiscriminatorFld} = this.{DiscriminatorFld};");
+                    }
                     deser.AppendLine("return;");
                     deser.AppendLine("}");
 
+                    if (isTree && pp.Name == DiscriminatorFld)
+                    {
+                        var x = string.Join(", ", innerClasses.Select(icc => $"{icc} => \"{icc}\""));
+                        sqser.AppendLine($"{pno}.{pp.Name} = this switch {{ {x} }};");
+                    }
                     var pNamePm = $"\"@p{pName.TrimStart('"')}";
                     sqser.AppendLine($"if ({pNamePre}{pno}.{pp.Name} != default)");
                     sqser.AppendLine("{");
@@ -169,6 +190,12 @@ namespace Cscg.AdoNet
             crea.AppendLine("}");
 
             var sel = new CodeWriter();
+            if (isTree)
+            {
+                sel.AppendLine($"public {name} Inner => Tmp;");
+                sel.AppendLine($"protected {name} Tmp {{ get; private set; }}");
+                sel.AppendLine();
+            }
             sel.AppendLine($"public void ReadSql({readType} r, string key, int i)");
             sel.AppendLine("{");
             sel.AppendLines(deser);
