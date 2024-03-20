@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cscg.Core;
@@ -81,7 +82,7 @@ namespace Cscg.AdoNet
 
             var after = new List<string>();
             var inner = new List<string>();
-            var mapPk = new List<string>();
+            var mapPk = new Dictionary<string, ITypeSymbol>();
             var lastPk = default(string);
             var lastPkT = default(ITypeSymbol);
 
@@ -124,11 +125,11 @@ namespace Cscg.AdoNet
                         var (fi, fo) = SqliteSource.GetForeign(tableName, ppName, ft, fc, u, d);
                         inner.AddRange(fi);
                         if (isMap)
-                            mapPk.Add(ppName);
+                            mapPk.Add(ppName, pp.ReturnType);
                         after.AddRange(fo);
                     }
 
-                    var forceNull = mapPk.Contains(ppName) ? false : default(bool?);
+                    var forceNull = mapPk.ContainsKey(ppName) ? false : default(bool?);
                     var (pType, pCond) = SqliteSource.GetType(pp.ReturnType, pk, forceNull);
                     crea.AppendLine($"@\"    \"{pName}\" {pType} {pCond},\",");
 
@@ -172,7 +173,7 @@ namespace Cscg.AdoNet
 
             if (isMap)
             {
-                inner.Insert(0, SqliteSource.GetMapKey(tableName, mapPk));
+                inner.Insert(0, SqliteSource.GetMapKey(tableName, mapPk.Keys));
             }
 
             foreach (var item in inner)
@@ -290,6 +291,14 @@ namespace Cscg.AdoNet
                 del.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateDelete({table});");
                 del.AppendLine("return cmd.ExecuteNonQuery() == 1;");
                 del.AppendLine("}");
+
+                foreach (var oneMap in mapPk)
+                {
+                    var omp = oneMap.Key.ToSnake();
+                    var omt = oneMap.Value.ToTrimDisplay();
+                    fin.AppendLine($"public {name}[] FindBy{oneMap.Key}({omt} {omp}) => " +
+                                   $"FindSame(x => x.{oneMap.Key} = {omp});");
+                }
             }
 
             var body = new CodeWriter();
