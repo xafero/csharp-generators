@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Cscg.Core;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Cscg.AdoNet
 {
@@ -48,6 +49,18 @@ namespace Cscg.AdoNet
             code.WriteClassLine(name, interfaces: adiTypes.ToArray());
             code.AppendLine("{");
 
+            var props = cds.Members.OfType<PropertyDeclarationSyntax>().Select(p =>
+            {
+                var pps = syntax.GetSymbol(p);
+                var pp = syntax.GetInfo(pps);
+                pp.ReturnType.IsTyped(out _, out var ppArgs, out _, out _);
+                var sp = ppArgs[0];
+                return new { sp };
+            }).ToArray();
+
+            var creators = $"   {string.Join(", ", props.Select(p => $"{p.sp}.CreateTable()"))
+                .Replace(", ", $",{Texts.NewLine}               ")}";
+
             var body = new List<string>
             {
                 "private string GetDataSource()",
@@ -76,6 +89,7 @@ namespace Cscg.AdoNet
                 $"protected override void CreateTables({connType} conn)",
                 "{",
                 "_ = conn.RunTransaction([",
+                creators,
                 "]);",
                 "}"
             };
@@ -83,7 +97,6 @@ namespace Cscg.AdoNet
             code.AppendLines(body, trim: false);
             code.AppendLine("}");
             code.AppendLine("}");
-            code.AppendLine(" // " + DateTime.Now.ToString("O")); // TODO
             ctx.AddSource(fileName, code.ToString());
         }
     }
