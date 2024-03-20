@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Cscg.Core
 {
@@ -32,5 +35,24 @@ namespace Cscg.Core
             var fqn = $"{space}.{name}";
             return fqn;
         }
+
+        public static void WrapForError(this SourceProductionContext ctx, SyntaxWrap syntax, Exec action)
+        {
+            var cds = syntax.Class;
+            var name = cds.GetClassName();
+            var fileName = $"{name}.g.cs";
+            var code = new CodeWriter();
+            try
+            {
+                action(cds, name, code, syntax);
+            }
+            catch (Exception e)
+            {
+                code.AppendLine($"/* {e} */");
+            }
+            ctx.AddSource(fileName, code.ToString());
+        }
     }
+
+    public delegate void Exec(ClassDeclarationSyntax cds, string name, CodeWriter code, SyntaxWrap syntax);
 }

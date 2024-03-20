@@ -1,5 +1,7 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis;
@@ -49,6 +51,21 @@ namespace Cscg.Core
         public static string GetFqn(this ClassDeclarationSyntax clazz)
         {
             return $"{clazz.GetParentName()}.{clazz.GetClassName()}";
+        }
+
+        public static bool GetGeneric(this TypeSyntax type, out string holder, out string[] args)
+        {
+            var typeTxt = type.ToString();
+            var tmp = typeTxt.Split(['<'], 2);
+            holder = tmp[0];
+            args = null;
+            if (tmp.Length == 2)
+            {
+                args = tmp[1].Split([", "], StringSplitOptions.RemoveEmptyEntries)
+                    .Select(a => a.TrimEnd('>')).ToArray();
+                return true;
+            }
+            return false;
         }
     }
 }

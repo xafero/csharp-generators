@@ -28,13 +28,13 @@ namespace Cscg.AdoNet
         }
 
         internal static void Exec(SourceProductionContext ctx, SyntaxWrap syntax)
+            => ctx.WrapForError(syntax, Exec);
+
+        private static void Exec(ClassDeclarationSyntax cds, string name, CodeWriter code, SyntaxWrap syntax)
         {
-            var ccs = syntax.Symbol.FindArgs(simple: true);
-            var cds = syntax.Class;
+            var cdy = syntax.Symbol;
+            var ccs = cdy.FindArgs(simple: true);
             var space = cds.GetParentName() ?? Coding.AutoNamespace;
-            var name = cds.GetClassName();
-            var fileName = $"{name}.g.cs";
-            var code = new CodeWriter();
             code.AddUsings(LibSpace, "System", "System.Linq", "Microsoft.Data.Sqlite");
             code.AppendLine();
             code.AppendLine($"namespace {space}");
@@ -49,14 +49,15 @@ namespace Cscg.AdoNet
             code.WriteClassLine(name, interfaces: adiTypes.ToArray());
             code.AppendLine("{");
 
-            var props = cds.Members.OfType<PropertyDeclarationSyntax>().Select(p =>
+            var props = cds.Members.OfType<FieldDeclarationSyntax>().Select(p =>
             {
-                var pps = syntax.GetSymbol(p);
-                var pp = syntax.GetInfo(pps);
-                pp.ReturnType.IsTyped(out _, out var ppArgs, out _, out _);
-                var sp = ppArgs[0];
-                return new { sp };
-            }).ToArray();
+                if (p.Declaration.Type.GetGeneric(out var fh, out var fa) && fh == "DbSet")
+                {
+                    var sp = fa[0];
+                    return new { sp };
+                }
+                return null;
+            }).Where(x => x != null).ToArray();
 
             var creators = $"   {string.Join(", ", props.Select(p => $"{p.sp}.CreateTable()"))
                 .Replace(", ", $",{Texts.NewLine}               ")}";
@@ -97,7 +98,6 @@ namespace Cscg.AdoNet
             code.AppendLines(body, trim: false);
             code.AppendLine("}");
             code.AppendLine("}");
-            ctx.AddSource(fileName, code.ToString());
         }
 
         internal static List<string> NewSet(string name)

@@ -41,13 +41,12 @@ namespace Cscg.AdoNet
             => ctx.Wrap();
 
         private static void Exec(SourceProductionContext ctx, SyntaxWrap syntax)
+            => ctx.WrapForError(syntax, Exec);
+
+        private static void Exec(ClassDeclarationSyntax cds, string name, CodeWriter code, SyntaxWrap syntax)
         {
             var ccs = syntax.Symbol.FindArgs(simple: true);
-            var cds = syntax.Class;
             var space = cds.GetParentName() ?? Coding.AutoNamespace;
-            var name = cds.GetClassName();
-            var fileName = $"{name}.g.cs";
-            var code = new CodeWriter();
             code.AddUsings(LibSpace, "System", "System.Linq", "Microsoft.Data.Sqlite");
             code.AppendLine();
             code.AppendLine($"namespace {space}");
@@ -322,7 +321,6 @@ namespace Cscg.AdoNet
             code.AppendLine();
             code.AppendLines(NewSet(name));
             code.AppendLine("}");
-            ctx.AddSource(fileName, code.ToString());
         }
     }
 }
