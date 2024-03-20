@@ -1,11 +1,24 @@
 using System;
-using System.IO;
 using System.Linq;
-using System.Text;
 using Cscg.AdoNet.Lib;
-using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using SourceGenerated.Sql;
+
+namespace SourceGenerated.Sql
+{
+    [Context]
+    public partial class AdContext
+    {
+        private DbSet<Blog> _blogs;
+        private DbSet<Post> _posts;
+        private DbSet<Funny> _funnies;
+        private DbSet<House> _houses;
+        private DbSet<Person> _persons;
+        private DbSet<HousePerson> _housePersons;
+        private DbSet<Profile> _profiles;
+        private DbSet<User> _users;
+    }
+}
 
 namespace SourceGenerated
 {
@@ -14,64 +27,47 @@ namespace SourceGenerated
         public static void MainAd()
         {
             var sqlFile = IoTool.DeleteIfExists("example.db");
-
-            var connStr = AdoTool.CreateConnStr<SqliteConnectionStringBuilder>(
-                s => s.DataSource = sqlFile,
-                s => s.Mode = SqliteOpenMode.ReadWriteCreate,
-                s => s.Pooling = true,
-                s => s.ForeignKeys = true,
-                s => s.RecursiveTriggers = true
-            );
-            using var conn = AdoTool.OpenConn<SqliteConnection>(connStr);
-            Console.WriteLine($"{connStr} / {conn.State}");
-
-            var (sql, rows) = conn.RunTransaction(
-                Blog.CreateTable(),
-                Post.CreateTable(),
-                Funny.CreateTable(),
-                House.CreateTable(),
-                Person.CreateTable(),
-                HousePerson.CreateTable(),
-                Profile.CreateTable(),
-                User.CreateTable()
-            );
-            File.WriteAllText("test.sql", sql, Encoding.UTF8);
-            Console.WriteLine(rows);
+            using var ctx = new AdContext();
 
             var person = new Person { Name = "Willy Scott" };
-            person.Id = person.Insert(conn);
+            Console.WriteLine(person.Id);
+
+            person.Id = ctx.Persons.Insert(person);
             Console.WriteLine(person.Id);
 
             person.Name = "Timmy Scott";
-            var wasUpdated = person.Update(conn);
+            var wasUpdated = ctx.Persons.Update(person);
             Console.WriteLine(wasUpdated);
 
-            person = Person.Find(conn, person.Id);
+            person = ctx.Persons.Find(person.Id);
             var json = JsonConvert.SerializeObject(person, Formatting.None);
             Console.WriteLine(json);
 
-            var persons = Person.List(conn, 5, 0);
+            var persons = ctx.Persons.List(5, 0);
             json = JsonConvert.SerializeObject(persons, Formatting.None);
             Console.WriteLine(json);
 
             var house = new House { Street = "Main Street 123" };
-            house.MyId = house.Insert(conn);
+            Console.WriteLine(house.MyId);
+
+            house.MyId = ctx.Houses.Insert(house);
             Console.WriteLine(house.MyId);
 
             var hp = new HousePerson { HousesMyId = house.MyId, OwnersId = person.Id };
-            var wasInserted = hp.Insert(conn);
+            var wasInserted = ctx.HousePersons.Insert(hp);
             Console.WriteLine(wasInserted);
 
-            var hPerson = HousePerson.FindSame(conn, p => p.OwnersId = 88).SingleOrDefault();
+            var hPerson = ctx.HousePersons.FindSame(p => p.OwnersId = 88).SingleOrDefault();
             json = JsonConvert.SerializeObject(hPerson, Formatting.None);
             Console.WriteLine(json);
 
-            var wasDeleted = hPerson?.Delete(conn);
+            var wasDeleted = hPerson != null && ctx.HousePersons.Delete(hPerson);
             Console.WriteLine($"Deleted? {wasDeleted}");
 
-            wasDeleted = person.Delete(conn);
+            wasDeleted = ctx.Persons.Delete(person);
             Console.WriteLine($"Deleted? {wasDeleted}");
 
+            var conn = ctx.GetOpenConn();
             var dbVersion = conn.GetDatabaseVersion();
             Console.WriteLine(dbVersion);
 
@@ -81,9 +77,11 @@ namespace SourceGenerated
             Console.WriteLine(json);
 
             var blog1 = new Blog { Rating = 5, Url = "www.google.com" };
-            blog1.MyBlogId = blog1.Insert(conn);
             Console.WriteLine(blog1.MyBlogId);
-            Console.WriteLine(Blog.List(conn, 10, 0).Length);
+
+            blog1.MyBlogId = ctx.Blogs.Insert(blog1);
+            Console.WriteLine(blog1.MyBlogId);
+            Console.WriteLine(ctx.Blogs.List().Length);
 
             var funny1 = new Funny
             {
@@ -93,47 +91,47 @@ namespace SourceGenerated
                 P = "Some text!", Q = TimeOnly.FromDateTime(DateTime.Now), R = TimeSpan.FromDays(39),
                 S = 199, T = 33394, U = 32939022
             };
-            funny1.Id = funny1.Insert(conn);
+            funny1.Id = ctx.Funnies.Insert(funny1);
             Console.WriteLine(funny1.Id);
-            Console.WriteLine(Funny.List(conn, 10, 0).Length);
+            Console.WriteLine(ctx.Funnies.List().Length);
 
             var person2 = new Person { Name = "Tim" };
-            person2.Id = person2.Insert(conn);
+            person2.Id = ctx.Persons.Insert(person2);
             Console.WriteLine(person2.Id);
-            Console.WriteLine(Person.List(conn, 10, 0).Length);
+            Console.WriteLine(ctx.Persons.List().Length);
 
             var house2 = new House { Street = "Super Way 43" };
-            house2.MyId = house2.Insert(conn);
+            house2.MyId = ctx.Houses.Insert(house2);
             Console.WriteLine(house2.MyId);
-            Console.WriteLine(House.List(conn, 10, 0).Length);
+            Console.WriteLine(ctx.Houses.List().Length);
 
             var hp2 = new HousePerson { HousesMyId = house2.MyId, OwnersId = person2.Id };
-            hp2.Insert(conn);
+            ctx.HousePersons.Insert(hp2);
 
             var post2 = new Post
             {
                 Title = "Good title", Content = "Everything is well and right.", BlogId = blog1.MyBlogId
             };
-            post2.PostId = post2.Insert(conn);
+            post2.PostId = ctx.Posts.Insert(post2);
             Console.WriteLine(post2.PostId);
-            Console.WriteLine(Post.List(conn, 10, 0).Length);
+            Console.WriteLine(ctx.Posts.List().Length);
 
             var prof2 = new Profile
             {
                 Bio = "Good CV or not", Birthdate = DateTime.Now, Image = [2, 38, 92, 34]
             };
-            prof2.ProfileId = prof2.Insert(conn);
+            prof2.ProfileId = ctx.Profiles.Insert(prof2);
             Console.WriteLine(prof2.ProfileId);
-            Console.WriteLine(Profile.List(conn, 10, 0).Length);
+            Console.WriteLine(ctx.Profiles.List().Length);
 
             var user2 = new User
             {
                 UserName = "Testo Macko", Email = "test@mail.com.uk",
                 ProfileId = prof2.ProfileId, UserId = "testy"
             };
-            user2.UserId = user2.Insert(conn);
+            user2.UserId = ctx.Users.Insert(user2);
             Console.WriteLine(user2.UserId);
-            Console.WriteLine(User.List(conn, 10, 0).Length);
+            Console.WriteLine(ctx.Users.List().Length);
         }
     }
 }

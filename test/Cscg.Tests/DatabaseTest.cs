@@ -1,6 +1,5 @@
 using System;
 using System.Data;
-using System.Linq;
 using Cscg.AdoNet.Lib;
 using Microsoft.Data.Sqlite;
 using SourceGenerated.Sql;
