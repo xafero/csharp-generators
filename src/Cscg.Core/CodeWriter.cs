@@ -17,7 +17,7 @@ namespace Cscg.Core
                 Lines.Add(string.Empty);
                 return;
             }
-            if (text is "}" or "};" or "});")
+            if (text is "}" or "};" || text.StartsWith("})"))
                 Level--;
             var prefix = string.Join("", Enumerable.Repeat(Space, Level));
             Lines.Add(prefix + text);
