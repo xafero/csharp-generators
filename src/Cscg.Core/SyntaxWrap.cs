@@ -7,9 +7,17 @@ namespace Cscg.Core
 {
     public class SyntaxWrap(GeneratorAttributeSyntaxContext context) : ISymbolFetch
     {
-        public ClassDeclarationSyntax Class => context.TargetNode as ClassDeclarationSyntax;
+        public ClassDeclarationSyntax Class => context.TargetNode as ClassDeclarationSyntax ??
+                                               context.TargetNode.Parent as ClassDeclarationSyntax;
 
-        public INamedTypeSymbol Symbol => context.TargetSymbol as INamedTypeSymbol;
+        public INamedTypeSymbol Symbol => context.TargetSymbol as INamedTypeSymbol ??
+                                          context.TargetSymbol.ContainingSymbol as INamedTypeSymbol;
+
+        public (MethodDeclarationSyntax, IMethodSymbol)? Method
+            => context.TargetNode is not MethodDeclarationSyntax md ||
+               context.TargetSymbol is not IMethodSymbol ms
+                ? null
+                : (md, ms);
 
         public AttributeData Attribute => context.Attributes.First();
 

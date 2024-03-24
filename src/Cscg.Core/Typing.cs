@@ -124,5 +124,20 @@ namespace Cscg.Core
             }
             return dict;
         }
+
+        public static string ToStr(object arg)
+        {
+            switch (arg)
+            {
+                case null:
+                    return "null";
+                case bool v:
+                    return v ? "true" : "false";
+                case string s:
+                    return s.StartsWith("\"") ? s : $"\"{s}\"";
+                default:
+                    return $"[ {arg} ({arg.GetType()}) ]";
+            }
+        }
     }
 }

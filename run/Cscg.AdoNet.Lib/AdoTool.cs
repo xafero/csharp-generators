@@ -84,6 +84,9 @@ namespace Cscg.AdoNet.Lib
             return dict;
         }
 
+        private static IEnumerable<string> ToColString(IEnumerable<KeyValuePair<string, string>> cols)
+            => cols.Select(c => $"{c.Key} = {c.Value}");
+
         public static string CreateInsert(this IDictionary<string, string> cols, string tbl,
             string? id = null)
         {
@@ -112,7 +115,7 @@ namespace Cscg.AdoNet.Lib
             bld.Append(tbl);
             bld.Append('"');
             bld.Append(" SET");
-            var tmp = cols.Skip(skip).Select(c => $"{c.Key} = {c.Value}");
+            var tmp = ToColString(cols.Skip(skip));
             bld.Append($" {string.Join(", ", tmp)}");
             bld.Append(" WHERE");
             bld.Append($" {id} = {prefix}{id};");
@@ -127,7 +130,7 @@ namespace Cscg.AdoNet.Lib
             bld.Append(tbl);
             bld.Append('"');
             bld.Append(" WHERE");
-            var tmp = cols.Select(c => $"{c.Key} = {c.Value}");
+            var tmp = ToColString(cols);
             bld.Append($" {string.Join(" AND ", tmp)};");
             return bld.ToString();
         }
@@ -140,9 +143,46 @@ namespace Cscg.AdoNet.Lib
             bld.Append(tbl);
             bld.Append('"');
             bld.Append(" WHERE");
-            var tmp = cols.Select(c => $"{c.Key} = {c.Value}");
-            bld.Append($" {string.Join(" AND ", tmp)};");
+            bld.Append($" {string.Join(" AND ", ToColString(cols))};");
             return bld.ToString();
+        }
+
+        public static string CreateJoin(params Table[] tables)
+        {
+            var bld = new StringBuilder();
+            bld.Append("SELECT ");
+            var tbp = GetTablePrefixes(tables);
+            var cols = string.Join(", ", tables.SelectMany(t =>
+            {
+                var prefix = tbp[t.Name];
+                return t.Columns.Select(c => $"\"{prefix}\".\"{c.Name}\" as {prefix}_{c.Name}");
+            }));
+            bld.AppendLine(cols);
+            var lastT = tables.First();
+            var lastP = tbp[lastT.Name];
+            bld.AppendLine($"FROM \"{lastT.Name}\" as \"{lastP}\"");
+            foreach (var currT in tables.Skip(1))
+            {
+                var currP = tbp[currT.Name];
+                var currPk = currT.Columns.FirstOrDefault(c => c.IsPrimaryKey)?.Name;
+                var lastFk = lastT.Columns.FirstOrDefault(c => c.ForeignTable == currT.Name)?.ForeignColumn;
+                bld.Append($"LEFT JOIN \"{currT.Name}\" as \"{currP}\" ON ");
+                bld.AppendLine($"\"{currP}\".\"{currPk}\" = \"{lastP}\".\"{lastFk}\"");
+                lastT = currT;
+            }
+            return bld.ToString();
+        }
+
+        private static Dictionary<string, string> GetTablePrefixes(IReadOnlyCollection<Table> tables)
+        {
+            var len = 1;
+            string[] prefixes;
+            while ((prefixes = tables.Select(t => t.Name.Substring(0, len)
+                       .ToLowerInvariant()).Distinct().ToArray()).Length != tables.Count)
+                len++;
+            var dict = tables.Zip(prefixes, (a, b) => (a, b))
+                .ToDictionary(k => k.a.Name, v => v.b);
+            return dict;
         }
     }
 }

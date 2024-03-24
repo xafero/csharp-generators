@@ -40,7 +40,9 @@ namespace Cscg.Core
         {
             var cds = syntax.Class;
             var name = cds.GetClassName();
-            var fileName = $"{name}.g.cs";
+            var fName = name;
+            if (syntax.Method is { } m) fName = $"{fName}.{m.Item2.Name}";
+            var fileName = $"{fName}.g.cs";
             var code = new CodeWriter();
             try
             {

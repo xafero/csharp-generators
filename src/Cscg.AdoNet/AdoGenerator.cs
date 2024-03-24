@@ -76,6 +76,10 @@ namespace Cscg.AdoNet
             crea.AppendLine("var sql = string.Join(Environment.NewLine, [");
             crea.AppendLine($"@\"CREATE TABLE IF NOT EXISTS \"{table}\" (\",");
 
+            var crei = new CodeWriter();
+            crei.AppendLine($"public static Table GetTable() => new Table({table}, new []");
+            crei.AppendLine("{");
+
             var deser = new CodeWriter();
             var sqser = new CodeWriter();
 
@@ -104,7 +108,8 @@ namespace Cscg.AdoNet
                     var pp = syntax.GetInfo(pps);
                     var ppName = ppa.TryGetValue($"{ColAn}_Name", out var tpn) ? tpn : pp.Name;
                     var pName = SqliteSource.Quote(ppName);
-                    var pk = !ppa.TryGetValue(KeyAn, out _)
+                    var isPrimary = ppa.TryGetValue(KeyAn, out _);
+                    var pk = !isPrimary
                         ? null
                         : SqliteSource.Quote($"PK_{tableName.Trim('"')}");
                     if (pk != null)
@@ -113,10 +118,10 @@ namespace Cscg.AdoNet
                         lastPkT = pp.ReturnType;
                     }
 
+                    ppa.TryGetValue($"{ForeignAn}_Table", out var ft);
+                    ppa.TryGetValue($"{ForeignAn}_Column", out var fc);
                     if (ppa.TryGetValue(ForeignAn, out _))
                     {
-                        ppa.TryGetValue($"{ForeignAn}_Table", out var ft);
-                        ppa.TryGetValue($"{ForeignAn}_Column", out var fc);
                         ppa.TryGetValue($"{ForeignAn}_Unique", out var fu);
                         ppa.TryGetValue($"{ForeignAn}_NoCascade", out var fd);
                         var u = fu == "true";
@@ -131,6 +136,11 @@ namespace Cscg.AdoNet
                     var forceNull = mapPk.ContainsKey(ppName) ? false : default(bool?);
                     var (pType, pCond) = SqliteSource.GetType(pp.ReturnType, pk, forceNull);
                     crea.AppendLine($"@\"    \"{pName}\" {pType} {pCond},\",");
+
+                    var creiP = Typing.ToStr(isPrimary);
+                    var creiT = Typing.ToStr(ft);
+                    var creiC = Typing.ToStr(fc);
+                    crei.AppendLine($"   new Column({pName}, {creiP}, {creiT}, {creiC}),");
 
                     var pno = "this";
                     var pNameSuf = string.Empty;
@@ -179,6 +189,9 @@ namespace Cscg.AdoNet
             {
                 crea.AppendLine(item);
             }
+
+            crei.ModifyLast(l => l.Replace(",\",", "\","));
+            crei.AppendLine("});");
 
             crea.ModifyLast(l => l.Replace(",\",", "\","));
             crea.AppendLine("\");\"");
@@ -255,7 +268,7 @@ namespace Cscg.AdoNet
                 ins.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateInsert({table}, ""{lastPk}"");");
                 ins.AppendLine($"return cmd.ExecuteScalar().ConvertTo<{lastPkT}>();");
                 ins.AppendLine("}");
-                
+
                 upd.AppendLine($"public bool Update({name} entity)");
                 upd.AppendLine("{");
                 upd.AppendLine("using var cmd = Conn.CreateCommand();");
@@ -302,6 +315,8 @@ namespace Cscg.AdoNet
 
             var body = new CodeWriter();
             body.AppendLines(crea);
+            body.AppendLine();
+            body.AppendLines(crei);
             body.AppendLine();
             body.AppendLines(sel);
 
