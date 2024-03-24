@@ -289,6 +289,27 @@ namespace Cscg.AdoNet
                         fin.AppendLine($"item.{include.s.Name} = res.Value.Item{++idx};");
                     fin.AppendLine("return item;");
                     fin.AppendLine("}");
+
+                    lst.AppendLine();
+                    lst.AppendLine($"public {name}[] ListInclude(int limit = 100, int offset = 0)");
+                    lst.AppendLine("{");
+                    lst.AppendLine("using var cmd = Conn.CreateCommand();");
+                    lst.AppendLine($"Table[] tables = {{ {tblInd} }};");
+                    lst.AppendLine("var prefix = tables.GetTablePrefixes();");
+                    lst.AppendLine($@"cmd.CommandText = tables.CreateJoin(prefix, limited: true);");
+                    lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", limit);");
+                    lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p1"", offset);");
+                    lst.AppendLine("using var reader = cmd.ExecuteReader();");
+                    lst.AppendLine($"var res = reader.ReadData<{tblRea}, {readType}>(prefix).Select(x =>");
+                    lst.AppendLine("{");
+                    lst.AppendLine("var item = x.Value.Item1;");
+                    idx = 1;
+                    foreach (var include in includes)
+                        lst.AppendLine($"item.{include.s.Name} = x.Value.Item{++idx};");
+                    lst.AppendLine("return item;");
+                    lst.AppendLine("}).ToArray();");
+                    lst.AppendLine("return res;");
+                    lst.AppendLine("}");
                 }
 
                 ins.AppendLine($"public {lastPkT} Insert({name} entity)");

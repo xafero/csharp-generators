@@ -148,7 +148,7 @@ namespace Cscg.AdoNet.Lib
         }
 
         public static string CreateJoin(this IReadOnlyCollection<Table> tables, IDictionary<string, string> tbp,
-            string? id = null, string prefix = "@p")
+            string? id = null, string prefix = "@p", bool limited = false)
         {
             var bld = new StringBuilder();
             bld.Append("SELECT ");
@@ -174,11 +174,17 @@ namespace Cscg.AdoNet.Lib
             }
             if (!string.IsNullOrWhiteSpace(id))
             {
-                var firstPk = firstT.Columns.FirstOrDefault(c => c.IsPrimaryKey)?.Name;
-                bld.Append($"WHERE \"{firstP}\".\"{firstPk}\" = {prefix}{id}");
+                bld.Append($"WHERE \"{firstP}\".\"{firstT.GetPk()}\" = {prefix}{id}");
+            }
+            if (limited)
+            {
+                bld.Append($"ORDER BY \"{firstP}\".\"{firstT.GetPk()}\" LIMIT @p0 OFFSET @p1");
             }
             return bld.ToString();
         }
+
+        private static string? GetPk(this Table table)
+            => table.Columns.FirstOrDefault(c => c.IsPrimaryKey)?.Name;
 
         public static Dictionary<string, string> GetTablePrefixes(this IReadOnlyCollection<Table> tables)
         {
