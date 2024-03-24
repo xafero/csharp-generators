@@ -147,18 +147,21 @@ namespace Cscg.AdoNet.Lib
             return bld.ToString();
         }
 
-        public static string CreateJoin(this IReadOnlyCollection<Table> tables, IDictionary<string, string> tbp)
+        public static string CreateJoin(this IReadOnlyCollection<Table> tables, IDictionary<string, string> tbp,
+            string? id = null, string prefix = "@p")
         {
             var bld = new StringBuilder();
             bld.Append("SELECT ");
             var cols = string.Join(", ", tables.SelectMany(t =>
             {
-                var prefix = tbp[t.Name];
-                return t.Columns.Select(c => $"\"{prefix}\".\"{c.Name}\" as {prefix}_{c.Name}");
+                var cPrefix = tbp[t.Name];
+                return t.Columns.Select(c => $"\"{cPrefix}\".\"{c.Name}\" as {cPrefix}_{c.Name}");
             }));
             bld.AppendLine(cols);
-            var lastT = tables.First();
-            var lastP = tbp[lastT.Name];
+            var firstT = tables.First();
+            var lastT = firstT;
+            var firstP = tbp[lastT.Name];
+            var lastP = firstP;
             bld.AppendLine($"FROM \"{lastT.Name}\" as \"{lastP}\"");
             foreach (var currT in tables.Skip(1))
             {
@@ -168,6 +171,11 @@ namespace Cscg.AdoNet.Lib
                 bld.Append($"LEFT JOIN \"{currT.Name}\" as \"{currP}\" ON ");
                 bld.AppendLine($"\"{currP}\".\"{currPk}\" = \"{lastP}\".\"{lastFk}\"");
                 lastT = currT;
+            }
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                var firstPk = firstT.Columns.FirstOrDefault(c => c.IsPrimaryKey)?.Name;
+                bld.Append($"WHERE \"{firstP}\".\"{firstPk}\" = {prefix}{id}");
             }
             return bld.ToString();
         }
