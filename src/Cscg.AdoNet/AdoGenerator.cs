@@ -19,6 +19,7 @@ namespace Cscg.AdoNet
         private static readonly string ColAn = GetAttributeName(ColAttrName);
         private static readonly string KeyAn = GetAttributeName(KeyAttrName);
         private static readonly string ForeignAn = GetAttributeName(ForeignAttrName);
+        private static readonly string IncludeAn = GetAttributeName(IncludeAttrName);
 
         public void Initialize(IncrementalGeneratorInitializationContext igi)
         {
@@ -98,11 +99,15 @@ namespace Cscg.AdoNet
             }
             if (isTree) innerClasses.Add(name);
 
+            var includes = new List<(PropertyDeclarationSyntax p, ISymbol s, Dictionary<string, string> a)>();
+
             foreach (var member in members)
                 if (member is PropertyDeclarationSyntax pds)
                 {
                     var pps = syntax.GetSymbol(pds);
                     var ppa = pps.FindArgs(simple: true);
+                    if (ppa.ContainsKey(IncludeAn))
+                        includes.Add((pds, pps, ppa));
                     if (!ppa.ContainsKey(ColAn))
                         continue;
                     var pp = syntax.GetInfo(pps);
@@ -260,6 +265,31 @@ namespace Cscg.AdoNet
                 fin.AppendLine("using var reader = cmd.ExecuteReader();");
                 fin.AppendLine($"return reader.ReadData<{name}, {readType}>().FirstOrDefault();");
                 fin.AppendLine("}");
+
+                if (includes.Any())
+                {
+                    fin.AppendLine();
+                    var includeNTypes = includes.Select(i => i.s.Name);
+                    var includeTypes = new[] { name }.Concat(includeNTypes).ToArray();
+                    fin.AppendLine($"public {name} FindInclude({lastPkT} id)");
+                    fin.AppendLine("{");
+                    fin.AppendLine("using var cmd = Conn.CreateCommand();");
+                    var tblInd = string.Join(", ", includeTypes.Select(it => $"{it}.GetTable()"));
+                    fin.AppendLine($"Table[] tables = {{ {tblInd} }};");
+                    fin.AppendLine("var prefix = tables.GetTablePrefixes();");
+                    fin.AppendLine($@"cmd.CommandText = tables.CreateJoin(prefix, ""0"");");
+                    fin.AppendLine($"cmd.Parameters.AddWithValue(\"@p0\", id);");
+                    fin.AppendLine("using var reader = cmd.ExecuteReader();");
+                    var tblRea = string.Join(", ", includeTypes);
+                    fin.AppendLine($"var res = reader.ReadData<{tblRea}, {readType}>(prefix).FirstOrDefault();");
+                    fin.AppendLine("if (res == null) return null;");
+                    fin.AppendLine("var item = res.Value.Item1;");
+                    var idx = 1;
+                    foreach (var include in includes)
+                        fin.AppendLine($"item.{include.s.Name} = res.Value.Item{++idx};");
+                    fin.AppendLine("return item;");
+                    fin.AppendLine("}");
+                }
 
                 ins.AppendLine($"public {lastPkT} Insert({name} entity)");
                 ins.AppendLine("{");

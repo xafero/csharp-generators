@@ -80,6 +80,9 @@ namespace SourceGenerated.Sql
         [Column]
         public long ProfileId { get; set; }
 
+        [Include]
+        public Profile Profile { get; set; }
+
         [Column]
         public string UserName { get; set; }
 

@@ -16,6 +16,7 @@ namespace Cscg.AdoNet
         internal const string ColAttrName = "Column";
         internal const string KeyAttrName = "Key";
         internal const string ForeignAttrName = "Foreign";
+        internal const string IncludeAttrName = "Include";
 
         internal const string DiscriminatorFld = "Discriminator";
 

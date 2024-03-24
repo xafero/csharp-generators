@@ -28,7 +28,7 @@ namespace Cscg.AdoNet.Lib
             }
         }
 
-        public static IEnumerable<(TData1, TData2)> ReadData<TData1, TData2, TReader>(
+        public static IEnumerable<(TData1?, TData2?)?> ReadData<TData1, TData2, TReader>(
             this TReader reader, Dictionary<string, string> prefixes)
             where TReader : DbDataReader
             where TData1 : IActiveRead<TReader>, new()
@@ -47,13 +47,13 @@ namespace Cscg.AdoNet.Lib
             }
             foreach (var item in reader.ReadData(prefixes, fac))
             {
-                var first = item.Values.OfType<TData1>().First();
-                var second = item.Values.OfType<TData2>().First();
+                var first = item.Values.OfType<TData1>().FirstOrDefault();
+                var second = item.Values.OfType<TData2>().FirstOrDefault();
                 yield return (first, second);
             }
         }
 
-        public static IEnumerable<(TData1, TData2, TData3)> ReadData<TData1, TData2, TData3, TReader>(
+        public static IEnumerable<(TData1?, TData2?, TData3?)?> ReadData<TData1, TData2, TData3, TReader>(
             this TReader reader, Dictionary<string, string> prefixes)
             where TReader : DbDataReader
             where TData1 : IActiveRead<TReader>, new()
@@ -74,9 +74,9 @@ namespace Cscg.AdoNet.Lib
             }
             foreach (var item in reader.ReadData(prefixes, fac))
             {
-                var first = item.Values.OfType<TData1>().First();
-                var second = item.Values.OfType<TData2>().First();
-                var third = item.Values.OfType<TData3>().First();
+                var first = item.Values.OfType<TData1>().FirstOrDefault();
+                var second = item.Values.OfType<TData2>().FirstOrDefault();
+                var third = item.Values.OfType<TData3>().FirstOrDefault();
                 yield return (first, second, third);
             }
         }
