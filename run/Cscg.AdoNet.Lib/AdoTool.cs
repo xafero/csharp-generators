@@ -147,11 +147,10 @@ namespace Cscg.AdoNet.Lib
             return bld.ToString();
         }
 
-        public static string CreateJoin(params Table[] tables)
+        public static string CreateJoin(this IReadOnlyCollection<Table> tables, IDictionary<string, string> tbp)
         {
             var bld = new StringBuilder();
             bld.Append("SELECT ");
-            var tbp = GetTablePrefixes(tables);
             var cols = string.Join(", ", tables.SelectMany(t =>
             {
                 var prefix = tbp[t.Name];
@@ -173,7 +172,7 @@ namespace Cscg.AdoNet.Lib
             return bld.ToString();
         }
 
-        private static Dictionary<string, string> GetTablePrefixes(IReadOnlyCollection<Table> tables)
+        public static Dictionary<string, string> GetTablePrefixes(this IReadOnlyCollection<Table> tables)
         {
             var len = 1;
             string[] prefixes;
