@@ -167,10 +167,11 @@ namespace Cscg.AdoNet.Lib
             {
                 var currP = tbp[currT.Name];
                 var currPk = currT.Columns.FirstOrDefault(c => c.IsPrimaryKey)?.Name;
-                var lastFk = lastT.Columns.FirstOrDefault(c => c.ForeignTable == currT.Name)?.ForeignColumn;
+                var lastFk = lastT.Columns.FirstOrDefault(c => c.ForeignTable == currT.Name)?.Name;
                 bld.Append($"LEFT JOIN \"{currT.Name}\" as \"{currP}\" ON ");
-                bld.AppendLine($"\"{currP}\".\"{currPk}\" = \"{lastP}\".\"{lastFk}\"");
+                bld.AppendLine($"\"{lastP}\".\"{lastFk}\" = \"{currP}\".\"{currPk}\"");
                 lastT = currT;
+                lastP = tbp[currT.Name];
             }
             if (!string.IsNullOrWhiteSpace(id))
             {
