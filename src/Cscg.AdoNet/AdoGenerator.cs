@@ -247,12 +247,23 @@ namespace Cscg.AdoNet
             var lst = new CodeWriter();
             if (!string.IsNullOrWhiteSpace(lastPk))
             {
-                lst.AppendLine($"public {name}[] List(int limit = 100, int offset = 0)");
+                lst.AppendLine($"public {name}[] List(int offset = 0, int limit = 10)");
                 lst.AppendLine("{");
                 lst.AppendLine("using var cmd = Conn.CreateCommand();");
                 lst.AppendLine($@"cmd.CommandText = @""SELECT * FROM ""{table}"" ORDER BY {lastPk} LIMIT @p0 OFFSET @p1;"";");
                 lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", limit);");
                 lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p1"", offset);");
+                lst.AppendLine("using var reader = cmd.ExecuteReader();");
+                lst.AppendLine($"return reader.ReadData<{name}, {readType}>().ToArray();");
+                lst.AppendLine("}");
+                lst.AppendLine();
+                lst.AppendLine($"public {name}[] Latest({lastPkT} lastId = default, int limit = 10)");
+                lst.AppendLine("{");
+                lst.AppendLine("using var cmd = Conn.CreateCommand();");
+                lst.AppendLine($"var tmp = lastId == default ? \" \" : \" WHERE {lastPk} < @p1 \";");
+                lst.AppendLine($@"cmd.CommandText = $@""SELECT * FROM ""{table}""{{tmp}}ORDER BY {lastPk} DESC LIMIT @p0;"";");
+                lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p0"", limit);");
+                lst.AppendLine($@"cmd.Parameters.AddWithValue(""@p1"", lastId);");
                 lst.AppendLine("using var reader = cmd.ExecuteReader();");
                 lst.AppendLine($"return reader.ReadData<{name}, {readType}>().ToArray();");
                 lst.AppendLine("}");
