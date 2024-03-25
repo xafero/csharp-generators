@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -138,6 +139,22 @@ namespace Cscg.Core
                 default:
                     return $"[ {arg} ({arg.GetType()}) ]";
             }
+        }
+
+        public static IEnumerable<string> SplitTypeOf(string text)
+        {
+            foreach (var item in text.Trim('{', '}')
+                         .Split([", "], StringSplitOptions.None)
+                         .Select(t => t.Split(['('], 2)[1].TrimEnd(')')))
+                yield return item;
+        }
+
+        public static (string nsp, string name) SplitType(string text)
+        {
+            var last = text.LastIndexOf('.');
+            var nsp = text.Substring(0, last);
+            var name = text.Substring(last).TrimStart('.');
+            return (nsp, name);
         }
     }
 }

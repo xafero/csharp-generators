@@ -5,5 +5,6 @@ namespace Cscg.AdoNet.Lib
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
     public sealed class IncludeAttribute : Attribute
     {
+        public Type[]? Add { get; set; }
     }
 }

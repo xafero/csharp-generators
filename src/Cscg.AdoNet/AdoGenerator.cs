@@ -269,8 +269,14 @@ namespace Cscg.AdoNet
                 if (includes.Any())
                 {
                     fin.AppendLine();
-                    var includeNTypes = includes.Select(i => i.s.Name);
-                    var includeTypes = new[] { name }.Concat(includeNTypes).ToArray();
+                    var includeTypes = new List<string> { name };
+                    foreach (var include in includes)
+                    {
+                        includeTypes.Add(include.s.Name);
+                        if (include.a.TryGetValue($"{IncludeAn}_Add", out var iaa))
+                            foreach (var inclType in Typing.SplitTypeOf(iaa))
+                                includeTypes.Add(Typing.SplitType(inclType).name);
+                    }
                     fin.AppendLine($"public {name} FindInclude({lastPkT} id)");
                     fin.AppendLine("{");
                     fin.AppendLine("using var cmd = Conn.CreateCommand();");
@@ -283,10 +289,15 @@ namespace Cscg.AdoNet
                     var tblRea = string.Join(", ", includeTypes);
                     fin.AppendLine($"var res = reader.ReadData<{tblRea}, {readType}>(prefix).FirstOrDefault();");
                     fin.AppendLine("if (res == null) return null;");
-                    fin.AppendLine("var item = res.Value.Item1;");
+                    fin.AppendLine($"var item = res.Value.Item1;");
                     var idx = 1;
-                    foreach (var include in includes)
-                        fin.AppendLine($"item.{include.s.Name} = res.Value.Item{++idx};");
+                    var tblItm = "item";
+                    foreach (var include in includeTypes.Skip(1))
+                    {
+                        var curr = $"{tblItm}.{include}";
+                        fin.AppendLine($"{curr} = res.Value.Item{++idx};");
+                        tblItm = curr;
+                    }
                     fin.AppendLine("return item;");
                     fin.AppendLine("}");
 
@@ -304,8 +315,13 @@ namespace Cscg.AdoNet
                     lst.AppendLine("{");
                     lst.AppendLine("var item = x.Value.Item1;");
                     idx = 1;
-                    foreach (var include in includes)
-                        lst.AppendLine($"item.{include.s.Name} = x.Value.Item{++idx};");
+                    tblItm = "item";
+                    foreach (var include in includeTypes.Skip(1))
+                    {
+                        var curr = $"{tblItm}.{include}";
+                        lst.AppendLine($"{curr} = x.Value.Item{++idx};");
+                        tblItm = curr;
+                    }
                     lst.AppendLine("return item;");
                     lst.AppendLine("}).ToArray();");
                     lst.AppendLine("return res;");
