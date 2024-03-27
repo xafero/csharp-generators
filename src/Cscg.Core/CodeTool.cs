@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Cscg.Core
 {
@@ -55,6 +54,4 @@ namespace Cscg.Core
             ctx.AddSource(fileName, code.ToString());
         }
     }
-
-    public delegate void Exec(ClassDeclarationSyntax cds, string name, CodeWriter code, SyntaxWrap syntax);
 }

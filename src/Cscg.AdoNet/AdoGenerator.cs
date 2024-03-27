@@ -20,6 +20,7 @@ namespace Cscg.AdoNet
         private static readonly string KeyAn = GetAttributeName(KeyAttrName);
         private static readonly string ForeignAn = GetAttributeName(ForeignAttrName);
         private static readonly string IncludeAn = GetAttributeName(IncludeAttrName);
+        private static readonly string RawSqlAn = GetAttributeName(RawSqlAttrName);
 
         public void Initialize(IncrementalGeneratorInitializationContext igi)
         {
@@ -48,7 +49,7 @@ namespace Cscg.AdoNet
         {
             var ccs = syntax.Symbol.FindArgs(simple: true);
             var space = cds.GetParentName() ?? Coding.AutoNamespace;
-            code.AddUsings(LibSpace, "System", "System.Linq", "Microsoft.Data.Sqlite");
+            code.AddUsings(LibSpace, "System", "System.Linq", "System.Collections.Generic", "Microsoft.Data.Sqlite");
             code.AppendLine();
             code.AppendLine($"namespace {space}");
             code.AppendLine("{");
@@ -77,6 +78,7 @@ namespace Cscg.AdoNet
             crea.AppendLine("var sql = string.Join(Environment.NewLine, [");
             crea.AppendLine($"@\"CREATE TABLE IF NOT EXISTS \"{table}\" (\",");
 
+            var cus = new CodeWriter();
             var crei = new CodeWriter();
             crei.AppendLine($"public static Table GetTable() => new Table({table}, new []");
             crei.AppendLine("{");
@@ -102,6 +104,7 @@ namespace Cscg.AdoNet
             var includes = new List<(PropertyDeclarationSyntax p, ISymbol s, Dictionary<string, string> a)>();
 
             foreach (var member in members)
+            {
                 if (member is PropertyDeclarationSyntax pds)
                 {
                     var pps = syntax.GetSymbol(pds);
@@ -184,6 +187,51 @@ namespace Cscg.AdoNet
                     sqser.AppendLine($"w.Parameters.AddWithValue({pNamePm}, {SqliteSource.GetWrite(pp, pno)});");
                     sqser.AppendLine("}");
                 }
+                else if (member is MethodDeclarationSyntax mds)
+                {
+                    var mms = (IMethodSymbol)syntax.GetSymbol(mds);
+                    var mma = mms.FindArgs(simple: true);
+                    if (mma.ContainsKey(RawSqlAn))
+                    {
+                        mma.TryGetValue($"{RawSqlAn}_Mapping", out var mmm);
+                        var mmName = mms.Name;
+                        var mmPar = mms.Parameters;
+                        var mmPars = string.Join(", ", mmPar.Select(p => $"{p.Type} {p.Name}"));
+                        cus.AppendLine($"public {name}[] {mmName}({mmPars})");
+                        cus.AppendLine("{");
+                        cus.AppendLine("using var cmd = Conn.CreateCommand();");
+                        var mmParLen = mmPar.Length;
+                        mmPars = string.Join(", ", Enumerable.Range(0, mmParLen).Select(_ => "default"));
+                        cus.AppendLine($"cmd.CommandText = {name}.{mmName}({mmPars});");
+                        foreach (var prm in mmPar)
+                        {
+                            var mp = prm.Name;
+                            cus.AppendLine($"cmd.Parameters.AddWithValue(\"@{mp}\", {mp});");
+                        }
+                        var mmx = Maps.SplitMap(mmm).ToDict();
+                        cus.AppendLine("var prefix = new Dictionary<string, string>");
+                        cus.AppendLine("{");
+                        cus.AppendLine(string.Join(", ", mmx.Select(w => $"[\"{w.Value}\"] = \"{w.Key}\"")));
+                        cus.AppendLine("};");
+                        cus.AppendLine("using var reader = cmd.ExecuteReader();");
+                        var tblRea = string.Join(", ", mmx.Values);
+                        cus.AppendLine($"var res = reader.ReadData<{tblRea}, {readType}>(prefix).Select(x =>");
+                        cus.AppendLine("{");
+                        cus.AppendLine("var item = x.Value.Item1;");
+                        var idx = 1;
+                        var tblItm = "item";
+                        foreach (var include in mmx.Values.Skip(1))
+                        {
+                            var curr = $"{tblItm}.{include}";
+                            cus.AppendLine($"{curr} = x.Value.Item{++idx};");
+                        }
+                        cus.AppendLine("return item;");
+                        cus.AppendLine("}).ToArray();");
+                        cus.AppendLine("return res;");
+                        cus.AppendLine("}");
+                    }
+                }
+            }
 
             if (isMap)
             {
@@ -401,7 +449,7 @@ namespace Cscg.AdoNet
             code.AppendLines(body);
             code.AppendLine("}");
             code.AppendLine();
-            code.AppendLines(NewSet(name, connType, sam, fin, lst, upd, ins, del));
+            code.AppendLines(NewSet(name, connType, sam, fin, lst, upd, ins, del, cus));
             code.AppendLine("}");
         }
     }

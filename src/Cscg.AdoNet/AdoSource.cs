@@ -17,6 +17,7 @@ namespace Cscg.AdoNet
         internal const string KeyAttrName = "Key";
         internal const string ForeignAttrName = "Foreign";
         internal const string IncludeAttrName = "Include";
+        internal const string RawSqlAttrName = "RawSql";
 
         internal const string DiscriminatorFld = "Discriminator";
 
@@ -111,7 +112,7 @@ namespace Cscg.AdoNet
         }
 
         internal static List<string> NewSet(string name, string connType, CodeWriter sam, CodeWriter fin,
-            CodeWriter lst, CodeWriter upd, CodeWriter ins, CodeWriter del)
+            CodeWriter lst, CodeWriter upd, CodeWriter ins, CodeWriter del, CodeWriter cus)
         {
             var code = new List<string>();
             var setName = $"{name}DbSet";
@@ -149,6 +150,11 @@ namespace Cscg.AdoNet
             {
                 code.Add("");
                 code.AddRange(del.Lines);
+            }
+            if (cus.Lines.Count >= 1)
+            {
+                code.Add("");
+                code.AddRange(cus.Lines);
             }
             code.Add("}");
             return code;
