@@ -153,7 +153,6 @@ namespace Cscg.AdoNet
             }
             if (cus.Lines.Count >= 1)
             {
-                code.Add("");
                 code.AddRange(cus.Lines);
             }
             code.Add("}");

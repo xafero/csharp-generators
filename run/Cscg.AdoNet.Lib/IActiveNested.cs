@@ -1,7 +1,12 @@
 ﻿namespace Cscg.AdoNet.Lib
 {
-    public interface IActiveNested<out T>
+    public interface IActiveNested<out T> : IActiveNested
     {
-        T Inner { get; }
+        new T Inner { get; }
+    }
+
+    public interface IActiveNested
+    {
+        object Inner { get; }
     }
 }

@@ -19,10 +19,17 @@ namespace Cscg.AdoNet.Lib
                     var key = reader.GetName(index);
                     var tmp = key.Split(['_'], 2);
                     var prefix = tmp[0];
-                    var table = prefixes.FirstOrDefault(p => p.Value == prefix).Key;
-                    var item = res.TryGetValue(table, out var f) ? f : res[table] = fac[table]();
+                    var table = prefixes.FirstOrDefault(p => p.Value.Split('|').Contains(prefix)).Key;
+                    var item = res.TryGetValue(prefix, out var f) ? f : res[prefix] = fac[table]();
                     var subKey = tmp[1];
                     item.ReadSql(reader, subKey, index);
+                }
+                foreach (var key in res.Keys.ToArray())
+                {
+                    var value = res[key];
+                    if (value is not IActiveNested an)
+                        continue;
+                    res[key] = (IActiveRead<TReader>)an.Inner;
                 }
                 yield return res;
             }
@@ -70,7 +77,7 @@ namespace Cscg.AdoNet.Lib
             foreach (var item in reader.ReadData(prefixes, fac))
             {
                 var first = item.Values.OfType<TData1>().FirstOrDefault();
-                var second = item.Values.OfType<TData2>().FirstOrDefault();
+                var second = item.Values.Except(new object?[] { first }).OfType<TData2>().FirstOrDefault();
                 yield return (first, second);
             }
         }
@@ -97,8 +104,8 @@ namespace Cscg.AdoNet.Lib
             foreach (var item in reader.ReadData(prefixes, fac))
             {
                 var first = item.Values.OfType<TData1>().FirstOrDefault();
-                var second = item.Values.OfType<TData2>().FirstOrDefault();
-                var third = item.Values.OfType<TData3>().FirstOrDefault();
+                var second = item.Values.Except(new object?[] { first }).OfType<TData2>().FirstOrDefault();
+                var third = item.Values.Except(new object?[] { first, second }).OfType<TData3>().FirstOrDefault();
                 yield return (first, second, third);
             }
         }
@@ -127,9 +134,9 @@ namespace Cscg.AdoNet.Lib
             foreach (var item in reader.ReadData(prefixes, fac))
             {
                 var first = item.Values.OfType<TData1>().FirstOrDefault();
-                var second = item.Values.OfType<TData2>().FirstOrDefault();
-                var third = item.Values.OfType<TData3>().FirstOrDefault();
-                var four = item.Values.OfType<TData4>().FirstOrDefault();
+                var second = item.Values.Except(new object?[]{ first }).OfType<TData2>().FirstOrDefault();
+                var third = item.Values.Except(new object?[] { first, second }).OfType<TData3>().FirstOrDefault();
+                var four = item.Values.Except(new object?[] { first, second, third }).OfType<TData4>().FirstOrDefault();
                 yield return (first, second, third, four);
             }
         }

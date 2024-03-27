@@ -168,10 +168,13 @@ namespace Cscg.AdoNet
                     deser.AppendLine($"{pno}.{pp.Name} = {ppReading};");
                     if (isTree && pp.Name == DiscriminatorFld)
                     {
+                        deser.AppendLine($"if ({pno}.{pp.Name} != default)");
+                        deser.AppendLine("{");
                         var y = string.Join(", ", innerClasses.Select(icc => $"\"{icc}\" => new {icc}()"));
                         deser.AppendLine($"this.Tmp = {pno}.{pp.Name} switch {{ {y} }};");
                         deser.AppendLine($"this.Tmp.{lastPk} = this.{lastPk};");
                         deser.AppendLine($"this.Tmp.{DiscriminatorFld} = this.{DiscriminatorFld};");
+                        deser.AppendLine("}");
                     }
                     deser.AppendLine("return;");
                     deser.AppendLine("}");
@@ -199,6 +202,7 @@ namespace Cscg.AdoNet
                         var mmPars = string.Join(", ", mmPar.Select(p => $"{p.Type} {p.Name}"));
                         var mmx = Maps.SplitMap(mmm).ToDict();
                         var mmt = $"({string.Join(", ", mmx.Select(q => $"{q.Value} {q.Key}"))})";
+                        cus.AppendLine();
                         cus.AppendLine($"public {mmt}[] {mmName}({mmPars})");
                         cus.AppendLine("{");
                         cus.AppendLine("using var cmd = Conn.CreateCommand();");
@@ -208,11 +212,12 @@ namespace Cscg.AdoNet
                         foreach (var prm in mmPar)
                         {
                             var mp = prm.Name;
-                            cus.AppendLine($"cmd.Parameters.AddWithValue(\"@{mp}\", {mp});");
+                            cus.AppendLine($"cmd.Parameters.AddWithValue(\"@{mp}\", ((object){mp}) ?? DBNull.Value);");
                         }
                         cus.AppendLine("var prefix = new Dictionary<string, string>");
                         cus.AppendLine("{");
-                        cus.AppendLine(string.Join(", ", mmx.Select(w => $"[\"{w.Value}\"] = \"{w.Key}\"")));
+                        cus.AppendLine(string.Join(", ", mmx.GroupBy(w => w.Value).Select(w =>
+                            $"[\"{w.Key}\"] = \"{string.Join("|", w.Select(q => q.Key))}\"")));
                         cus.AppendLine("};");
                         cus.AppendLine("using var reader = cmd.ExecuteReader();");
                         var tblRea = string.Join(", ", mmx.Values);
@@ -252,6 +257,7 @@ namespace Cscg.AdoNet
             var sel = new CodeWriter();
             if (isTree)
             {
+                sel.AppendLine("object IActiveNested.Inner => Inner;");
                 sel.AppendLine($"public {name} Inner => Tmp;");
                 sel.AppendLine($"protected {name} Tmp {{ get; private set; }}");
                 sel.AppendLine();
