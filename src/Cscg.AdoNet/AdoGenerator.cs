@@ -197,7 +197,9 @@ namespace Cscg.AdoNet
                         var mmName = mms.Name;
                         var mmPar = mms.Parameters;
                         var mmPars = string.Join(", ", mmPar.Select(p => $"{p.Type} {p.Name}"));
-                        cus.AppendLine($"public {name}[] {mmName}({mmPars})");
+                        var mmx = Maps.SplitMap(mmm).ToDict();
+                        var mmt = $"({string.Join(", ", mmx.Select(q => $"{q.Value} {q.Key}"))})";
+                        cus.AppendLine($"public {mmt}[] {mmName}({mmPars})");
                         cus.AppendLine("{");
                         cus.AppendLine("using var cmd = Conn.CreateCommand();");
                         var mmParLen = mmPar.Length;
@@ -208,26 +210,14 @@ namespace Cscg.AdoNet
                             var mp = prm.Name;
                             cus.AppendLine($"cmd.Parameters.AddWithValue(\"@{mp}\", {mp});");
                         }
-                        var mmx = Maps.SplitMap(mmm).ToDict();
                         cus.AppendLine("var prefix = new Dictionary<string, string>");
                         cus.AppendLine("{");
                         cus.AppendLine(string.Join(", ", mmx.Select(w => $"[\"{w.Value}\"] = \"{w.Key}\"")));
                         cus.AppendLine("};");
                         cus.AppendLine("using var reader = cmd.ExecuteReader();");
                         var tblRea = string.Join(", ", mmx.Values);
-                        cus.AppendLine($"var res = reader.ReadData<{tblRea}, {readType}>(prefix).Select(x =>");
-                        cus.AppendLine("{");
-                        cus.AppendLine("var item = x.Value.Item1;");
-                        var idx = 1;
-                        var tblItm = "item";
-                        foreach (var include in mmx.Values.Skip(1))
-                        {
-                            var curr = $"{tblItm}.{include}";
-                            cus.AppendLine($"{curr} = x.Value.Item{++idx};");
-                        }
-                        cus.AppendLine("return item;");
-                        cus.AppendLine("}).ToArray();");
-                        cus.AppendLine("return res;");
+                        cus.AppendLine($"var res = reader.ReadData<{tblRea}, {readType}>(prefix);");
+                        cus.AppendLine("return res.Select(x => x.Value).ToArray();");
                         cus.AppendLine("}");
                     }
                 }
