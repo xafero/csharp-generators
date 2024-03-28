@@ -3,7 +3,12 @@ using System.Collections.Generic;
 
 namespace Cscg.AdoNet.Lib
 {
-    public sealed class DbQueue<TEntity> : IEnumerable<TEntity>
+    public abstract class DbQueue
+    {
+        public abstract IEnumerable<object> AsEnumerable();
+    }
+
+    public sealed class DbQueue<TEntity> : DbQueue, IEnumerable<TEntity>
         where TEntity : class
     {
         private readonly IDictionary<object, TEntity> _queue;
@@ -26,6 +31,7 @@ namespace Cscg.AdoNet.Lib
         }
 
         public void Clear() => _queue.Clear();
+        public override IEnumerable<object> AsEnumerable() => this;
         public IEnumerator<TEntity> GetEnumerator() => _queue.Values.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         public override string ToString() => $"{_queue.Count} items";

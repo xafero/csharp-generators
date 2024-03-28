@@ -77,7 +77,7 @@ namespace Cscg.AdoNet
                 var dbQueName = $"DbQueue<{p.o}>";
                 var dbQueField = $"_{dbSetProp.ToSnake()}Q";
                 dbQueues.Add($"private readonly {dbQueName} {dbQueField} = new();");
-                dbQueueL.Add($"foreach (var item in {dbQueField}) yield return item;");
+                dbQueueL.Add($"yield return ({dbQueField}, {dbSetProp});");
                 dbQueueC.Add($"{dbQueField}.Clear();");
                 var dbQueVar = p.o.ToSnake();
                 dbQueueE.Add($"case {p.o} {dbQueVar}: {dbQueField}.Enqueue({dbQueVar}); break;");
@@ -119,7 +119,7 @@ namespace Cscg.AdoNet
             body.AddRange(["public override void Enqueue(object obj)", "{", "switch (obj)", "{"]);
             body.AddRange(dbQueueE);
             body.AddRange(["}", "}", ""]);
-            body.AddRange(["protected override IEnumerable<object> LoopQueues()", "{"]);
+            body.AddRange(["protected override IEnumerable<(DbQueue, DbSet)> LoopQueues()", "{"]);
             body.AddRange(dbQueueL);
             body.AddRange(["}", ""]);
             body.AddRange(["protected override void ClearQueues()", "{"]);

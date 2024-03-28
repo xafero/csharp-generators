@@ -338,6 +338,8 @@ namespace Cscg.AdoNet
             asx.AppendLine("iAdd(Context, entity);");
             asx.AppendLine("}");
             asx.AppendLine();
+            asx.AppendLine($"public override void Add(object entity) => Add(({name})entity);");
+            asx.AppendLine();
             asx.AppendLine($"internal static {name} iSave(DbContext ctx, {connType} conn, {name} entity)");
             asx.AppendLine("{");
             asx.AppendLines(savB);
@@ -353,6 +355,8 @@ namespace Cscg.AdoNet
             asx.AppendLine("{");
             asx.AppendLine("iSave(Context, Conn, entity);");
             asx.AppendLine("}");
+            asx.AppendLine();
+            asx.AppendLine($"public override void Save(object entity) => Save(({name})entity);");
 
             var sam = new CodeWriter();
             sam.AppendLine($"public {name}[] FindSame(params Action<{name}>[] func)");

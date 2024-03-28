@@ -41,7 +41,7 @@ namespace Cscg.AdoNet.Lib
 
         protected abstract void CreateTables(TConn conn);
 
-        protected abstract IEnumerable<object> LoopQueues();
+        protected abstract IEnumerable<(DbQueue, DbSet)> LoopQueues();
         protected abstract void ClearQueues();
 
         public override DbConnection GetDbConn() => GetOpenConn();
@@ -65,32 +65,33 @@ namespace Cscg.AdoNet.Lib
 
         public void SaveChanges()
         {
-            // TODO "BEGIN TRANSACTION;"
-
-
-
-            foreach (var item in LoopQueues())
+            using var conn = GetDbConn();
+            try
             {
-
-
-                Console.WriteLine(" // " + item);
-
-
-                // TODO
-
-
-                var type = GetType();
-
-                ;
-
-
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "BEGIN TRANSACTION;";
+                    cmd.ExecuteNonQuery();
+                }
+                foreach (var (queue, set) in LoopQueues())
+                {
+                    var waiting = new Queue<object>(queue.AsEnumerable());
+                    while (waiting.Count >= 1 && waiting.Dequeue() is { } obj)
+                        set.Save(obj);
+                }
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "COMMIT;";
+                    cmd.ExecuteNonQuery();
+                }
+                ClearQueues();
             }
-
-
-
-            // TODO "COMMIT;"
-
-            // TODO ClearQueues();
+            catch (Exception)
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "ROLLBACK;";
+                cmd.ExecuteNonQuery();
+            }
         }
     }
 }
