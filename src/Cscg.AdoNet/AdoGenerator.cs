@@ -87,6 +87,7 @@ namespace Cscg.AdoNet
             var deser = new CodeWriter();
             var sqser = new CodeWriter();
             var asc = new CodeWriter();
+            var ass = new CodeWriter();
 
             var after = new List<string>();
             var inner = new List<string>();
@@ -123,7 +124,13 @@ namespace Cscg.AdoNet
                         var ppCt = pps.ContainingType;
                         var ppIsWt = ppCt.Name != name;
                         var ppWtN = ppIsWt ? $"x{asc.Lines.Count + 1}" : "entity";
-                        if (ppIsWt) asc.AppendLines([$"if (entity is {ppCt} {ppWtN})", "{"]);
+                        if (ppIsWt)
+                        {
+                            string[] ascWTxt = [$"if (entity is {ppCt} {ppWtN})", "{"];
+                            asc.AppendLines(ascWTxt);
+                            ass.AppendLines(ascWTxt);
+                        }
+                        var ppWtNppN = $"{ppWtN}.{ppName}";
                         if (pp.ReturnType.IsTyped(out _, out var prA, out var prList, out _) &&
                             prList && prA.SingleOrDefault() is var prAs)
                         {
@@ -135,8 +142,21 @@ namespace Cscg.AdoNet
                         else
                         {
                             asc.AppendLine($"{pp.ReturnType.Name}DbSet.Enqueue(ctx, {ppWtN}?.{ppName});");
+
+                            if (lastPk != null)
+                            {
+                                ass.AppendLine($"if ({ppWtNppN} != default)");
+                                ass.AppendLine("{");
+                                ass.AppendLine($"{ppWtNppN} = {pp.ReturnType.Name}DbSet.iSave(ctx, conn, {ppWtNppN});");
+                                ass.AppendLine($"{ppWtNppN}Id = {ppWtNppN}.Id;");
+                                ass.AppendLine("}");
+                            }
                         }
-                        if (ppIsWt) asc.AppendLine("}");
+                        if (ppIsWt)
+                        {
+                            asc.AppendLine("}");
+                            ass.AppendLine("}");
+                        }
                     }
 
                     if (!ppa.ContainsKey(ColAn))
@@ -308,6 +328,22 @@ namespace Cscg.AdoNet
             asx.AppendLine("{");
             asx.AppendLine("Enqueue(Context, entity);");
             asx.AppendLine("}");
+            asx.AppendLine();
+            var setName = $"{name}DbSet";
+            asx.AppendLine($"internal static {name} iSave(DbContext ctx, {connType} conn, {name} entity)");
+            asx.AppendLine("{");
+            asx.AppendLines(ass);
+            if (lastPk == null)
+                asx.AppendLine($"{setName}.iInsert(conn, entity);");
+            else
+                asx.AppendLine($"entity.{lastPk} = {setName}.iInsert(conn, entity);");
+            asx.AppendLine("return entity;");
+            asx.AppendLine("}");
+            asx.AppendLine();
+            asx.AppendLine($"public void Save({name} entity)");
+            asx.AppendLine("{");
+            asx.AppendLine("iSave(Context, Conn, entity);");
+            asx.AppendLine("}");
 
             var sam = new CodeWriter();
             sam.AppendLine($"public {name}[] FindSame(params Action<{name}>[] func)");
@@ -424,12 +460,17 @@ namespace Cscg.AdoNet
                     lst.AppendLine("}");
                 }
 
-                ins.AppendLine($"public {lastPkT} Insert({name} entity)");
+                ins.AppendLine($"internal static {lastPkT} iInsert({connType} conn, {name} entity)");
                 ins.AppendLine("{");
-                ins.AppendLine("using var cmd = Conn.CreateCommand();");
+                ins.AppendLine("using var cmd = conn.CreateCommand();");
                 ins.AppendLine("entity.WriteSql(cmd);");
                 ins.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateInsert({table}, ""{lastPk}"");");
                 ins.AppendLine($"return cmd.ExecuteScalar().ConvertTo<{lastPkT}>();");
+                ins.AppendLine("}");
+                ins.AppendLine();
+                ins.AppendLine($"public {lastPkT} Insert({name} entity)");
+                ins.AppendLine("{");
+                ins.AppendLine("return iInsert(Conn, entity);");
                 ins.AppendLine("}");
 
                 upd.AppendLine($"public bool Update({name} entity)");
@@ -456,12 +497,17 @@ namespace Cscg.AdoNet
                 code.Lines.ModifyLast(intfCodePos, f => $"{f}, IHasId<{mapIdK}>");
                 code.Lines.Insert(intfCodePos + 2, $"\t\tpublic {mapIdK} Id => ({mapIdV});{Texts.NewLine}");
 
-                ins.AppendLine($"public bool Insert({name} entity)");
+                ins.AppendLine($"internal static bool iInsert({connType} conn, {name} entity)");
                 ins.AppendLine("{");
-                ins.AppendLine("using var cmd = Conn.CreateCommand();");
+                ins.AppendLine("using var cmd = conn.CreateCommand();");
                 ins.AppendLine("entity.WriteSql(cmd);");
                 ins.AppendLine($@"cmd.CommandText = cmd.GetColumns().CreateInsert({table});");
                 ins.AppendLine($"return cmd.ExecuteNonQuery() == 1;");
+                ins.AppendLine("}");
+                ins.AppendLine();
+                ins.AppendLine($"public bool Insert({name} entity)");
+                ins.AppendLine("{");
+                ins.AppendLine("return iInsert(Conn, entity);");
                 ins.AppendLine("}");
 
                 del.AppendLine($"public bool Delete({name} entity)");
