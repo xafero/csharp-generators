@@ -327,6 +327,7 @@ namespace Cscg.AdoNet
             var asx = new CodeWriter();
             asx.AppendLine($"internal static void iAdd(DbContext ctx, {name} entity)");
             asx.AppendLine("{");
+            asx.AppendLines(["if (entity == default)", "{", "return;", "}"]);
             asx.AppendLines(addB);
             asx.AppendLine("ctx.Enqueue(entity);");
             asx.AppendLines(addE);
