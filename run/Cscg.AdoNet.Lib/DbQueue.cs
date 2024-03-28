@@ -7,12 +7,10 @@ namespace Cscg.AdoNet.Lib
         where TEntity : class
     {
         private readonly IDictionary<object, TEntity> _queue;
-        private int _index;
 
         public DbQueue()
         {
             _queue = new Dictionary<object, TEntity>();
-            _index = 0;
         }
 
         public void Enqueue(TEntity item)
@@ -21,8 +19,10 @@ namespace Cscg.AdoNet.Lib
                 _queue[hi.Id] = item;
             else if (item is IHasId<string> { Id: not null } hs)
                 _queue[hs.Id] = item;
-            else if (!_queue.Values.Contains(item))
-                _queue[$"#{++_index}"] = item;
+            else if (item is IHasId<(string, string)> hm)
+                _queue[hm.Id] = item;
+            else
+                _queue[item.GetHashCode()] = item;
         }
 
         public void Clear() => _queue.Clear();
