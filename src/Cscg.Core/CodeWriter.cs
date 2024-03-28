@@ -19,7 +19,7 @@ namespace Cscg.Core
             }
             if (text is "}" or "};" || text.StartsWith("})"))
                 Level--;
-            var prefix = string.Join("", Enumerable.Repeat(Space, Level));
+            var prefix = string.Join("", Enumerable.Repeat(Space, Level < 0 ? 0 : Level));
             Lines.Add(prefix + text);
             if (text == "{")
                 Level++;

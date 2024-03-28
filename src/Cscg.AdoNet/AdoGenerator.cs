@@ -86,8 +86,10 @@ namespace Cscg.AdoNet
 
             var deser = new CodeWriter();
             var sqser = new CodeWriter();
-            var asc = new CodeWriter();
-            var ass = new CodeWriter();
+            var addB = new CodeWriter();
+            var addE = new CodeWriter();
+            var savB = new CodeWriter();
+            var savE = new CodeWriter();
 
             var after = new List<string>();
             var inner = new List<string>();
@@ -123,39 +125,44 @@ namespace Cscg.AdoNet
                     {
                         var ppCt = pps.ContainingType;
                         var ppIsWt = ppCt.Name != name;
-                        var ppWtN = ppIsWt ? $"x{asc.Lines.Count + 1}" : "entity";
+                        var ppWtN = ppIsWt ? $"x{addB.Lines.Count + 1}" : "entity";
                         if (ppIsWt)
                         {
                             string[] ascWTxt = [$"if (entity is {ppCt} {ppWtN})", "{"];
-                            asc.AppendLines(ascWTxt);
-                            ass.AppendLines(ascWTxt);
+                            addB.AppendLines(ascWTxt);
+                            savB.AppendLines(ascWTxt);
                         }
                         var ppWtNppN = $"{ppWtN}.{ppName}";
                         if (pp.ReturnType.IsTyped(out _, out var prA, out var prList, out _) &&
                             prList && prA.SingleOrDefault() is var prAs)
                         {
-                            asc.AppendLine($"foreach (var item in {ppWtN}?.{ppName} ?? [])");
-                            asc.AppendLine("{");
-                            asc.AppendLine($"{prAs.Name}DbSet.Enqueue(ctx, item);");
-                            asc.AppendLine("}");
+                            addE.AppendLine($"foreach (var item in {ppWtNppN} ?? [])");
+                            addE.AppendLine("{");
+                            addE.AppendLine($"{prAs.Name}DbSet.iAdd(ctx, item);");
+                            addE.AppendLine("}");
+
+                            savE.AppendLine($"foreach (var item in {ppWtNppN} ?? [])");
+                            savE.AppendLine("{");
+                            savE.AppendLine($"{prAs.Name}DbSet.iSave(ctx, conn, item);");
+                            savE.AppendLine("}");
                         }
                         else
                         {
-                            asc.AppendLine($"{pp.ReturnType.Name}DbSet.Enqueue(ctx, {ppWtN}?.{ppName});");
+                            addB.AppendLine($"if ({ppWtNppN} != default)");
+                            addB.AppendLine("{");
+                            addB.AppendLine($"{pp.ReturnType.Name}DbSet.iAdd(ctx, {ppWtNppN});");
+                            addB.AppendLine("}");
 
-                            if (lastPk != null)
-                            {
-                                ass.AppendLine($"if ({ppWtNppN} != default)");
-                                ass.AppendLine("{");
-                                ass.AppendLine($"{ppWtNppN} = {pp.ReturnType.Name}DbSet.iSave(ctx, conn, {ppWtNppN});");
-                                ass.AppendLine($"{ppWtNppN}Id = {ppWtNppN}.Id;");
-                                ass.AppendLine("}");
-                            }
+                            savB.AppendLine($"if ({ppWtNppN} != default)");
+                            savB.AppendLine("{");
+                            savB.AppendLine($"{ppWtNppN} = {pp.ReturnType.Name}DbSet.iSave(ctx, conn, {ppWtNppN});");
+                            savB.AppendLine($"{ppWtNppN}Id = {ppWtNppN}.Id;");
+                            savB.AppendLine("}");
                         }
                         if (ppIsWt)
                         {
-                            asc.AppendLine("}");
-                            ass.AppendLine("}");
+                            addB.AppendLine("}");
+                            savB.AppendLine("}");
                         }
                     }
 
@@ -318,29 +325,30 @@ namespace Cscg.AdoNet
             sel.AppendLine("}");
 
             var asx = new CodeWriter();
-            asx.AppendLine($"internal static void Enqueue(DbContext ctx, {name} entity)");
+            asx.AppendLine($"internal static void iAdd(DbContext ctx, {name} entity)");
             asx.AppendLine("{");
-            asx.AppendLines(asc);
+            asx.AppendLines(addB);
             asx.AppendLine("ctx.Enqueue(entity);");
+            asx.AppendLines(addE);
             asx.AppendLine("}");
             asx.AppendLine();
             asx.AppendLine($"public override void Add({name} entity)");
             asx.AppendLine("{");
-            asx.AppendLine("Enqueue(Context, entity);");
+            asx.AppendLine("iAdd(Context, entity);");
             asx.AppendLine("}");
             asx.AppendLine();
-            var setName = $"{name}DbSet";
             asx.AppendLine($"internal static {name} iSave(DbContext ctx, {connType} conn, {name} entity)");
             asx.AppendLine("{");
-            asx.AppendLines(ass);
+            asx.AppendLines(savB);
             if (lastPk == null)
-                asx.AppendLine($"{setName}.iInsert(conn, entity);");
+                asx.AppendLine("iInsert(conn, entity);");
             else
-                asx.AppendLine($"entity.{lastPk} = {setName}.iInsert(conn, entity);");
+                asx.AppendLine($"entity.{lastPk} = iInsert(conn, entity);");
+            asx.AppendLines(savE);
             asx.AppendLine("return entity;");
             asx.AppendLine("}");
             asx.AppendLine();
-            asx.AppendLine($"public void Save({name} entity)");
+            asx.AppendLine($"public override void Save({name} entity)");
             asx.AppendLine("{");
             asx.AppendLine("iSave(Context, Conn, entity);");
             asx.AppendLine("}");
