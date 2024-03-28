@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 
@@ -11,6 +12,8 @@ namespace Cscg.AdoNet.Lib
         protected abstract string GetConnStr();
 
         public abstract DbConnection GetDbConn();
+
+        public abstract void Enqueue(object obj);
 
         protected abstract void DisposeOld();
 
@@ -38,6 +41,9 @@ namespace Cscg.AdoNet.Lib
 
         protected abstract void CreateTables(TConn conn);
 
+        protected abstract IEnumerable<object> LoopQueues();
+        protected abstract void ClearQueues();
+
         public override DbConnection GetDbConn() => GetOpenConn();
 
         public virtual TConn GetOpenConn()
@@ -55,6 +61,36 @@ namespace Cscg.AdoNet.Lib
             if (_conn is not { IsValueCreated: true })
                 return;
             _conn.Value.Dispose();
+        }
+
+        public void SaveChanges()
+        {
+            // TODO "BEGIN TRANSACTION;"
+
+
+
+            foreach (var item in LoopQueues())
+            {
+
+
+                Console.WriteLine(" // " + item);
+
+
+                // TODO
+
+
+                var type = GetType();
+
+                ;
+
+
+            }
+
+
+
+            // TODO "COMMIT;"
+
+            // TODO ClearQueues();
         }
     }
 }

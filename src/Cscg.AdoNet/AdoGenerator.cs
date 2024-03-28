@@ -66,6 +66,7 @@ namespace Cscg.AdoNet
             var adiTypes = new List<string> { adiType };
             if (isTree) adiTypes.Add($"IActiveNested<{name}>");
             code.WriteClassLine(name, interfaces: adiTypes.ToArray());
+            var intfCodePos = code.Lines.Count - 1;
             code.AppendLine("{");
 
             var crea = new CodeWriter();
@@ -85,6 +86,7 @@ namespace Cscg.AdoNet
 
             var deser = new CodeWriter();
             var sqser = new CodeWriter();
+            var asc = new CodeWriter();
 
             var after = new List<string>();
             var inner = new List<string>();
@@ -111,11 +113,34 @@ namespace Cscg.AdoNet
                     var ppa = pps.FindArgs(simple: true);
                     if (ppa.ContainsKey(IncludeAn))
                         includes.Add((pds, pps, ppa));
-                    if (!ppa.ContainsKey(ColAn))
-                        continue;
+
                     var pp = syntax.GetInfo(pps);
                     var ppName = ppa.TryGetValue($"{ColAn}_Name", out var tpn) ? tpn : pp.Name;
                     var pName = SqliteSource.Quote(ppName);
+
+                    if (!pp.ReturnType.IsBuiltIn() && pp.ReturnType.TypeKind != TypeKind.Array)
+                    {
+                        var ppCt = pps.ContainingType;
+                        var ppIsWt = ppCt.Name != name;
+                        var ppWtN = ppIsWt ? $"x{asc.Lines.Count + 1}" : "entity";
+                        if (ppIsWt) asc.AppendLines([$"if (entity is {ppCt} {ppWtN})", "{"]);
+                        if (pp.ReturnType.IsTyped(out _, out var prA, out var prList, out _) &&
+                            prList && prA.SingleOrDefault() is var prAs)
+                        {
+                            asc.AppendLine($"foreach (var item in {ppWtN}?.{ppName} ?? [])");
+                            asc.AppendLine("{");
+                            asc.AppendLine($"{prAs.Name}DbSet.Enqueue(ctx, item);");
+                            asc.AppendLine("}");
+                        }
+                        else
+                        {
+                            asc.AppendLine($"{pp.ReturnType.Name}DbSet.Enqueue(ctx, {ppWtN}?.{ppName});");
+                        }
+                        if (ppIsWt) asc.AppendLine("}");
+                    }
+
+                    if (!ppa.ContainsKey(ColAn))
+                        continue;
                     var isPrimary = ppa.TryGetValue(KeyAn, out _);
                     var pk = !isPrimary
                         ? null
@@ -272,6 +297,18 @@ namespace Cscg.AdoNet
             sel.AppendLines(sqser);
             sel.AppendLine("}");
 
+            var asx = new CodeWriter();
+            asx.AppendLine($"internal static void Enqueue(DbContext ctx, {name} entity)");
+            asx.AppendLine("{");
+            asx.AppendLines(asc);
+            asx.AppendLine("ctx.Enqueue(entity);");
+            asx.AppendLine("}");
+            asx.AppendLine();
+            asx.AppendLine($"public override void Add({name} entity)");
+            asx.AppendLine("{");
+            asx.AppendLine("Enqueue(Context, entity);");
+            asx.AppendLine("}");
+
             var sam = new CodeWriter();
             sam.AppendLine($"public {name}[] FindSame(params Action<{name}>[] func)");
             sam.AppendLine("{");
@@ -291,6 +328,10 @@ namespace Cscg.AdoNet
             var lst = new CodeWriter();
             if (!string.IsNullOrWhiteSpace(lastPk))
             {
+                code.Lines.ModifyLast(intfCodePos, f => $"{f}, IHasId<{lastPkT}>");
+                if (lastPk != "Id")
+                    code.Lines.Insert(intfCodePos + 2, $"\t\tpublic {lastPkT} Id => {lastPk};{Texts.NewLine}");
+
                 lst.AppendLine($"public {name}[] List(int offset = 0, int limit = 10)");
                 lst.AppendLine("{");
                 lst.AppendLine("using var cmd = Conn.CreateCommand();");
@@ -445,7 +486,7 @@ namespace Cscg.AdoNet
             code.AppendLines(body);
             code.AppendLine("}");
             code.AppendLine();
-            code.AppendLines(NewSet(name, connType, sam, fin, lst, upd, ins, del, cus));
+            code.AppendLines(NewSet(name, connType, sam, fin, lst, upd, ins, del, cus, asx));
             code.AppendLine("}");
         }
     }

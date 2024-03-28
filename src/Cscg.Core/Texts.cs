@@ -22,12 +22,14 @@ namespace Cscg.Core
             return text.Substring(0, 1).ToLower() + text.Substring(1);
         }
 
-        public static void ModifyLast(this IList<string> lines, Func<string, string> func)
+        public static void ModifyLast(this IList<string> lines, int idx, Func<string, string> func)
         {
-            var idx = lines.Count - 1;
             var oldLine = lines[idx];
             var newLine = func(oldLine);
             lines[idx] = newLine;
         }
+
+        public static void ModifyLast(this IList<string> lines, Func<string, string> func)
+            => ModifyLast(lines, lines.Count - 1, func);
     }
 }

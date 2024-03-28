@@ -4,5 +4,7 @@
         where TEntity : class
     {
         public DbContext Context { get; protected set; }
+
+        public abstract void Add(TEntity entity);
     }
 }

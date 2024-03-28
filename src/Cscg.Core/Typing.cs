@@ -37,6 +37,16 @@ namespace Cscg.Core
             return false;
         }
 
+        public static bool IsDotNet(this ITypeSymbol type, out string module)
+        {
+            module = type.ContainingModule?.ToString();
+            switch (module)
+            {
+                case "System.Runtime.dll": return true;
+                default: return false;
+            }
+        }
+
         public static bool IsNull(this ITypeSymbol type, out INamedTypeSymbol underlying)
         {
             if (Is(type, TypeKind.Struct) && type.Name == "Nullable" &&
@@ -155,6 +165,16 @@ namespace Cscg.Core
             var nsp = text.Substring(0, last);
             var name = text.Substring(last).TrimStart('.');
             return (nsp, name);
+        }
+
+        public static bool IsBuiltIn(this ITypeSymbol type)
+        {
+            return type.IsEnum(out _) || type.IsNull(out _) || type.IsDotNet(out _);
+        }
+
+        public static string ToFqn(this ITypeSymbol type)
+        {
+            return type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         }
     }
 }

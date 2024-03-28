@@ -37,7 +37,7 @@ namespace Cscg.AdoNet
             var cdy = syntax.Symbol;
             var ccs = cdy.FindArgs(simple: true);
             var space = cds.GetParentName() ?? Coding.AutoNamespace;
-            code.AddUsings(LibSpace, "System", "System.Linq", "Microsoft.Data.Sqlite");
+            code.AddUsings(LibSpace, "System", "System.Linq", "System.Collections.Generic", "Microsoft.Data.Sqlite");
             code.AppendLine();
             code.AppendLine($"namespace {space}");
             code.AppendLine("{");
@@ -59,6 +59,10 @@ namespace Cscg.AdoNet
             }).Where(x => x != null).ToArray();
 
             var dbSets = new List<string>();
+            var dbQueues = new List<string>();
+            var dbQueueL = new List<string>();
+            var dbQueueC = new List<string>();
+            var dbQueueE = new List<string>();
             var creators = new List<string>();
             foreach (var p in objects)
             {
@@ -70,6 +74,13 @@ namespace Cscg.AdoNet
                 dbSets.Add("{");
                 dbSets.Add($"get => {p.n.n} as {dbSetName} ?? ({dbSetName})({p.n.n} = new {dbSetName}(this));");
                 dbSets.Add("}");
+                var dbQueName = $"DbQueue<{p.o}>";
+                var dbQueField = $"_{dbSetProp.ToSnake()}Q";
+                dbQueues.Add($"private readonly {dbQueName} {dbQueField} = new();");
+                dbQueueL.Add($"foreach (var item in {dbQueField}) yield return item;");
+                dbQueueC.Add($"{dbQueField}.Clear();");
+                var dbQueVar = p.o.ToSnake();
+                dbQueueE.Add($"case {p.o} {dbQueVar}: {dbQueField}.Enqueue({dbQueVar}); break;");
             }
             creators.ModifyLast(f => f.TrimEnd(','));
 
@@ -104,6 +115,17 @@ namespace Cscg.AdoNet
             };
             body.AddRange(creators);
             body.AddRange(["]);", "}"]);
+            body.AddRange([""]);
+            body.AddRange(["public override void Enqueue(object obj)", "{", "switch (obj)", "{"]);
+            body.AddRange(dbQueueE);
+            body.AddRange(["}", "}", ""]);
+            body.AddRange(["protected override IEnumerable<object> LoopQueues()", "{"]);
+            body.AddRange(dbQueueL);
+            body.AddRange(["}", ""]);
+            body.AddRange(["protected override void ClearQueues()", "{"]);
+            body.AddRange(dbQueueC);
+            body.AddRange(["}", ""]);
+            body.AddRange(dbQueues);
             body.AddRange(dbSets);
 
             code.AppendLines(body, trim: false);
@@ -112,7 +134,7 @@ namespace Cscg.AdoNet
         }
 
         internal static List<string> NewSet(string name, string connType, CodeWriter sam, CodeWriter fin,
-            CodeWriter lst, CodeWriter upd, CodeWriter ins, CodeWriter del, CodeWriter cus)
+            CodeWriter lst, CodeWriter upd, CodeWriter ins, CodeWriter del, CodeWriter cus, CodeWriter asc)
         {
             var code = new List<string>();
             var setName = $"{name}DbSet";
@@ -154,6 +176,11 @@ namespace Cscg.AdoNet
             if (cus.Lines.Count >= 1)
             {
                 code.AddRange(cus.Lines);
+            }
+            if (asc.Lines.Count >= 1)
+            {
+                code.Add("");
+                code.AddRange(asc.Lines);
             }
             code.Add("}");
             return code;
