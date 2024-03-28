@@ -451,6 +451,11 @@ namespace Cscg.AdoNet
 
             if (isMap && mapPk.Count >= 1)
             {
+                var mapIdK = '(' + string.Join(", ", mapPk.Select(m => m.Value)) + ')';
+                var mapIdV = string.Join(", ", mapPk.Select(m => m.Key));
+                code.Lines.ModifyLast(intfCodePos, f => $"{f}, IHasId<{mapIdK}>");
+                code.Lines.Insert(intfCodePos + 2, $"\t\tpublic {mapIdK} Id => ({mapIdV});{Texts.NewLine}");
+
                 ins.AppendLine($"public bool Insert({name} entity)");
                 ins.AppendLine("{");
                 ins.AppendLine("using var cmd = Conn.CreateCommand();");
