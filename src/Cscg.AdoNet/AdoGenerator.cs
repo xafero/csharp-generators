@@ -346,7 +346,8 @@ namespace Cscg.AdoNet
             if (lastPk == null)
                 asx.AppendLine("iInsert(conn, entity);");
             else
-                asx.AppendLine($"(entity.{lastPk}, entity) = ctx.Cache<{name}, {lastPkT}>(entity, e => iInsert(conn, e));");
+                asx.AppendLine($"(entity.{lastPk}, entity) = ctx.Cache<{name}, {lastPkT}>(" +
+                               $"entity, i => iFind(conn, i), e => iInsert(conn, e));");
             asx.AppendLines(savE);
             asx.AppendLine("return entity;");
             asx.AppendLine("}");
@@ -402,13 +403,18 @@ namespace Cscg.AdoNet
                 lst.AppendLine($"return reader.ReadData<{name}, {readType}>().ToArray();");
                 lst.AppendLine("}");
 
-                fin.AppendLine($"public {name} Find({lastPkT} id)");
+                fin.AppendLine($"internal static {name} iFind({connType} conn, {lastPkT} id)");
                 fin.AppendLine("{");
-                fin.AppendLine("using var cmd = Conn.CreateCommand();");
+                fin.AppendLine("using var cmd = conn.CreateCommand();");
                 fin.AppendLine($@"cmd.CommandText = @""SELECT * FROM ""{table}"" WHERE {lastPk} = @p0;"";");
                 fin.AppendLine(@"cmd.Parameters.AddWithValue(""@p0"", id);");
                 fin.AppendLine("using var reader = cmd.ExecuteReader();");
                 fin.AppendLine($"return reader.ReadData<{name}, {readType}>().FirstOrDefault();");
+                fin.AppendLine("}");
+                fin.AppendLine();
+                fin.AppendLine($"public {name} Find({lastPkT} id)");
+                fin.AppendLine("{");
+                fin.AppendLine("return iFind(Conn, id);");
                 fin.AppendLine("}");
 
                 if (includes.Any())

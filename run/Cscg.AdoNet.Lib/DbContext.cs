@@ -25,24 +25,31 @@ namespace Cscg.AdoNet.Lib
 
         protected readonly Dictionary<string, object> XCache = new();
 
-        public (TId, TEntity) Cache<TEntity, TId>(TEntity obj, Func<TEntity, TId> func)
+        public (TId, TEntity) Cache<TEntity, TId>(TEntity obj, Func<TId, TEntity> load, Func<TEntity, TId> save)
             where TEntity : IHasId<TId>
         {
             var type = obj.GetType();
             var id = obj.Id;
-            var key = $"{type.Name} # {id}";
             TEntity val;
-            if (XCache.TryGetValue(key, out var found))
+            if (XCache.TryGetValue(GetKey(type, id), out var found))
             {
                 val = (TEntity)found;
+                id = val.Id;
+            }
+            else if (id is { } i && load(i) is { } exist)
+            {
+                id = exist.Id;
+                XCache[GetKey(type, id)] = val = exist;
             }
             else
             {
-                id = func(val = obj)!;
-                XCache[key] = obj;
+                id = save(val = obj)!;
+                XCache[GetKey(type, id)] = obj;
             }
             return (id, val);
         }
+
+        private static string GetKey<TId>(Type type, TId id) => $"{type.Name} # {id}";
     }
 
     public abstract class DbContext<TConn> : DbContext
