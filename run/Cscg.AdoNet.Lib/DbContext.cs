@@ -22,6 +22,27 @@ namespace Cscg.AdoNet.Lib
             GC.SuppressFinalize(this);
             DisposeOld();
         }
+
+        protected readonly Dictionary<string, object> XCache = new();
+
+        public (TId, TEntity) Cache<TEntity, TId>(TEntity obj, Func<TEntity, TId> func)
+            where TEntity : IHasId<TId>
+        {
+            var type = obj.GetType();
+            var id = obj.Id;
+            var key = $"{type.Name} # {id}";
+            TEntity val;
+            if (XCache.TryGetValue(key, out var found))
+            {
+                val = (TEntity)found;
+            }
+            else
+            {
+                id = func(val = obj)!;
+                XCache[key] = obj;
+            }
+            return (id, val);
+        }
     }
 
     public abstract class DbContext<TConn> : DbContext
@@ -92,6 +113,7 @@ namespace Cscg.AdoNet.Lib
                 cmd.CommandText = "ROLLBACK;";
                 cmd.ExecuteNonQuery();
             }
+            XCache.Clear();
         }
     }
 }

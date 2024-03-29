@@ -346,7 +346,7 @@ namespace Cscg.AdoNet
             if (lastPk == null)
                 asx.AppendLine("iInsert(conn, entity);");
             else
-                asx.AppendLine($"entity.{lastPk} = iInsert(conn, entity);");
+                asx.AppendLine($"(entity.{lastPk}, entity) = ctx.Cache<{name}, {lastPkT}>(entity, e => iInsert(conn, e));");
             asx.AppendLines(savE);
             asx.AppendLine("return entity;");
             asx.AppendLine("}");
