@@ -42,8 +42,11 @@ namespace Cscg.Core
             module = type.ContainingModule?.ToString();
             switch (module)
             {
-                case "System.Runtime.dll": return true;
-                default: return false;
+                case "System.Runtime.dll":
+                case "System.Private.CoreLib.dll":
+                    return true;
+                default:
+                    return false;
             }
         }
 
